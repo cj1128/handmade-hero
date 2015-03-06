@@ -1,5 +1,51 @@
 #include <windows.h>
 
+#define local_persist static
+#define internal static
+#define global_variable static
+
+global_variable bool Running;
+global_variable BITMAPINFO BitmapInfo;
+global_variable HBITMAP BitmapHandle;
+global_variable HDC BitmapDeviceHandle;
+global_variable void * BitmapMemory;
+
+internal void Win32UpdateWindow(HDC DeviceContext,int X, int Y, int Width, int Height)
+{
+  StretchDIBits(DeviceContext,
+    X,Y,Width,Height,
+    X,Y,Width,Height,
+    BitmapMemory,
+    &BitmapInfo,
+    DIB_RGB_COLORS,SRCCOPY);
+}
+
+internal void Win32ResizeDIBSection(int Width, int Height)
+{
+  if(BitmapHandle){
+    DeleteObject(BitmapHandle);
+  }
+
+  if( BitmapDeviceHandle == 0)
+  {
+    BitmapDeviceHandle = CreateCompatibleDC(0);
+  }
+
+  BitmapInfo.bmiHeader.biSize = sizeof(BitmapInfo.bmiHeader);
+  BitmapInfo.bmiHeader.biWidth = Width;
+  BitmapInfo.bmiHeader.biHeight = Height;
+  BitmapInfo.bmiHeader.biPlanes = 1;
+  BitmapInfo.bmiHeader.biBitCount = 32;
+  BitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+  BitmapHandle  = CreateDIBSection(
+    BitmapDeviceHandle,
+    &BitmapInfo,
+    DIB_RGB_COLORS,
+    &BitmapMemory,
+    0,0);
+}
+
 LRESULT CALLBACK MainWindowCallback(HWND Window,
                             UINT Message,
                             WPARAM wParam,
@@ -9,17 +55,21 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
   switch(Message){
     case WM_SIZE:
     {
-      OutputDebugStringA("SIZE\n");
+      RECT ClientRect ;
+      GetClientRect(Window, &ClientRect);
+      int Width = ClientRect.right - ClientRect.left;
+      int Height = ClientRect.bottom - ClientRect.top;
+      Win32ResizeDIBSection(Width, Height);
     } break;
 
     case WM_DESTROY:
     {
-      OutputDebugStringA("DESTROY\n");
+      Running = false;
     } break;
 
     case WM_CLOSE:
     {
-      OutputDebugStringA("CLOSE\n");
+      Running = false;
     } break;
 
     case WM_ACTIVATEAPP:
@@ -31,23 +81,11 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     {
       PAINTSTRUCT Paint;
       HDC DeviceContext = BeginPaint(Window,&Paint);
+      int X = Paint.rcPaint.left;
+      int Y = Paint.rcPaint.top;
       int Width = Paint.rcPaint.right - Paint.rcPaint.left;
       int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;
-      static DWORD Color = WHITENESS;
-      PatBlt(
-        DeviceContext,
-        Paint.rcPaint.left,
-        Paint.rcPaint.top,
-        Width,
-        Height,
-        Color
-      );
-      if(Color == WHITENESS){
-        Color = BLACKNESS;
-      }
-      else{
-        Color = WHITENESS;
-      }
+      Win32UpdateWindow(DeviceContext, X, Y, Width, Height);
       EndPaint(Window,&Paint);
     } break;
 
@@ -93,8 +131,9 @@ WinMain(HINSTANCE Instance,
       0
     );
     if(WindowHandle){
+      Running = true;
       MSG Message;
-      for(;;){
+      while(Running){
         if(GetMessage(&Message,WindowHandle,0,0) > 0){
           TranslateMessage(&Message);
           DispatchMessage(&Message);
