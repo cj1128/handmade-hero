@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdint.h>
 
 #define local_persist static
 #define internal static
@@ -6,15 +7,45 @@
 
 global_variable bool Running;
 global_variable BITMAPINFO BitmapInfo;
-global_variable HBITMAP BitmapHandle;
-global_variable HDC BitmapDeviceHandle;
 global_variable void * BitmapMemory;
+global_variable int BitmapWidth;
+global_variable int BitmapHeight;
+global_variable int BytesPerPixel = 4;
 
-internal void Win32UpdateWindow(HDC DeviceContext,int X, int Y, int Width, int Height)
+
+internal void
+RenderWeirdGradient(int BlueOffset, int GreenOffset)
+{
+  int Width = BitmapWidth;
+  int Height = BitmapHeight;
+
+  int Pitch = Width * BytesPerPixel;
+  uint8_t *Row = (uint8_t *)BitmapMemory;
+
+  for(int Y = 0;Y < BitmapHeight; Y++)
+  {
+    uint32_t *Pixel = (uint32_t *)Row;
+    for(int X = 0; X < BitmapWidth; X++)
+    {
+      // Memory Order: BB GG RR XX
+      // 0xXXBBGGRR
+      uint8_t Blue = X + BlueOffset;
+      uint8_t Green = Y + GreenOffset;
+
+      *Pixel++ = ((Green << 8) | Blue );
+
+    }
+    Row += Pitch;
+  }
+}
+
+
+
+internal void Win32UpdateWindow(HDC DeviceContext,int WindowWidth, int WindowHeight)
 {
   StretchDIBits(DeviceContext,
-    X,Y,Width,Height,
-    X,Y,Width,Height,
+    0,0,BitmapWidth,BitmapHeight,
+    0,0,WindowWidth,WindowHeight,
     BitmapMemory,
     &BitmapInfo,
     DIB_RGB_COLORS,SRCCOPY);
@@ -22,14 +53,11 @@ internal void Win32UpdateWindow(HDC DeviceContext,int X, int Y, int Width, int H
 
 internal void Win32ResizeDIBSection(int Width, int Height)
 {
-  if(BitmapHandle){
-    DeleteObject(BitmapHandle);
+  if(BitmapMemory){
+    VirtualFree(BitmapMemory, 0, MEM_RELEASE);
   }
-
-  if( BitmapDeviceHandle == 0)
-  {
-    BitmapDeviceHandle = CreateCompatibleDC(0);
-  }
+  BitmapWidth = Width;
+  BitmapHeight = Height;
 
   BitmapInfo.bmiHeader.biSize = sizeof(BitmapInfo.bmiHeader);
   BitmapInfo.bmiHeader.biWidth = Width;
@@ -38,12 +66,8 @@ internal void Win32ResizeDIBSection(int Width, int Height)
   BitmapInfo.bmiHeader.biBitCount = 32;
   BitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-  BitmapHandle  = CreateDIBSection(
-    BitmapDeviceHandle,
-    &BitmapInfo,
-    DIB_RGB_COLORS,
-    &BitmapMemory,
-    0,0);
+  int BitmapMemorysize = Width * Height * BytesPerPixel;
+  BitmapMemory = VirtualAlloc(0, BitmapMemorysize, MEM_COMMIT, PAGE_READWRITE);
 }
 
 LRESULT CALLBACK MainWindowCallback(HWND Window,
@@ -81,11 +105,16 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     {
       PAINTSTRUCT Paint;
       HDC DeviceContext = BeginPaint(Window,&Paint);
+
       int X = Paint.rcPaint.left;
       int Y = Paint.rcPaint.top;
       int Width = Paint.rcPaint.right - Paint.rcPaint.left;
       int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;
-      Win32UpdateWindow(DeviceContext, X, Y, Width, Height);
+
+      RECT ClientRect;
+      GetClientRect(Window, &ClientRect);
+
+      Win32UpdateWindow(DeviceContext, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top);
       EndPaint(Window,&Paint);
     } break;
 
@@ -131,16 +160,38 @@ WinMain(HINSTANCE Instance,
       0
     );
     if(WindowHandle){
+
       Running = true;
-      MSG Message;
-      while(Running){
-        if(GetMessage(&Message,WindowHandle,0,0) > 0){
+      int XOffset = 0;
+      int YOffset = 0;
+
+      while(Running)
+      {
+        MSG Message;
+        while( PeekMessage(&Message,WindowHandle,0,0, PM_REMOVE) )
+        {
+          if(Message.message == WM_QUIT){
+            Running = false;
+          }
           TranslateMessage(&Message);
           DispatchMessage(&Message);
         }
-        else{
-          break;
-        }
+
+        RenderWeirdGradient(XOffset, YOffset);
+
+        HDC DeviceContext = GetDC(WindowHandle);
+
+        RECT ClientRect;
+        GetClientRect(WindowHandle, &ClientRect);
+
+        int WindowWidth = ClientRect.right - ClientRect.left;
+        int WindowHeight = ClientRect.bottom - ClientRect.top;
+
+        Win32UpdateWindow(DeviceContext, WindowWidth,WindowHeight);
+        ReleaseDC(WindowHandle, DeviceContext);
+
+        XOffset++;
+        YOffset += 2;
       }
     }
     else{
@@ -153,4 +204,5 @@ WinMain(HINSTANCE Instance,
 
   return 0;
 }
+
 
