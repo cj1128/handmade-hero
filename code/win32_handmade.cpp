@@ -5,69 +5,91 @@
 #define internal static
 #define global_variable static
 
-global_variable bool Running;
-global_variable BITMAPINFO BitmapInfo;
-global_variable void * BitmapMemory;
-global_variable int BitmapWidth;
-global_variable int BitmapHeight;
-global_variable int BytesPerPixel = 4;
 
+
+struct win32_offscreen_buffer
+{
+  BITMAPINFO Info;
+  void *Memory;
+  int Width;
+  int Height;
+  int Pitch;
+};
+
+struct win32_window_dimension
+{
+  int Width;
+  int Height;
+};
+
+global_variable bool GlobalRunning;
+global_variable win32_offscreen_buffer GlobalBackbuffer;
+
+win32_window_dimension
+Win32GetWindowDimension(HWND Window){
+  win32_window_dimension Result;
+
+  RECT ClientRect;
+  GetClientRect(Window, &ClientRect);
+  Result.Width = ClientRect.right - ClientRect.left;
+  Result.Height = ClientRect.bottom - ClientRect.top;
+  return Result;
+}
 
 internal void
-RenderWeirdGradient(int BlueOffset, int GreenOffset)
+RenderWeirdGradient(win32_offscreen_buffer Buffer, int BlueOffset, int GreenOffset)
 {
-  int Width = BitmapWidth;
-  int Height = BitmapHeight;
+  uint8_t *Row = (uint8_t *)Buffer.Memory;
 
-  int Pitch = Width * BytesPerPixel;
-  uint8_t *Row = (uint8_t *)BitmapMemory;
-
-  for(int Y = 0;Y < BitmapHeight; Y++)
+  for(int Y = 0;Y < Buffer.Height; Y++)
   {
     uint32_t *Pixel = (uint32_t *)Row;
-    for(int X = 0; X < BitmapWidth; X++)
+    for(int X = 0; X < Buffer.Width; X++)
     {
       // Memory Order: BB GG RR XX
-      // 0xXXBBGGRR
+      // 0xXXRRGGBB
       uint8_t Blue = X + BlueOffset;
       uint8_t Green = Y + GreenOffset;
 
       *Pixel++ = ((Green << 8) | Blue );
 
     }
-    Row += Pitch;
+    Row += Buffer.Pitch;
   }
 }
 
 
 
-internal void Win32UpdateWindow(HDC DeviceContext,int WindowWidth, int WindowHeight)
+internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int WindowHeight,
+  win32_offscreen_buffer Buffer)
 {
   StretchDIBits(DeviceContext,
-    0,0,BitmapWidth,BitmapHeight,
     0,0,WindowWidth,WindowHeight,
-    BitmapMemory,
-    &BitmapInfo,
+    0,0,Buffer.Width,Buffer.Height,
+    Buffer.Memory,
+    &Buffer.Info,
     DIB_RGB_COLORS,SRCCOPY);
 }
 
-internal void Win32ResizeDIBSection(int Width, int Height)
+internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
-  if(BitmapMemory){
-    VirtualFree(BitmapMemory, 0, MEM_RELEASE);
+  if(Buffer->Memory){
+    VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
   }
-  BitmapWidth = Width;
-  BitmapHeight = Height;
+  Buffer->Width = Width;
+  Buffer->Height = Height;
 
-  BitmapInfo.bmiHeader.biSize = sizeof(BitmapInfo.bmiHeader);
-  BitmapInfo.bmiHeader.biWidth = Width;
-  BitmapInfo.bmiHeader.biHeight = Height;
-  BitmapInfo.bmiHeader.biPlanes = 1;
-  BitmapInfo.bmiHeader.biBitCount = 32;
-  BitmapInfo.bmiHeader.biCompression = BI_RGB;
+  Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
+  Buffer->Info.bmiHeader.biWidth = Width;
+  Buffer->Info.bmiHeader.biHeight = Height;
+  Buffer->Info.bmiHeader.biPlanes = 1;
+  Buffer->Info.bmiHeader.biBitCount = 32;
+  Buffer->Info.bmiHeader.biCompression = BI_RGB;
 
+  int BytesPerPixel = 4;
   int BitmapMemorysize = Width * Height * BytesPerPixel;
-  BitmapMemory = VirtualAlloc(0, BitmapMemorysize, MEM_COMMIT, PAGE_READWRITE);
+  Buffer->Memory = VirtualAlloc(0, BitmapMemorysize, MEM_COMMIT, PAGE_READWRITE);
+  Buffer->Pitch = BytesPerPixel * Width;
 }
 
 LRESULT CALLBACK MainWindowCallback(HWND Window,
@@ -77,23 +99,14 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
 {
   LRESULT Result = 0;
   switch(Message){
-    case WM_SIZE:
-    {
-      RECT ClientRect ;
-      GetClientRect(Window, &ClientRect);
-      int Width = ClientRect.right - ClientRect.left;
-      int Height = ClientRect.bottom - ClientRect.top;
-      Win32ResizeDIBSection(Width, Height);
-    } break;
-
     case WM_DESTROY:
     {
-      Running = false;
+      GlobalRunning = false;
     } break;
 
     case WM_CLOSE:
     {
-      Running = false;
+      GlobalRunning = false;
     } break;
 
     case WM_ACTIVATEAPP:
@@ -105,16 +118,8 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     {
       PAINTSTRUCT Paint;
       HDC DeviceContext = BeginPaint(Window,&Paint);
-
-      int X = Paint.rcPaint.left;
-      int Y = Paint.rcPaint.top;
-      int Width = Paint.rcPaint.right - Paint.rcPaint.left;
-      int Height = Paint.rcPaint.bottom - Paint.rcPaint.top;
-
-      RECT ClientRect;
-      GetClientRect(Window, &ClientRect);
-
-      Win32UpdateWindow(DeviceContext, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top);
+      win32_window_dimension Dimension = Win32GetWindowDimension(WindowHandle);
+      Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
       EndPaint(Window,&Paint);
     } break;
 
@@ -161,34 +166,28 @@ WinMain(HINSTANCE Instance,
     );
     if(WindowHandle){
 
-      Running = true;
+      GlobalRunning = true;
       int XOffset = 0;
       int YOffset = 0;
 
-      while(Running)
+      HDC DeviceContext = GetDC(WindowHandle);
+      Win32ResizeDIBSection(&GlobalBackbuffer, 1920, 1080);
+
+      while(GlobalRunning)
       {
         MSG Message;
         while( PeekMessage(&Message,WindowHandle,0,0, PM_REMOVE) )
         {
           if(Message.message == WM_QUIT){
-            Running = false;
+            GlobalRunning = false;
           }
           TranslateMessage(&Message);
           DispatchMessage(&Message);
         }
 
-        RenderWeirdGradient(XOffset, YOffset);
-
-        HDC DeviceContext = GetDC(WindowHandle);
-
-        RECT ClientRect;
-        GetClientRect(WindowHandle, &ClientRect);
-
-        int WindowWidth = ClientRect.right - ClientRect.left;
-        int WindowHeight = ClientRect.bottom - ClientRect.top;
-
-        Win32UpdateWindow(DeviceContext, WindowWidth,WindowHeight);
-        ReleaseDC(WindowHandle, DeviceContext);
+        RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
+        win32_window_dimension Dimension = Win32GetWindowDimension(WindowHandle);
+        Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
 
         XOffset++;
         YOffset += 2;
