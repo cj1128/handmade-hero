@@ -1,10 +1,10 @@
 #include <windows.h>
 #include <stdint.h>
+#include <xinput.h>
 
 #define local_persist static
 #define internal static
 #define global_variable static
-
 
 
 struct win32_offscreen_buffer
@@ -24,6 +24,34 @@ struct win32_window_dimension
 
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
+
+#define X_INPUT_GET_STATE(name) DWORD name(DWORD dwUserIndex,XINPUT_STATE *pState)
+typedef X_INPUT_GET_STATE(f_x_input_get_state);
+X_INPUT_GET_STATE(XInputGetStateStub)
+{
+  return 0;
+}
+global_variable f_x_input_get_state *XInputGetState_ = XInputGetStateStub;
+#define XInputGetState XInputGetState_
+
+#define X_INPUT_SET_STATE(name) DWORD name(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
+typedef X_INPUT_SET_STATE(f_x_input_set_state);
+X_INPUT_SET_STATE(XInputSetStateStub)
+{
+  return 0;
+}
+global_variable f_x_input_set_state *XInputSetState_ = XInputSetStateStub;
+#define XInputSetState XInputSetState_
+
+
+internal void
+Win32LoadXInput(void){
+  HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
+  if(XInputLibrary){
+    XInputGetState = (f_x_input_get_state *) GetProcAddress(XInputLibrary,"XInputGetState");
+    XInputSetState = (f_x_input_set_state *) GetProcAddress(XInputLibrary,"XInputSetState");
+  }
+}
 
 win32_window_dimension
 Win32GetWindowDimension(HWND Window){
@@ -114,11 +142,32 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
       OutputDebugStringA("ACTIVATEAPP\n");
     } break;
 
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    {
+      uint32_t VKCode = wParam;
+      bool WasDown = ((lParam & (1 << 30)) != 0);
+      bool IsDown = ((lParam & (1<< 31)) == 0 );
+      switch(VKCode){
+        case 'W':
+        {
+          OutputDebugStringA("W");
+        } break;
+        case 'D':
+        {
+          OutputDebugStringA("D");
+        } break;
+      }
+    }
+
     case WM_PAINT:
     {
+      OutputDebugStringA("WM Paint");
       PAINTSTRUCT Paint;
       HDC DeviceContext = BeginPaint(Window,&Paint);
-      win32_window_dimension Dimension = Win32GetWindowDimension(WindowHandle);
+      win32_window_dimension Dimension = Win32GetWindowDimension(Window);
       Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
       EndPaint(Window,&Paint);
     } break;
@@ -140,6 +189,7 @@ WinMain(HINSTANCE Instance,
 	int CmdShow)
 {
   WNDCLASS WindowClass = {};
+  Win32LoadXInput();
 
   //TODO: check if owndc,hredraw,vredraw matter
   WindowClass.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
@@ -183,6 +233,31 @@ WinMain(HINSTANCE Instance,
           }
           TranslateMessage(&Message);
           DispatchMessage(&Message);
+        }
+
+        // Poll message from controller
+        for(DWORD ControllerIndex = 0; ControllerIndex < XUSER_MAX_COUNT; ControllerIndex++){
+          XINPUT_STATE ControllerState;
+          if(XInputGetState(ControllerIndex, &ControllerState) == ERROR_SUCCESS){
+            XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
+            bool Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+            bool Down = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+            bool Left = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+            bool Right = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+            bool Start = (Pad->wButtons & XINPUT_GAMEPAD_START);
+            bool Back = (Pad->wButtons & XINPUT_GAMEPAD_BACK);
+            bool LeftShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+            bool RightShoulder = (Pad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+            bool AButton = (Pad->wButtons & XINPUT_GAMEPAD_A);
+            bool BButton = (Pad->wButtons & XINPUT_GAMEPAD_B);
+            bool XButton = (Pad->wButtons & XINPUT_GAMEPAD_X);
+            bool YButton = (Pad->wButtons & XINPUT_GAMEPAD_Y);
+            int16_t StickX = Pad->sThumbLX;
+            int16_t StickY = Pad->sThumbLY;
+          }
+          else{
+
+          }
         }
 
         RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
