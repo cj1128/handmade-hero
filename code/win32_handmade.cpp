@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdint.h>
 #include <xinput.h>
+#include <dsound.h>
 
 #define local_persist static
 #define internal static
@@ -44,12 +45,80 @@ global_variable f_x_input_set_state *XInputSetState_ = XInputSetStateStub;
 #define XInputSetState XInputSetState_
 
 
+#define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
+typedef DIRECT_SOUND_CREATE(direct_sound_create);
+
+
 internal void
 Win32LoadXInput(void){
   HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
   if(XInputLibrary){
     XInputGetState = (f_x_input_get_state *) GetProcAddress(XInputLibrary,"XInputGetState");
     XInputSetState = (f_x_input_set_state *) GetProcAddress(XInputLibrary,"XInputSetState");
+  }
+}
+
+internal void
+Win32InitDSound(HWND Window, int32_t SamplesPerSound, int32_t BufferSize){
+  HMODULE DSouondLibrary = LoadLibraryA("dsound.dll");
+  if(DSouondLibrary){
+    direct_sound_create *DirectSoundCreate = (direct_sound_create *)
+      GetProcAddress(DSouondLibrary, "DirectSoundCreate");
+
+    LPDIRECTSOUND DirectSound;
+    if(DirectSoundCreate && SUCCEEDED(DirectSoundCreate(0, &DirectSound,0))){
+      WAVEFORMATEX WaveFormat = {};
+      WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
+      WaveFormat.nChannels = 2;
+      WaveFormat.nSamplesPerSec = SamplesPerSound;
+      WaveFormat.wBitsPerSample = 16;
+      WaveFormat.nBlockAlign = (WaveFormat.nChannels * WaveFormat.wBitsPerSample) / 8 ;
+      WaveFormat.nAvgBytesPerSec = WaveFormat.nSamplesPerSec * WaveFormat.nBlockAlign;
+      WaveFormat.cbSize = 0;
+
+      if(SUCCEEDED(DirectSound->SetCooperativeLevel(Window, DSSCL_PRIORITY))){
+        DSBUFFERDESC BufferDesc = {};
+        BufferDesc.dwSize = sizeof(BufferDesc);
+        BufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+
+        LPDIRECTSOUNDBUFFER PrimaryBuffer;
+        if(SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &PrimaryBuffer, 0))){
+          HRESULT Error = PrimaryBuffer->SetFormat(&WaveFormat);
+          if(SUCCEEDED(Error)){
+            OutputDebugStringA("DirectSound set format successfully");
+          }
+          else{
+
+          }
+        }
+        else{
+
+        }
+      }
+      else{
+
+      }
+
+      DSBUFFERDESC BufferDesc = {};
+      BufferDesc.dwSize = sizeof(BufferDesc);
+      BufferDesc.dwFlags = 0;
+      BufferDesc.dwBufferBytes = BufferSize;
+      BufferDesc.lpwfxFormat = &WaveFormat;
+      LPDIRECTSOUNDBUFFER SecondaryBuffer;
+      HRESULT Error = DirectSound->CreateSoundBuffer(&BufferDesc, &SecondaryBuffer, 0);
+      if(SUCCEEDED(Error)){
+        OutputDebugStringA("allocate secondary buffer successfully");
+      }
+      else{
+
+      }
+    }
+    else{
+
+    }
+  }
+  else{
+
   }
 }
 
@@ -200,7 +269,7 @@ WinMain(HINSTANCE Instance,
 
   if(RegisterClass(&WindowClass))
   {
-    HWND WindowHandle =  CreateWindowEx(
+    HWND Window =  CreateWindowEx(
       0,
       WindowClass.lpszClassName,
       "HandmadeHero",
@@ -214,19 +283,21 @@ WinMain(HINSTANCE Instance,
       Instance,
       0
     );
-    if(WindowHandle){
+    if(Window){
+
+      Win32InitDSound(Window, 48000, 48000 * sizeof(int16_t) * 2);
 
       GlobalRunning = true;
       int XOffset = 0;
       int YOffset = 0;
 
-      HDC DeviceContext = GetDC(WindowHandle);
+      HDC DeviceContext = GetDC(Window);
       Win32ResizeDIBSection(&GlobalBackbuffer, 1920, 1080);
 
       while(GlobalRunning)
       {
         MSG Message;
-        while( PeekMessage(&Message,WindowHandle,0,0, PM_REMOVE) )
+        while( PeekMessage(&Message,Window,0,0, PM_REMOVE) )
         {
           if(Message.message == WM_QUIT){
             GlobalRunning = false;
@@ -261,7 +332,7 @@ WinMain(HINSTANCE Instance,
         }
 
         RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
-        win32_window_dimension Dimension = Win32GetWindowDimension(WindowHandle);
+        win32_window_dimension Dimension = Win32GetWindowDimension(Window);
         Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
 
         XOffset++;
