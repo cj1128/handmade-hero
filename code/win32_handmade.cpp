@@ -4,6 +4,7 @@
 #include <dsound.h>
 
 #include <math.H>
+#include <stdio.h>
 // TODO: implements sine ourselves
 
 #define internal static
@@ -40,6 +41,7 @@ struct win32_sound_output
     float  tSine;
     int LatencySampleCount;
 };
+
 
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
@@ -264,7 +266,6 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
 
     default:
     {
-      OutputDebugStringA("DEFAULT\n");
       Result = DefWindowProc(Window,Message,wParam,lParam);
     }
   }
@@ -320,6 +321,11 @@ WinMain(HINSTANCE Instance,
     LPSTR CmdLine,
     int CmdShow)
 {
+
+  LARGE_INTEGER PerfCountFrequencyResult;
+  QueryPerformanceFrequency(&PerfCountFrequencyResult);
+  int64_t PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+
   WNDCLASS WindowClass = {};
   Win32LoadXInput();
 
@@ -378,6 +384,11 @@ WinMain(HINSTANCE Instance,
 
       HDC DeviceContext = GetDC(Window);
       Win32ResizeDIBSection(&GlobalBackbuffer, 1920, 1080);
+
+      //For time measure
+      LARGE_INTEGER LastCounter;
+      QueryPerformanceCounter(&LastCounter);
+      uint64_t LastCycleCounter = __rdtsc();
 
       while(GlobalRunning)
       {
@@ -444,7 +455,28 @@ WinMain(HINSTANCE Instance,
 
           Win32FillSoundBuffer(&SoundOutput, ByteToLock, BytesToWrite);
         }
+
+        //For time measure
+        uint64_t EndCycleCounter = __rdtsc();
+
+        LARGE_INTEGER EndCounter;
+        QueryPerformanceCounter(&EndCounter);
+        uint64_t CyclesElapsed = EndCycleCounter - LastCycleCounter;
+        int64_t  CounterElapsed = EndCounter.QuadPart   - LastCounter.QuadPart;
+        float MSPerFrame = CounterElapsed * 1000.0f  / PerfCountFrequency ;
+        float FPS = (float)PerfCountFrequency / CounterElapsed ;
+        float MCPF = (float)CyclesElapsed  / 1000 / 1000;
+
+        char Buffer[256];
+        sprintf(Buffer, "%.2fms/f  %.2ff/s  %.2fMC/f \n", MSPerFrame, FPS, MCPF);
+        OutputDebugStringA(Buffer);
+
+        LastCounter  = EndCounter;
+        LastCycleCounter = EndCycleCounter;
+
       }
+
+
     }
     else{
       //TODO logging
