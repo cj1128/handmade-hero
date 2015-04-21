@@ -2,16 +2,17 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-04-21 15:36:54
+* @Last Modified time: 2015-04-25 18:17:39
 */
 
 #include "handmade.h"
 
 internal void
-UpdateSound(game_sound_buffer *SoundBuffer)
+UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
 {
   local_persist float tSine;
-  int ToneVolume = 5000;
+  int ToneVolume = 10000;
+  int WavePeriod = SoundBuffer->SamplesPerSecond / ToneHz;
   int16_t *SampleOut = SoundBuffer->Samples;
   for(int SampleIndex = 0 ;SampleIndex < SoundBuffer->SampleCount ;
     SampleIndex++)
@@ -20,7 +21,7 @@ UpdateSound(game_sound_buffer *SoundBuffer)
     int16_t SampleValue = (int16_t)(SineValue * ToneVolume);
     *SampleOut++ = SampleValue;
     *SampleOut++ = SampleValue;
-    tSine += 2.0f * Pi32 / (float)(SoundBuffer->WavePeriod);
+    tSine += 2.0f * Pi32 / (float)(WavePeriod);
   }
 }
 
@@ -47,8 +48,26 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
 }
 
 internal void
-GameUpdateAndRender(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffset, game_sound_buffer *SoundBuffer)
+GameUpdateAndRender(game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz)
 {
-  UpdateSound(SoundBuffer);
+  local_persist int BlueOffset = 0;
+  local_persist int GreenOffset = 0;
+
+  game_controller_input *controller1 = &Input->Controllers[0];
+  if(controller1->IsAnalog)
+  {
+    //TODO: do some stuff
+  }
+  else
+  {
+    //TODO: do some stuff
+  }
+
+  if(controller1->Down.EndedDown)
+  {
+    //TODO: do some stuff
+  }
+
+  UpdateSound(SoundBuffer, ToneHz);
   RenderWeirdGradient(Buffer, BlueOffset, GreenOffset);
 }
