@@ -1,3 +1,7 @@
+#define internal static
+#define local_persiste static
+#define global_variable static
+
 #include <windows.h>
 #include <stdint.h>
 #include <xinput.h>
@@ -7,9 +11,10 @@
 #include <stdio.h>
 // TODO: implements sine ourselves
 
-#define internal static
-#define local_persiste static
-#define global_variable static
+
+#include "handmade.cpp"
+
+
 
 #define Pi32 3.14159265359f
 
@@ -427,7 +432,12 @@ WinMain(HINSTANCE Instance,
           }
         }
 
-        RenderWeirdGradient(GlobalBackbuffer, XOffset, YOffset);
+        game_offscreen_buffer Buffer = {};
+        Buffer.Memory = GlobalBackbuffer.Memory;
+        Buffer.Width = GlobalBackbuffer.Width;
+        Buffer.Height = GlobalBackbuffer.Height;
+        Buffer.Pitch = GlobalBackbuffer.Pitch;
+        GameUpdateAndRender(&Buffer, XOffset, YOffset);
         win32_window_dimension Dimension = Win32GetWindowDimension(Window);
         Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, GlobalBackbuffer);
 
@@ -467,16 +477,14 @@ WinMain(HINSTANCE Instance,
         float FPS = (float)PerfCountFrequency / CounterElapsed ;
         float MCPF = (float)CyclesElapsed  / 1000 / 1000;
 
-        char Buffer[256];
-        sprintf(Buffer, "%.2fms/f  %.2ff/s  %.2fMC/f \n", MSPerFrame, FPS, MCPF);
-        OutputDebugStringA(Buffer);
+        char DebugBuffer[256];
+        sprintf(DebugBuffer, "%.2fms/f  %.2ff/s  %.2fMC/f \n", MSPerFrame, FPS, MCPF);
+        OutputDebugStringA(DebugBuffer);
 
         LastCounter  = EndCounter;
         LastCycleCounter = EndCycleCounter;
 
       }
-
-
     }
     else{
       //TODO logging
