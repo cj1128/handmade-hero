@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-04-25 18:17:39
+* @Last Modified time: 2015-04-25 20:56:32
 */
 
 #include "handmade.h"
@@ -48,10 +48,17 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
 }
 
 internal void
-GameUpdateAndRender(game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz)
+GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz)
 {
-  local_persist int BlueOffset = 0;
-  local_persist int GreenOffset = 0;
+
+  Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
+  game_state *GameState = (game_state *)Memory->PermanentStorage;
+  if(!Memory->IsInitialized)
+  {
+    GameState->ToneHz = 256;
+    GameState->BlueOffset = 0;
+    GameState->GreenOffset = 0;
+  }
 
   game_controller_input *controller1 = &Input->Controllers[0];
   if(controller1->IsAnalog)
@@ -69,5 +76,5 @@ GameUpdateAndRender(game_input *Input, game_offscreen_buffer *Buffer, game_sound
   }
 
   UpdateSound(SoundBuffer, ToneHz);
-  RenderWeirdGradient(Buffer, BlueOffset, GreenOffset);
+  RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 }

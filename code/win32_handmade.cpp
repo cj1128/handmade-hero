@@ -330,6 +330,21 @@ WinMain(HINSTANCE Instance,
     );
     if(Window){
 
+      game_memory GameMemory = {};
+      GameMemory.PermanentStorageSize = Megabytes(64);
+      GameMemory.TransientStorageSize = Gigabytes(1);
+
+#if HANDMADE_DEBUG
+      LPVOID BaseAddress = (LPVOID)Terabytes(2);
+#else
+      LPVOID BaseAddress = 0;
+#endif
+
+      uint64_t TotalSize = GameMemory.PermanentStorageSize +
+        GameMemory.TransientStorageSize;
+      GameMemory.PermanentStorage = (uint8_t *)VirtualAlloc(BaseAddress, TotalSize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+      GameMemory.TransientStorage = (uint8_t *)GameMemory.PermanentStorage + GameMemory.PermanentStorageSize;
+
       //Init Input
       game_input Input[2] = {};
       game_input *NewInput = &Input[0];
@@ -489,7 +504,8 @@ WinMain(HINSTANCE Instance,
         }
 
         SoundBuffer.SampleCount = BytesToWrite / SoundOutput.BytesPerSample;
-        GameUpdateAndRender(NewInput, &Buffer, &SoundBuffer, ToneHz);
+
+        GameUpdateAndRender(&GameMemory, NewInput, &Buffer, &SoundBuffer, ToneHz);
 
         if(SoundIsValid){
           Win32FillSoundBuffer(&SoundOutput, ByteToLock, BytesToWrite, &SoundBuffer);

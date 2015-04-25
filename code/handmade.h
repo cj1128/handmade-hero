@@ -13,6 +13,17 @@
 
 #define ArrayCount(Array) (sizeof((Array)) / sizeof((Array)[0]))
 
+#if HANDMADE_DEBUG
+  #define Assert(expression) if(!(expression)){ *(int *)0 = 0; }
+#elif
+  #define Assert(expression)
+#endif
+
+#define Kilobytes(value) ((value)*1024LL)
+#define Megabytes(value) (Kilobytes(value)*1024LL)
+#define Gigabytes(value) (Megabytes(value)*1024LL)
+#define Terabytes(value) (Gigabytes(value)*1024LL)
+
 struct game_offscreen_buffer
 {
   void *Memory;
@@ -69,7 +80,24 @@ struct game_input
   game_controller_input Controllers[4];
 };
 
+struct game_memory
+{
+  bool IsInitialized;
+  uint64_t PermanentStorageSize;
+  void *PermanentStorage;
+
+  uint64_t TransientStorageSize;
+  void *TransientStorage;
+};
+
+struct game_state
+{
+  int ToneHz;
+  int BlueOffset;
+  int GreenOffset;
+};
+
 internal void
-GameUpdateAndRender(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffset, game_sound_buffer *SoundBuffer);
+GameUpdateAndRender(game_memory *Memory, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz);
 
 #endif
