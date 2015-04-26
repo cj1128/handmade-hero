@@ -35,6 +35,88 @@ global_variable f_x_input_set_state *XInputSetState_ = XInputSetStateStub;
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
+internal debug_read_file_result
+DEBUGPlatformReadFile(char *Filename)
+{
+  debug_read_file_result Result = {};
+  HANDLE FileHandle = CreateFile(Filename, GENERIC_READ,
+                                  FILE_SHARE_READ,
+                                  0,
+                                  OPEN_EXISTING,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  0);
+  if(FileHandle !=  INVALID_HANDLE_VALUE)
+  {
+    LARGE_INTEGER FileSize;
+    if(GetFileSizeEx(FileHandle, &FileSize))
+    {
+      Result.ContentSize = SafeTruncateUint64(FileSize.QuadPart);
+      Result.Content = VirtualAlloc(0, Result.ContentSize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+      if(Result.Content)
+      {
+        DWORD BytesRead;
+        if(ReadFile(FileHandle, Result.Content, Result.ContentSize, &BytesRead, 0) && BytesRead == Result.ContentSize)
+        {
+        }
+        else
+        {
+          DEBUGPlatformFreeFileMemory(Result.Content);
+          Result.Content = 0;
+        }
+      }
+      else
+      {
+
+      }
+    }
+    else
+    {
+    }
+    CloseHandle(FileHandle);
+  }
+  else
+  {
+    //TODO: logging
+  }
+  return Result;
+}
+
+internal void
+DEBUGPlatformFreeFileMemory(void *Memory)
+{
+  VirtualFree(Memory, 0, MEM_RELEASE);
+}
+
+internal bool
+DEBUGPlatformWriteFile(char *Filename, uint64_t Size, void *Content)
+{
+  bool Result = false;
+  HANDLE FileHandle = CreateFile(Filename, GENERIC_WRITE,
+                                  0,
+                                  0,
+                                  CREATE_ALWAYS,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  0);
+  if(FileHandle != INVALID_HANDLE_VALUE)
+  {
+    DWORD BytesWritten;
+    if(WriteFile(FileHandle, Content, Size, &BytesWritten, 0))
+    {
+      Result = (BytesWritten == Size);
+    }
+    else
+    {
+
+    }
+    CloseHandle(FileHandle);
+  }
+  else
+  {
+    //TODO: logging
+  }
+  return Result;
+}
+
 
 internal void
 Win32LoadXInput(void){

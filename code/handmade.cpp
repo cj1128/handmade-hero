@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-04-25 20:56:32
+* @Last Modified time: 2015-04-26 17:00:20
 */
 
 #include "handmade.h"
@@ -55,6 +55,13 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   if(!Memory->IsInitialized)
   {
+    char *Filename = __FILE__;
+    debug_read_file_result File = DEBUGPlatformReadFile(Filename);
+    if(File.Content)
+    {
+      DEBUGPlatformWriteFile("test.txt", File.ContentSize, File.Content);
+      DEBUGPlatformFreeFileMemory(File.Content);
+    }
     GameState->ToneHz = 256;
     GameState->BlueOffset = 0;
     GameState->GreenOffset = 0;

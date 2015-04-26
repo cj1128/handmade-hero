@@ -24,6 +24,31 @@
 #define Gigabytes(value) (Megabytes(value)*1024LL)
 #define Terabytes(value) (Gigabytes(value)*1024LL)
 
+internal uint32_t
+SafeTruncateUint64(uint64_t Value)
+{
+  Assert( Value <= 0xffffffff );
+  uint32_t Result = Value;
+  return Result;
+}
+
+
+#if HANDMADE_INTERNAL
+/*
+NOTE: These are NOT for doing anything for the shipping game
+      they are blocking and the write doesn't protect against lost data
+ */
+struct debug_read_file_result
+{
+  uint32_t ContentSize;
+  void *Content;
+};
+internal debug_read_file_result DEBUGPlatformReadFile(char *Filename);
+internal bool DEBUGPlatformWriteFile(char *Filename, uint64_t Size, void *Content);
+internal void DEBUGPlatformFreeFileMemory(void *Memory);
+
+#endif
+
 struct game_offscreen_buffer
 {
   void *Memory;
