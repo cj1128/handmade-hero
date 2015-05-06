@@ -7,7 +7,6 @@
 #define local_persist static
 #define global_variable static
 
-
 //TODO: Implements sinf by myself
 #define Pi32 3.14159265359f
 
@@ -28,7 +27,7 @@ internal uint32_t
 SafeTruncateUint64(uint64_t Value)
 {
   Assert( Value <= 0xffffffff );
-  uint32_t Result = Value;
+  uint32_t Result = (uint32_t)Value;
   return Result;
 }
 
@@ -44,7 +43,7 @@ struct debug_read_file_result
   void *Content;
 };
 internal debug_read_file_result DEBUGPlatformReadFile(char *Filename);
-internal bool DEBUGPlatformWriteFile(char *Filename, uint64_t Size, void *Content);
+internal bool DEBUGPlatformWriteFile(char *Filename, uint32_t Size, void *Content);
 internal void DEBUGPlatformFreeFileMemory(void *Memory);
 
 #endif
@@ -105,6 +104,7 @@ struct game_input
   game_controller_input Controllers[4];
 };
 
+//NOTE: this memory should be initialized to zero by platform!
 struct game_memory
 {
   bool IsInitialized;

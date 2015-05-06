@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-04-26 17:00:20
+* @Last Modified time: 2015-05-06 10:26:26
 */
 
 #include "handmade.h"
@@ -37,8 +37,8 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
     {
       // Memory Order: BB GG RR XX
       // 0xXXRRGGBB
-      uint8_t Blue = X + BlueOffset;
-      uint8_t Green = Y + GreenOffset;
+      uint8_t Blue = (uint8_t)(X + BlueOffset);
+      uint8_t Green = (uint8_t)(Y + GreenOffset);
 
       *Pixel++ = ((Green << 8) | Blue );
 
@@ -57,29 +57,29 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
   {
     char *Filename = __FILE__;
     debug_read_file_result File = DEBUGPlatformReadFile(Filename);
-    if(File.Content)
+   if(File.Content)
     {
       DEBUGPlatformWriteFile("test.txt", File.ContentSize, File.Content);
       DEBUGPlatformFreeFileMemory(File.Content);
     }
     GameState->ToneHz = 256;
-    GameState->BlueOffset = 0;
-    GameState->GreenOffset = 0;
   }
 
-  game_controller_input *controller1 = &Input->Controllers[0];
-  if(controller1->IsAnalog)
+  game_controller_input *Controller0 = &Input->Controllers[0];
+  if(Controller0->IsAnalog)
   {
     //TODO: do some stuff
+    GameState->BlueOffset += (int)(4.0f * Controller0->EndX);
+    GameState->GreenOffset = 256 + (int)(128.0f * Controller0->EndY);
   }
   else
   {
     //TODO: do some stuff
   }
 
-  if(controller1->Down.EndedDown)
+  if(Controller0->Down.EndedDown)
   {
-    //TODO: do some stuff
+    GameState->GreenOffset += 10;
   }
 
   UpdateSound(SoundBuffer, ToneHz);

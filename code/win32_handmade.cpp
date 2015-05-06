@@ -88,7 +88,7 @@ DEBUGPlatformFreeFileMemory(void *Memory)
 }
 
 internal bool
-DEBUGPlatformWriteFile(char *Filename, uint64_t Size, void *Content)
+DEBUGPlatformWriteFile(char *Filename, uint32_t Size, void *Content)
 {
   bool Result = false;
   HANDLE FileHandle = CreateFile(Filename, GENERIC_WRITE,
@@ -223,6 +223,96 @@ internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int 
     DIB_RGB_COLORS,SRCCOPY);
 }
 
+internal void
+Win32ProcessKeyboardMessage(game_button_state *ButtonState, bool IsDown)
+{
+  ButtonState->EndedDown = IsDown;
+  ButtonState->HalfTransitionCount++;
+}
+
+
+internal void
+Win32ProcessPendingMessages(game_controller_input *KeyboardController)
+{
+  MSG Message;
+  while( PeekMessage(&Message,0,0,0, PM_REMOVE) )
+  {
+    switch(Message.message)
+    {
+      case WM_QUIT:
+      {
+        GlobalRunning = false;
+      } break;
+
+      case WM_SYSKEYDOWN:
+      case WM_SYSKEYUP:
+      case WM_KEYDOWN:
+      case WM_KEYUP:
+      {
+        uint32_t VKCode = (uint32_t)Message.wParam;
+        bool WasDown = ((Message.lParam & (1 << 30)) != 0);
+        bool IsDown = ((Message.lParam & (1<< 31)) == 0 );
+        if(WasDown != IsDown)
+        {
+          switch(VKCode){
+            case 'W':
+            {
+            } break;
+            case 'A':
+            {
+            } break;
+            case 'S':
+            {
+            } break;
+
+            case 'D':
+            {
+            } break;
+            case 'Q':
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->LeftShoulder, IsDown);
+            } break;
+            case 'E':
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->RightShoulder, IsDown);
+            } break;
+            case VK_UP:
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->Up, IsDown);
+            } break;
+            case VK_DOWN:
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->Down, IsDown);
+            } break;
+            case VK_LEFT:
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->Left, IsDown);
+            } break;
+            case VK_RIGHT:
+            {
+              Win32ProcessKeyboardMessage(&KeyboardController->Right, IsDown);
+            } break;
+            case VK_ESCAPE:
+            {
+              GlobalRunning = false;
+            } break;
+            case VK_SPACE:
+            {
+            } break;
+          }
+        }
+      } break;
+
+      default:
+      {
+        TranslateMessage(&Message);
+        DispatchMessage(&Message);
+      } break;
+    }
+  }
+}
+
+
 internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
   if(Buffer->Memory){
@@ -265,27 +355,6 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     {
       OutputDebugStringA("ACTIVATEAPP\n");
     } break;
-
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    {
-      uint32_t VKCode = wParam;
-      bool WasDown = ((lParam & (1 << 30)) != 0);
-      bool IsDown = ((lParam & (1<< 31)) == 0 );
-      switch(VKCode){
-        case 'W':
-        {
-          ToneHz += 20;
-          OutputDebugStringA("W");
-        } break;
-        case 'D':
-        {
-          OutputDebugStringA("D");
-        } break;
-      }
-    }
 
     case WM_PAINT:
     {
@@ -466,17 +535,13 @@ WinMain(HINSTANCE Instance,
 
       while(GlobalRunning)
       {
-        MSG Message;
-        while( PeekMessage(&Message,Window,0,0, PM_REMOVE) )
-        {
-          if(Message.message == WM_QUIT){
-            GlobalRunning = false;
-          }
-          TranslateMessage(&Message);
-          DispatchMessage(&Message);
-        }
 
-        int MaxControllerCount = XUSER_MAX_COUNT;
+        game_controller_input *KeyboardController = &NewInput->Controllers[0];
+        *KeyboardController = {};
+
+        Win32ProcessPendingMessages(KeyboardController);
+
+        uint32_t MaxControllerCount = XUSER_MAX_COUNT;
         if(MaxControllerCount > ArrayCount(NewInput->Controllers))
         {
           MaxControllerCount = ArrayCount(NewInput->Controllers);
@@ -562,10 +627,10 @@ WinMain(HINSTANCE Instance,
         Buffer.Pitch = GlobalBackbuffer.Pitch;
 
         // DirectSound test
-        DWORD PlayCursor;
-        DWORD WriteCursor;
-        DWORD BytesToWrite;
-        DWORD ByteToLock;
+        DWORD PlayCursor = 0 ;
+        DWORD WriteCursor = 0 ;
+        DWORD BytesToWrite = 0 ;
+        DWORD ByteToLock = 0 ;
         bool SoundIsValid = false;
         if(SUCCEEDED(GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor,&WriteCursor))){
           SoundIsValid = true;
@@ -610,7 +675,7 @@ WinMain(HINSTANCE Instance,
         float MCPF = (float)CyclesElapsed  / 1000 / 1000;
 
         char DebugBuffer[256];
-        sprintf(DebugBuffer, "%.2fms/f  %.2ff/s  %.2fMC/f \n", MSPerFrame, FPS, MCPF);
+        sprintf_s(DebugBuffer, 256, "%.2fms/f  %.2ff/s  %.2fMC/f \n", MSPerFrame, FPS, MCPF);
         OutputDebugStringA(DebugBuffer);
 
         LastCounter  = EndCounter;
