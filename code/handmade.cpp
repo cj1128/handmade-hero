@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-05-06 10:26:26
+* @Last Modified time: 2015-05-06 17:34:33
 */
 
 #include "handmade.h"
@@ -14,7 +14,8 @@ UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
   int ToneVolume = 10000;
   int WavePeriod = SoundBuffer->SamplesPerSecond / ToneHz;
   int16_t *SampleOut = SoundBuffer->Samples;
-  for(int SampleIndex = 0 ;SampleIndex < SoundBuffer->SampleCount ;
+  for(int SampleIndex = 0 ;
+    SampleIndex < SoundBuffer->SampleCount ;
     SampleIndex++)
   {
     float SineValue = sinf(tSine);
@@ -48,7 +49,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
 }
 
 internal void
-GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz)
+GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer)
 {
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
@@ -63,25 +64,40 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
       DEBUGPlatformFreeFileMemory(File.Content);
     }
     GameState->ToneHz = 256;
+    Memory->IsInitialized = true;
   }
 
-  game_controller_input *Controller0 = &Input->Controllers[0];
-  if(Controller0->IsAnalog)
+  for(int ControllerIndex = 0 ;
+    ControllerIndex < ArrayCount(Input->Controllers);
+    ControllerIndex++)
   {
-    //TODO: do some stuff
-    GameState->BlueOffset += (int)(4.0f * Controller0->EndX);
-    GameState->GreenOffset = 256 + (int)(128.0f * Controller0->EndY);
-  }
-  else
-  {
-    //TODO: do some stuff
+    game_controller_input *Controller = GetController(Input, ControllerIndex);
+    if(Controller->IsAnalog)
+    {
+      GameState->BlueOffset += (int)(4.0f * Controller->StickAverageX);
+      GameState->GreenOffset = 256 + (int)(128.0f * Controller->StickAverageY);
+    }
+    else
+    {
+      if(Controller->MoveLeft.EndedDown)
+      {
+        GameState->BlueOffset -= 10;
+      }
+      else if(Controller->MoveRight.EndedDown)
+      {
+       GameState->BlueOffset += 10;
+      }
+      else if(Controller->MoveUp.EndedDown)
+      {
+       GameState->GreenOffset += 10;
+      }
+      else if(Controller->MoveDown.EndedDown)
+      {
+       GameState->GreenOffset -= 10;
+      }
+    }
   }
 
-  if(Controller0->Down.EndedDown)
-  {
-    GameState->GreenOffset += 10;
-  }
-
-  UpdateSound(SoundBuffer, ToneHz);
+  UpdateSound(SoundBuffer, GameState->ToneHz);
   RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 }

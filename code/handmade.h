@@ -72,37 +72,48 @@ struct game_button_state
 struct game_controller_input
 {
   bool IsAnalog;
-  float StartX;
-  float StartY;
-
-  float EndX;
-  float EndY;
-
-  float MinX;
-  float MinY;
-
-  float MaxX;
-  float MaxY;
+  bool IsConnected;
+  float StickAverageX;
+  float StickAverageY;
 
   union
   {
-    game_button_state Buttons[6];
+    game_button_state Buttons[12];
     struct
     {
-      game_button_state Up;
-      game_button_state Down;
-      game_button_state Left;
-      game_button_state Right;
+      game_button_state MoveUp;
+      game_button_state MoveDown;
+      game_button_state MoveLeft;
+      game_button_state MoveRight;
+
+      game_button_state ActionUp;
+      game_button_state ActionDown;
+      game_button_state ActionLeft;
+      game_button_state ActionRight;
+
       game_button_state LeftShoulder;
       game_button_state RightShoulder;
+
+      game_button_state Start;
+      game_button_state Back;
+
+      //NOTE: All buttons must be added above terminator
+      game_button_state Terminator;
     };
   };
 };
 
 struct game_input
 {
-  game_controller_input Controllers[4];
+  game_controller_input Controllers[5];
 };
+
+inline game_controller_input *GetController(game_input *Input, unsigned int Index)
+{
+  Assert(Index < ArrayCount(Input->Controllers));
+  game_controller_input *Result = &Input->Controllers[Index];
+  return Result;
+}
 
 //NOTE: this memory should be initialized to zero by platform!
 struct game_memory
@@ -123,6 +134,6 @@ struct game_state
 };
 
 internal void
-GameUpdateAndRender(game_memory *Memory, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer, int ToneHz);
+GameUpdateAndRender(game_memory *Memory, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer);
 
 #endif
