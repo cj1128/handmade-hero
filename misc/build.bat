@@ -9,7 +9,7 @@ set CommonCompilerFlags= -FC -MT -nologo -Gm- -GR- -EHa- ^
   -DHANDMADE_WIN32=1 ^
   -Z7 ^
   -Fmwin32_handmade.map ^
-  user32.lib gdi32.lib
+  user32.lib gdi32.lib winmm.lib
 set CommonLinkerFlags= -opt:ref
 
 REM 32-bit build
