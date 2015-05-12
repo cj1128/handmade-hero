@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-05-10 11:06:32
+* @Last Modified time: 2015-05-12 13:51:07
 */
 
 #include "handmade.h"
@@ -23,23 +23,31 @@ UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
     *SampleOut++ = SampleValue;
     *SampleOut++ = SampleValue;
     tSine += 2.0f * Pi32 / (float)(WavePeriod);
+    if( tSine > 2.0f * Pi32 )
+    {
+      tSine -= 2.0f * Pi32;
+    }
   }
 }
 
 internal void
 RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffset)
 {
-  uint8_t *Row = (uint8_t *)Buffer->Memory;
+  uint8 *Row = (uint8 *)Buffer->Memory;
 
-  for(int Y = 0;Y < Buffer->Height; Y++)
+  for(int Y = 0;
+    Y < Buffer->Height;
+    ++Y)
   {
-    uint32_t *Pixel = (uint32_t *)Row;
-    for(int X = 0; X < Buffer->Width; X++)
+    uint32 *Pixel = (uint32 *)Row;
+    for(int X = 0;
+      X < Buffer->Width;
+      ++X)
     {
       // Memory Order: BB GG RR XX
       // 0xXXRRGGBB
-      uint8_t Blue = (uint8_t)(X + BlueOffset);
-      uint8_t Green = (uint8_t)(Y + GreenOffset);
+      uint8 Blue = (uint8)(X + BlueOffset);
+      uint8 Green = (uint8)(Y + GreenOffset);
 
       *Pixel++ = ((Green << 8) | Blue );
 
@@ -49,7 +57,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
 }
 
 internal void
-GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer)
+GameUpdateVideo(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 {
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
@@ -98,6 +106,11 @@ GameUpdateAndRender(game_memory *Memory, game_input *Input, game_offscreen_buffe
     }
   }
 
-  UpdateSound(SoundBuffer, GameState->ToneHz);
   RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
+}
+
+void GameUpdateAudio(game_memory *Memory, game_sound_buffer *SoundBuffer)
+{
+  game_state *GameState = (game_state *)Memory->PermanentStorage;
+  UpdateSound(SoundBuffer, GameState->ToneHz);
 }
