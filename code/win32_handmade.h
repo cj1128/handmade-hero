@@ -20,7 +20,7 @@ struct win32_window_dimension
 struct win32_sound_output
 {
     int SamplesPerSecond;
-    uint32_t RunningSampleIndex;
+    uint32 RunningSampleIndex;
     int WavePeriod;
     int BytesPerSample;
     int SecondaryBufferSize;

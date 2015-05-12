@@ -2,6 +2,7 @@
 #define HANDMADE_H__
 
 #include <math.H>
+#include <stdint.h>
 
 #define internal static
 #define local_persist static
@@ -9,6 +10,19 @@
 
 //TODO: Implements sinf by myself
 #define Pi32 3.14159265359f
+
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
+typedef float real32;
+typedef double real64;
 
 #define ArrayCount(Array) (sizeof((Array)) / sizeof((Array)[0]))
 
@@ -23,11 +37,11 @@
 #define Gigabytes(value) (Megabytes(value)*1024LL)
 #define Terabytes(value) (Gigabytes(value)*1024LL)
 
-internal uint32_t
-SafeTruncateUint64(uint64_t Value)
+internal uint32
+SafeTruncateUint64(uint64 Value)
 {
   Assert( Value <= 0xffffffff );
-  uint32_t Result = (uint32_t)Value;
+  uint32 Result = (uint32)Value;
   return Result;
 }
 
@@ -39,11 +53,11 @@ NOTE: These are NOT for doing anything for the shipping game
  */
 struct debug_read_file_result
 {
-  uint32_t ContentSize;
+  uint32 ContentSize;
   void *Content;
 };
 internal debug_read_file_result DEBUGPlatformReadFile(char *Filename);
-internal bool DEBUGPlatformWriteFile(char *Filename, uint32_t Size, void *Content);
+internal bool DEBUGPlatformWriteFile(char *Filename, uint32 Size, void *Content);
 internal void DEBUGPlatformFreeFileMemory(void *Memory);
 
 #endif
@@ -59,7 +73,7 @@ struct game_offscreen_buffer
 struct game_sound_buffer
 {
   int SampleCount;
-  int16_t *Samples;
+  int16 *Samples;
   int SamplesPerSecond;
 };
 
@@ -73,8 +87,8 @@ struct game_controller_input
 {
   bool IsAnalog;
   bool IsConnected;
-  float StickAverageX;
-  float StickAverageY;
+  real32 StickAverageX;
+  real32 StickAverageY;
 
   union
   {
@@ -119,10 +133,10 @@ inline game_controller_input *GetController(game_input *Input, unsigned int Inde
 struct game_memory
 {
   bool IsInitialized;
-  uint64_t PermanentStorageSize;
+  uint64 PermanentStorageSize;
   void *PermanentStorage;
 
-  uint64_t TransientStorageSize;
+  uint64 TransientStorageSize;
   void *TransientStorage;
 };
 

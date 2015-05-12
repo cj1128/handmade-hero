@@ -1,24 +1,25 @@
 #include <windows.h>
-#include <stdint.h>
 #include <xinput.h>
 #include <dsound.h>
 #include <stdio.h>
 
-#include "win32_handmade.h"
 #include "handmade.cpp"
+#include "win32_handmade.h"
 
 
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
-global_variable int64_t GlobalPerfCounterFrequency;
+global_variable int64 GlobalPerfCounterFrequency;
 
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
 typedef X_INPUT_GET_STATE(f_x_input_get_state);
+
 X_INPUT_GET_STATE(XInputGetStateStub)
 {
     return(ERROR_DEVICE_NOT_CONNECTED);
 }
+
 global_variable f_x_input_get_state *XInputGetState_ = XInputGetStateStub;
 #define XInputGetState XInputGetState_
 
@@ -43,17 +44,17 @@ Win32GetCurrentCounter()
   return Result;
 }
 
-internal float
+internal real32
 Win32GetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End)
 {
-  float Result = ((float)(End.QuadPart - Start.QuadPart)) / GlobalPerfCounterFrequency;
+  real32 Result = ((float)(End.QuadPart - Start.QuadPart)) / GlobalPerfCounterFrequency;
   return Result;
 }
 
-internal float
+internal real32
 Win32ProcessXInputStickValue(SHORT Value, SHORT DeadZone)
 {
-  float Result = 0;
+  real32 Result = 0;
   if(Value < -DeadZone)
   {
     Result = (float)((Value + DeadZone) / (32768 - DeadZone));
@@ -118,7 +119,7 @@ DEBUGPlatformFreeFileMemory(void *Memory)
 }
 
 internal bool
-DEBUGPlatformWriteFile(char *Filename, uint32_t Size, void *Content)
+DEBUGPlatformWriteFile(char *Filename, uint32 Size, void *Content)
 {
   bool Result = false;
   HANDLE FileHandle = CreateFile(Filename, GENERIC_WRITE,
@@ -169,7 +170,7 @@ Win32ProcessXInputButton(DWORD XInputButtonState,
 
 
 internal void
-Win32InitDSound(HWND Window, int32_t SamplesPerSecond, int32_t BufferSize)
+Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
 {
   HMODULE DSouondLibrary = LoadLibraryA("dsound.dll");
   if(DSouondLibrary)
@@ -285,7 +286,7 @@ Win32ProcessPendingMessages(game_controller_input *KeyboardController)
       case WM_KEYDOWN:
       case WM_KEYUP:
       {
-        uint32_t VKCode = (uint32_t)Message.wParam;
+        uint32 VKCode = (uint32)Message.wParam;
         bool WasDown = ((Message.lParam & (1 << 30)) != 0);
         bool IsDown = ((Message.lParam & (1<< 31)) == 0 );
         if(WasDown != IsDown)
@@ -429,7 +430,7 @@ Win32ClearSoundBuffer(win32_sound_output *SoundOutput)
                                             &Region1, &Region1Size,
                                             &Region2, &Region2Size,
                                             0))){
-      int8_t *ByteOut = (int8_t *)Region1;
+      int8 *ByteOut = (int8 *)Region1;
       for(DWORD ByteIndex = 0;
         ByteIndex < Region1Size;
         ByteIndex++)
@@ -437,7 +438,7 @@ Win32ClearSoundBuffer(win32_sound_output *SoundOutput)
           *ByteOut++ = 0;
       }
 
-      ByteOut = (int8_t *)Region2;
+      ByteOut = (int8 *)Region2;
       for(DWORD ByteIndex = 0;
         ByteIndex < Region2Size;
         ByteIndex++)
@@ -462,8 +463,8 @@ Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD By
                                              &Region2, &Region2Size,
                                              0))){
         DWORD Region1SampleCount = Region1Size / SoundOutput->BytesPerSample;
-        int16_t *SampleOut = (int16_t *)Region1;
-        int16_t *Source = SourceBuffer->Samples;
+        int16 *SampleOut = (int16 *)Region1;
+        int16 *Source = SourceBuffer->Samples;
         for(DWORD SampleIndex = 0; SampleIndex < Region1SampleCount; SampleIndex++){
             *SampleOut++ = *Source++;
             *SampleOut++ = *Source++;
@@ -471,7 +472,7 @@ Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD By
         }
 
         DWORD Region2SampleCount = Region2Size / SoundOutput->BytesPerSample;
-        SampleOut = (int16_t *)Region2;
+        SampleOut = (int16 *)Region2;
         for(DWORD SampleIndex = 0; SampleIndex < Region2SampleCount; SampleIndex++){
             *SampleOut++ = *Source++;
             *SampleOut++ = *Source++;
@@ -544,16 +545,16 @@ WinMain(HINSTANCE Instance,
       LPVOID BaseAddress = 0;
 #endif
 
-      uint64_t TotalSize = GameMemory.PermanentStorageSize +
+      uint64 TotalSize = GameMemory.PermanentStorageSize +
         GameMemory.TransientStorageSize;
-      GameMemory.PermanentStorage = (uint8_t *)VirtualAlloc(BaseAddress, TotalSize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-      GameMemory.TransientStorage = (uint8_t *)GameMemory.PermanentStorage + GameMemory.PermanentStorageSize;
+      GameMemory.PermanentStorage = (uint8 *)VirtualAlloc(BaseAddress, TotalSize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+      GameMemory.TransientStorage = (uint8 *)GameMemory.PermanentStorage + GameMemory.PermanentStorageSize;
 
 
       //Win32 DirectSound
       win32_sound_output SoundOutput = {};
       SoundOutput.SamplesPerSecond = 48000;
-      SoundOutput.BytesPerSample = sizeof(int16_t) * 2;
+      SoundOutput.BytesPerSample = sizeof(int16) * 2;
       SoundOutput.SecondaryBufferSize = SoundOutput.BytesPerSample * SoundOutput.SamplesPerSecond;
       SoundOutput.LatencySampleCount = SoundOutput.SamplesPerSecond / 15;
 
@@ -561,7 +562,7 @@ WinMain(HINSTANCE Instance,
       Win32ClearSoundBuffer(&SoundOutput);
       GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
-      int16_t *Samples = (int16_t *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize, MEM_COMMIT, PAGE_READWRITE);
+      int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize, MEM_COMMIT, PAGE_READWRITE);
 
       GlobalRunning = true;
 
@@ -576,7 +577,7 @@ WinMain(HINSTANCE Instance,
         //For time measure
         LARGE_INTEGER LastCounter;
         QueryPerformanceCounter(&LastCounter);
-        uint64_t LastCycleCounter = __rdtsc();
+        uint64 LastCycleCounter = __rdtsc();
 
 
         while(GlobalRunning)
@@ -595,7 +596,7 @@ WinMain(HINSTANCE Instance,
 
           Win32ProcessPendingMessages(NewKeyboardController);
 
-          uint32_t MaxControllerCount = XUSER_MAX_COUNT;
+          uint32 MaxControllerCount = XUSER_MAX_COUNT;
           if(MaxControllerCount > (ArrayCount(NewInput->Controllers) - 1))
           {
             MaxControllerCount = ArrayCount(NewInput->Controllers) - 1;
@@ -783,11 +784,11 @@ WinMain(HINSTANCE Instance,
           OldInput = Temp;
 
 
-          uint64_t EndCycleCounter = __rdtsc();
+          uint64 EndCycleCounter = __rdtsc();
           LARGE_INTEGER EndCounter = Win32GetCurrentCounter();
 
-          uint64_t CyclesElapsed = EndCycleCounter - LastCycleCounter;
-          int64_t  CounterElapsed = EndCounter.QuadPart   - LastCounter.QuadPart;
+          uint64 CyclesElapsed = EndCycleCounter - LastCycleCounter;
+          int64  CounterElapsed = EndCounter.QuadPart   - LastCounter.QuadPart;
 
 #if 1
           float MSPerFrame = CounterElapsed * 1000.0f  / GlobalPerfCounterFrequency ;
