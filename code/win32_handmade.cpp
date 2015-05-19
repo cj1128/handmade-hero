@@ -2,8 +2,9 @@
 #include <xinput.h>
 #include <dsound.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "handmade.cpp"
+#include "handmade.h"
 #include "win32_handmade.h"
 
 
@@ -169,8 +170,14 @@ Win32ProcessXInputStickValue(SHORT Value, SHORT DeadZone)
   return Result;
 }
 
-internal debug_read_file_result
-DEBUGPlatformReadFile(char *Filename)
+
+DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
+{
+  VirtualFree(Memory, 0, MEM_RELEASE);
+}
+
+
+DEBUG_PLATFORM_READ_FILE(DEBUGPlatformReadFile)
 {
   debug_read_file_result Result = {};
   HANDLE FileHandle = CreateFile(Filename, GENERIC_READ,
@@ -215,14 +222,7 @@ DEBUGPlatformReadFile(char *Filename)
   return Result;
 }
 
-internal void
-DEBUGPlatformFreeFileMemory(void *Memory)
-{
-  VirtualFree(Memory, 0, MEM_RELEASE);
-}
-
-internal bool
-DEBUGPlatformWriteFile(char *Filename, uint32 Size, void *Content)
+DEBUG_PLATFORM_WRITE_FILE(DEBUGPlatformWriteFile)
 {
   bool Result = false;
   HANDLE FileHandle = CreateFile(Filename, GENERIC_WRITE,
@@ -251,9 +251,27 @@ DEBUGPlatformWriteFile(char *Filename, uint32 Size, void *Content)
   return Result;
 }
 
+internal GameCode
+Win32LoadGameCode(char *GameSource)
+{
+  GameCode Result = {};
+  HMODULE GameModule = LoadLibraryA(GameSource);
+  if(GameModule)
+  {
+    Result.UpdateAudio = (game_update_audio *)GetProcAddress(GameModule, "GameUpdateAudio");
+    Result.UpdateVideo = (game_update_video *)GetProcAddress(GameModule, "GameUpdateVideo");
+  }
+  else
+  {
+    printf("Can't load game moudle!\n");
+    exit(1);
+  }
+  return Result;
+}
 
 internal void
-Win32LoadXInput(void){
+Win32LoadXInput(void)
+{
   HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
   if(XInputLibrary){
     XInputGetState = (f_x_input_get_state *) GetProcAddress(XInputLibrary, "XInputGetState");
@@ -616,6 +634,8 @@ WinMain(HINSTANCE Instance,
   GlobalPerfCounterFrequency = PerfCountFrequencyResult.QuadPart;
 
   WNDCLASS WindowClass = {};
+  char *GameSource = "handmade.dll";
+  GameCode Game = Win32LoadGameCode(GameSource);
   Win32LoadXInput();
 
   //TODO: check if owndc,hredraw,vredraw matter
@@ -649,6 +669,9 @@ WinMain(HINSTANCE Instance,
       game_memory GameMemory = {};
       GameMemory.PermanentStorageSize = Megabytes(64);
       GameMemory.TransientStorageSize = Gigabytes(1);
+      GameMemory.DEBUGPlatformWriteFile = DEBUGPlatformWriteFile;
+      GameMemory.DEBUGPlatformReadFile = DEBUGPlatformReadFile;
+      GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
 
 #if HANDMADE_DEBUG
       LPVOID BaseAddress = (LPVOID)Terabytes(2);
@@ -848,7 +871,7 @@ WinMain(HINSTANCE Instance,
           Buffer.Height = GlobalBackbuffer.Height;
           Buffer.Pitch = GlobalBackbuffer.Pitch;
 
-          GameUpdateVideo(&GameMemory, NewInput, &Buffer);
+          Game.UpdateVideo(&GameMemory, NewInput, &Buffer);
 
           LARGE_INTEGER AudioClock = Win32GetCurrentCounter();
           real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipClock, AudioClock);
@@ -910,7 +933,7 @@ WinMain(HINSTANCE Instance,
             SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
             SoundBuffer.SampleCount = BytesToWrite / SoundOutput.BytesPerSample;
             SoundBuffer.Samples = Samples;
-            GameUpdateAudio(&GameMemory, &SoundBuffer);
+            Game.UpdateAudio(&GameMemory, &SoundBuffer);
 
 #if HANDMADE_DEBUG
             win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex];

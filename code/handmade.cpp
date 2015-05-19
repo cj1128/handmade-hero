@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-05-12 13:51:07
+* @Last Modified time: 2015-05-13 17:51:34
 */
 
 #include "handmade.h"
@@ -56,8 +56,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
   }
 }
 
-internal void
-GameUpdateVideo(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+GAME_UPDATE_VIDEO(GameUpateVideo)
 {
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
@@ -65,11 +64,11 @@ GameUpdateVideo(game_memory *Memory, game_input *Input, game_offscreen_buffer *B
   if(!Memory->IsInitialized)
   {
     char *Filename = __FILE__;
-    debug_read_file_result File = DEBUGPlatformReadFile(Filename);
+    debug_read_file_result File = Memory->DEBUGPlatformReadFile(Filename);
    if(File.Content)
     {
-      DEBUGPlatformWriteFile("test.txt", File.ContentSize, File.Content);
-      DEBUGPlatformFreeFileMemory(File.Content);
+      Memory->DEBUGPlatformWriteFile("test.txt", File.ContentSize, File.Content);
+      Memory->DEBUGPlatformFreeFileMemory(File.Content);
     }
     GameState->ToneHz = 256;
     Memory->IsInitialized = true;
@@ -109,7 +108,7 @@ GameUpdateVideo(game_memory *Memory, game_input *Input, game_offscreen_buffer *B
   RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 }
 
-void GameUpdateAudio(game_memory *Memory, game_sound_buffer *SoundBuffer)
+GAME_UPDATE_AUDIO(GameUpdateAudio)
 {
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   UpdateSound(SoundBuffer, GameState->ToneHz);

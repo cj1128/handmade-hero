@@ -16,6 +16,7 @@ REM 32-bit build
 REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link %CommonLinkerFlags% -subsystem:windows,5.1
 
 REM 64-bit build
+cl %CommonCompilerFlags% ..\handmade\code\handmade.cpp /LD /link -incremental:no -opt:ref
 cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link %CommonLinkerFlags%
 popd
 

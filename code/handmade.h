@@ -37,7 +37,11 @@ typedef double real64;
 #define Gigabytes(value) (Megabytes(value)*1024LL)
 #define Terabytes(value) (Gigabytes(value)*1024LL)
 
-internal uint32
+
+
+
+
+uint32
 SafeTruncateUint64(uint64 Value)
 {
   Assert( Value <= 0xffffffff );
@@ -56,11 +60,19 @@ struct debug_read_file_result
   uint32 ContentSize;
   void *Content;
 };
-internal debug_read_file_result DEBUGPlatformReadFile(char *Filename);
-internal bool DEBUGPlatformWriteFile(char *Filename, uint32 Size, void *Content);
-internal void DEBUGPlatformFreeFileMemory(void *Memory);
+
+
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(char *Filename)
+typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
+
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(char *Filename, uint32 Size, void *Content)
+typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
+
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void *Memory)
+typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 
 #endif
+
 
 struct game_offscreen_buffer
 {
@@ -138,6 +150,10 @@ struct game_memory
 
   uint64 TransientStorageSize;
   void *TransientStorage;
+
+  debug_platform_read_file *DEBUGPlatformReadFile;
+  debug_platform_write_file *DEBUGPlatformWriteFile;
+  debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
 };
 
 struct game_state
@@ -147,7 +163,19 @@ struct game_state
   int GreenOffset;
 };
 
-internal void
-GameUpdateAndRender(game_memory *Memory, game_offscreen_buffer *Buffer, game_sound_buffer *SoundBuffer);
+
+#define GAME_UPDATE_VIDEO(name) void name(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+#define GAME_UPDATE_AUDIO(name) void name(game_memory *Memory, game_sound_buffer *SoundBuffer)
+
+typedef GAME_UPDATE_VIDEO(game_update_video);
+typedef GAME_UPDATE_AUDIO(game_update_audio);
+
+struct GameCode
+{
+  game_update_video *UpdateVideo;
+  game_update_audio *UpdateAudio;
+};
+
+
 
 #endif
