@@ -7,6 +7,25 @@
 #include "handmade.h"
 #include "win32_handmade.h"
 
+/*
+THIS IS NOT A FINAL PLATFORM LAYER!
+- Saved game locations
+- Getting a handle to our own exectuable file
+- Asset loading path
+- Threading (launch a thread)
+- Raw Input (support for multiple keyborad)
+- Sleep/timeBeginPeriod
+- ClipCursor() (for multimonitor support)
+- FullScreen support
+- WM_SETCURSOR (control cursor visibility)
+- QueryCancelAutoplay
+- WM_ACTIVATEAPP (for when we are not the active application)
+- Blit speed improvements (BitBlt)
+- Hardware Acceleration (OpenGl or Direct3D or Both)
+- GetKeyboardLayout (for French keyboards, international WASD support)
+
+  JUST A PARTIAL LIST OF STUFF!
+ */
 
 global_variable bool GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
@@ -37,6 +56,79 @@ global_variable f_x_input_set_state *XInputSetState_ = XInputSetStateStub;
 
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
+
+internal void
+CatStrings(size_t LeftLength, char *Left,
+  size_t RightLength, char *Right,
+  char *Dest)
+{
+  for(int i = 0; i< LeftLength; i++)
+  {
+    *Dest++ = *Left++;
+  }
+  for(int i = 0; i < RightLength; i++)
+  {
+    *Dest++ = *Right++;
+  }
+  *Dest = '\0';
+}
+
+internal FILETIME
+Win32GetLastWriteTime(char *FilePath)
+{
+  FILETIME Result = {};
+  WIN32_FIND_DATA FindData;
+  HANDLE FindHandle = FindFirstFileA(FilePath, &FindData);
+  if(FindHandle != INVALID_HANDLE_VALUE)
+  {
+    Result = FindData.ftLastWriteTime;
+    FindClose(FindHandle);
+  }
+
+  return Result;
+}
+
+internal win32_game_code
+Win32LoadGameCode(char *SourceDLLPath, char *TempDLLPath)
+{
+  win32_game_code Result = {};
+
+  Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLPath);
+  CopyFile(SourceDLLPath, TempDLLPath, FALSE);
+  Result.GameCodeDLL = LoadLibraryA(TempDLLPath);
+  if(Result.GameCodeDLL)
+  {
+    Result.GameUpdateVideo = (game_update_video *)GetProcAddress(Result.GameCodeDLL, "GameUpdateVideo");
+    Result.GameUpdateAudio = (game_update_audio *)GetProcAddress(Result.GameCodeDLL, "GameUpdateAudio");
+
+    Result.IsValid = (Result.GameUpdateVideo && Result.GameUpdateAudio);
+
+    if(!Result.IsValid)
+    {
+      OutputDebugStringA("Can't load Functions in module!");
+      exit(1);
+    }
+  }
+  else
+  {
+    OutputDebugStringA("Error! Can't load game module!");
+    exit(1);
+  }
+  return Result;
+}
+
+internal void
+Win32UnloadGameCode(win32_game_code *GameCode)
+{
+  if(GameCode->GameCodeDLL)
+  {
+    FreeLibrary(GameCode->GameCodeDLL);
+    GameCode->GameCodeDLL = 0;
+  }
+  GameCode->IsValid = false;
+  GameCode->GameUpdateVideo = 0;
+  GameCode->GameUpdateAudio = 0;
+}
 
 internal void
 Win32DebugDrawVertical(win32_offscreen_buffer *BackBuffer, int X, int Top, int Bottom, uint32 Color)
@@ -247,24 +339,6 @@ DEBUG_PLATFORM_WRITE_FILE(DEBUGPlatformWriteFile)
   else
   {
     //TODO: logging
-  }
-  return Result;
-}
-
-internal GameCode
-Win32LoadGameCode(char *GameSource)
-{
-  GameCode Result = {};
-  HMODULE GameModule = LoadLibraryA(GameSource);
-  if(GameModule)
-  {
-    Result.UpdateAudio = (game_update_audio *)GetProcAddress(GameModule, "GameUpdateAudio");
-    Result.UpdateVideo = (game_update_video *)GetProcAddress(GameModule, "GameUpdateVideo");
-  }
-  else
-  {
-    printf("Can't load game moudle!\n");
-    exit(1);
   }
   return Result;
 }
@@ -619,6 +693,36 @@ WinMain(HINSTANCE Instance,
     LPSTR CmdLine,
     int CmdShow)
 {
+  char EXEFullPath[MAX_PATH];
+  DWORD EXEFullPathLength = GetModuleFileNameA(0, EXEFullPath, sizeof(EXEFullPath));
+  char *OnePastLastSlash = EXEFullPath;
+  for(char *Scan = EXEFullPath;
+    *Scan;
+    Scan++)
+  {
+    if(*Scan == '\\')
+    {
+      OnePastLastSlash = Scan + 1;
+    }
+  }
+
+  char SourceGameCodeDLLFileName[] = "handmade.dll";
+  char SourceGameCodeDLLFullPath[MAX_PATH];
+  CatStrings(OnePastLastSlash - EXEFullPath,
+    EXEFullPath,
+    sizeof(SourceGameCodeDLLFileName) - 1,
+    SourceGameCodeDLLFileName,
+    SourceGameCodeDLLFullPath
+  );
+
+  char TempGameCodeDLLFileName[] = "handmade_temp.dll";
+  char TempGameCodeDLLFullPath[MAX_PATH];
+  CatStrings(OnePastLastSlash - EXEFullPath,
+    EXEFullPath,
+    sizeof(TempGameCodeDLLFileName) - 1,
+    TempGameCodeDLLFileName,
+    TempGameCodeDLLFullPath
+  );
 
   UINT DesiredSchedulerMS = 1;
   bool SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
@@ -635,7 +739,6 @@ WinMain(HINSTANCE Instance,
 
   WNDCLASS WindowClass = {};
   char *GameSource = "handmade.dll";
-  GameCode Game = Win32LoadGameCode(GameSource);
   Win32LoadXInput();
 
   //TODO: check if owndc,hredraw,vredraw matter
@@ -733,9 +836,18 @@ WinMain(HINSTANCE Instance,
         real32 AudioLantencySeconds = 0;
         bool SoundIsValid = false;
 
+        win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath, TempGameCodeDLLFullPath);
+
 
         while(GlobalRunning)
         {
+          FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
+          if(CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime) != 0)
+          {
+            Win32UnloadGameCode(&Game);
+            Game = Win32LoadGameCode(SourceGameCodeDLLFullPath, TempGameCodeDLLFullPath);
+          }
+
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           *NewKeyboardController = {};
@@ -871,7 +983,7 @@ WinMain(HINSTANCE Instance,
           Buffer.Height = GlobalBackbuffer.Height;
           Buffer.Pitch = GlobalBackbuffer.Pitch;
 
-          Game.UpdateVideo(&GameMemory, NewInput, &Buffer);
+          Game.GameUpdateVideo(&GameMemory, NewInput, &Buffer);
 
           LARGE_INTEGER AudioClock = Win32GetCurrentCounter();
           real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipClock, AudioClock);
@@ -933,7 +1045,7 @@ WinMain(HINSTANCE Instance,
             SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
             SoundBuffer.SampleCount = BytesToWrite / SoundOutput.BytesPerSample;
             SoundBuffer.Samples = Samples;
-            Game.UpdateAudio(&GameMemory, &SoundBuffer);
+            Game.GameUpdateAudio(&GameMemory, &SoundBuffer);
 
 #if HANDMADE_DEBUG
             win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex];
@@ -1056,5 +1168,3 @@ WinMain(HINSTANCE Instance,
   }
   return 0;
 }
-
-

@@ -170,12 +170,5 @@ struct game_state
 typedef GAME_UPDATE_VIDEO(game_update_video);
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
-struct GameCode
-{
-  game_update_video *UpdateVideo;
-  game_update_audio *UpdateAudio;
-};
-
-
 
 #endif

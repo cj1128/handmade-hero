@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-05-13 17:51:34
+* @Last Modified time: 2015-06-15 17:04:18
 */
 
 #include "handmade.h"
@@ -49,14 +49,14 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
       uint8 Blue = (uint8)(X + BlueOffset);
       uint8 Green = (uint8)(Y + GreenOffset);
 
-      *Pixel++ = ((Green << 8) | Blue );
+      *Pixel++ = ((Green << 8) | Blue);
 
     }
     Row += Buffer->Pitch;
   }
 }
 
-GAME_UPDATE_VIDEO(GameUpateVideo)
+extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 {
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize);
@@ -108,7 +108,7 @@ GAME_UPDATE_VIDEO(GameUpateVideo)
   RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
 }
 
-GAME_UPDATE_AUDIO(GameUpdateAudio)
+extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)
 {
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   UpdateSound(SoundBuffer, GameState->ToneHz);
