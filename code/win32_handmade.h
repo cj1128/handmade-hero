@@ -62,6 +62,8 @@ struct win32_state
 
     HANDLE PlayingbackHandle;
     int InputPlayingbackIndex;
+    char EXEPath[MAX_PATH];
+    char *OnePastLastEXEPathSlash;
 };
 
 

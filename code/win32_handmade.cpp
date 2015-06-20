@@ -34,46 +34,74 @@ global_variable int64 GlobalPerfCounterFrequency;
 global_variable bool GlobalPause;
 
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
-typedef X_INPUT_GET_STATE(f_x_input_get_state);
-
-X_INPUT_GET_STATE(XInputGetStateStub)
-{
-    return(ERROR_DEVICE_NOT_CONNECTED);
-}
-
-global_variable f_x_input_get_state *XInputGetState_ = XInputGetStateStub;
-#define XInputGetState XInputGetState_
+typedef X_INPUT_GET_STATE(x_input_get_state);
+global_variable x_input_get_state *XInputGetState_ = 0;
 
 // NOTE(casey): XInputSetState
 #define X_INPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
-typedef X_INPUT_SET_STATE(f_x_input_set_state);
-X_INPUT_SET_STATE(XInputSetStateStub)
-{
-    return(ERROR_DEVICE_NOT_CONNECTED);
-}
-global_variable f_x_input_set_state *XInputSetState_ = XInputSetStateStub;
-#define XInputSetState XInputSetState_
+typedef X_INPUT_SET_STATE(x_input_set_state);
+global_variable x_input_set_state *XInputSetState_ = 0;
 
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
-internal void
-Win32BeginRecordingInput(win32_state *Win32State, int InputRecordingIndex)
+internal int
+GetStringLength(char *str)
 {
-  Win32State->InputRecordingIndex = InputRecordingIndex;
-  char *FileName = "temp.hmi";
-  Win32State->RecordingHandle = CreateFileA(FileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-
-  DWORD BytesToWrite = (DWORD)Win32State->TotalSize;
-  DWORD BytesWritten;
-  WriteFile(Win32State->RecordingHandle, Win32State->GameMemoryBlock, BytesToWrite, &BytesWritten, 0);
+  int length = 0;
+  while(*str++)
+  {
+    length++;
+  }
+  return length;
 }
 
 internal void
-Win32RecordInput(win32_state *Win32State, game_input *Input)
+CatStrings(size_t LeftLength, char *Left,
+  size_t RightLength, char *Right,
+  char *Dest)
+{
+  for(int i = 0; i< LeftLength; i++)
+  {
+    *Dest++ = *Left++;
+  }
+  for(int i = 0; i < RightLength; i++)
+  {
+    *Dest++ = *Right++;
+  }
+  *Dest = '\0';
+}
+
+internal void
+GetInputFilePath(win32_state *State, char *FileName, char *FilePath)
+{
+  CatStrings(State->OnePastLastEXEPathSlash - State->EXEPath,
+    State->EXEPath,
+    GetStringLength(FileName),
+    FileName,
+    FilePath
+  );
+}
+
+internal void
+Win32BeginRecordingInput(win32_state *State, int InputRecordingIndex)
+{
+  State->InputRecordingIndex = InputRecordingIndex;
+  char *FileName = "looped_input.hmi";
+  char FilePath[MAX_PATH];
+  GetInputFilePath(State, FileName, FilePath);
+  State->RecordingHandle = CreateFileA(FilePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+
+  DWORD BytesToWrite = (DWORD)State->TotalSize;
+  DWORD BytesWritten;
+  WriteFile(State->RecordingHandle, State->GameMemoryBlock, BytesToWrite, &BytesWritten, 0);
+}
+
+internal void
+Win32RecordInput(win32_state *State, game_input *Input)
 {
   DWORD BytesWritten;
-  WriteFile(Win32State->RecordingHandle, Input, sizeof(*Input), &BytesWritten, 0);
+  WriteFile(State->RecordingHandle, Input, sizeof(*Input), &BytesWritten, 0);
 }
 
 internal void
@@ -84,15 +112,17 @@ Win32EndRecordingInput(win32_state *Win32State)
 }
 
 internal void
-Win32BeginInputPlayingback(win32_state *Win32State, int InputPlayingbackIndex)
+Win32BeginInputPlayingback(win32_state *State, int InputPlayingbackIndex)
 {
-  Win32State->InputPlayingbackIndex = InputPlayingbackIndex;
-  char *FileName = "temp.hmi";
-  Win32State->PlayingbackHandle = CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+  State->InputPlayingbackIndex = InputPlayingbackIndex;
+  char *FileName = "looped_input.hmi";
+  char FilePath[MAX_PATH];
+  GetInputFilePath(State, FileName, FilePath);
+  State->PlayingbackHandle = CreateFileA(FilePath, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 
-  DWORD BytesToRead = (DWORD)Win32State->TotalSize;
+  DWORD BytesToRead = (DWORD)State->TotalSize;
   DWORD BytesRead;
-  ReadFile(Win32State->PlayingbackHandle, Win32State->GameMemoryBlock, BytesToRead, &BytesRead, 0);
+  ReadFile(State->PlayingbackHandle, State->GameMemoryBlock, BytesToRead, &BytesRead, 0);
 }
 
 internal void
@@ -118,35 +148,15 @@ Win32PlaybackInput(win32_state *Win32State, game_input *Input)
   }
 }
 
-internal void
-CatStrings(size_t LeftLength, char *Left,
-  size_t RightLength, char *Right,
-  char *Dest)
-{
-  for(int i = 0; i< LeftLength; i++)
-  {
-    *Dest++ = *Left++;
-  }
-  for(int i = 0; i < RightLength; i++)
-  {
-    *Dest++ = *Right++;
-  }
-  *Dest = '\0';
-}
+
 
 internal FILETIME
 Win32GetLastWriteTime(char *FilePath)
 {
-  FILETIME Result = {};
-  WIN32_FIND_DATA FindData;
-  HANDLE FindHandle = FindFirstFileA(FilePath, &FindData);
-  if(FindHandle != INVALID_HANDLE_VALUE)
-  {
-    Result = FindData.ftLastWriteTime;
-    FindClose(FindHandle);
-  }
-
-  return Result;
+  WIN32_FILE_ATTRIBUTE_DATA Data;
+  GetFileAttributesEx(FilePath,
+    GetFileExInfoStandard, &Data);
+  return Data.ftLastWriteTime;
 }
 
 internal win32_game_code
@@ -409,8 +419,8 @@ Win32LoadXInput(void)
 {
   HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
   if(XInputLibrary){
-    XInputGetState = (f_x_input_get_state *) GetProcAddress(XInputLibrary, "XInputGetState");
-    XInputSetState = (f_x_input_set_state *) GetProcAddress(XInputLibrary, "XInputSetState");
+    XInputGetState_ = (x_input_get_state *) GetProcAddress(XInputLibrary, "XInputGetState");
+    XInputSetState_ = (x_input_set_state *) GetProcAddress(XInputLibrary, "XInputSetState");
   }
 }
 
@@ -508,7 +518,7 @@ internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int 
   win32_offscreen_buffer Buffer)
 {
   StretchDIBits(DeviceContext,
-    0, 0, WindowWidth, WindowHeight,
+    0, 0, Buffer.Width, Buffer.Height,
     0, 0, Buffer.Width, Buffer.Height,
     Buffer.Memory,
     &Buffer.Info,
@@ -769,23 +779,24 @@ WinMain(HINSTANCE Instance,
     LPSTR CmdLine,
     int CmdShow)
 {
-  char EXEFullPath[MAX_PATH];
-  DWORD EXEFullPathLength = GetModuleFileNameA(0, EXEFullPath, sizeof(EXEFullPath));
-  char *OnePastLastSlash = EXEFullPath;
-  for(char *Scan = EXEFullPath;
+  win32_state Win32State = {};
+
+  DWORD EXEPathLength = GetModuleFileNameA(0, Win32State.EXEPath, sizeof(Win32State.EXEPath));
+  Win32State.OnePastLastEXEPathSlash = Win32State.EXEPath;
+  for(char *Scan = Win32State.EXEPath;
     *Scan;
     Scan++)
   {
     if(*Scan == '\\')
     {
-      OnePastLastSlash = Scan + 1;
+      Win32State.OnePastLastEXEPathSlash = Scan + 1;
     }
   }
 
   char SourceGameCodeDLLFileName[] = "handmade.dll";
   char SourceGameCodeDLLFullPath[MAX_PATH];
-  CatStrings(OnePastLastSlash - EXEFullPath,
-    EXEFullPath,
+  CatStrings(Win32State.OnePastLastEXEPathSlash - Win32State.EXEPath,
+    Win32State.EXEPath,
     sizeof(SourceGameCodeDLLFileName) - 1,
     SourceGameCodeDLLFileName,
     SourceGameCodeDLLFullPath
@@ -793,8 +804,8 @@ WinMain(HINSTANCE Instance,
 
   char TempGameCodeDLLFileName[] = "handmade_temp.dll";
   char TempGameCodeDLLFullPath[MAX_PATH];
-  CatStrings(OnePastLastSlash - EXEFullPath,
-    EXEFullPath,
+  CatStrings(Win32State.OnePastLastEXEPathSlash - Win32State.EXEPath,
+    Win32State.EXEPath,
     sizeof(TempGameCodeDLLFileName) - 1,
     TempGameCodeDLLFileName,
     TempGameCodeDLLFullPath
@@ -858,7 +869,6 @@ WinMain(HINSTANCE Instance,
       LPVOID BaseAddress = 0;
 #endif
 
-      win32_state Win32State = {};
 
       Win32State.TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
 
@@ -960,9 +970,10 @@ WinMain(HINSTANCE Instance,
             game_controller_input *NewController = &NewInput->Controllers[InputIndex];
             game_controller_input *OldController = &OldInput->Controllers[InputIndex];
 
-            if(XInputGetState(ControllerIndex, &ControllerState) == ERROR_SUCCESS)
+            if(XInputGetState_(ControllerIndex, &ControllerState) == ERROR_SUCCESS)
             {
               NewController->IsConnected = true;
+              NewController->IsAnalog = OldController->IsAnalog;
               XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
 
               NewController->StickAverageX = Win32ProcessXInputStickValue(Pad->sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
