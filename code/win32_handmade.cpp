@@ -201,6 +201,7 @@ Win32UnloadGameCode(win32_game_code *GameCode)
   GameCode->GameUpdateAudio = 0;
 }
 
+#if 0
 internal void
 Win32DebugDrawVertical(win32_offscreen_buffer *BackBuffer, int X, int Top, int Bottom, uint32 Color)
 {
@@ -302,6 +303,7 @@ Win32DebugSyncDisplay(win32_offscreen_buffer *Backbuffer,
     Win32DrawSoundBufferMarker(Backbuffer, SoundOutput, C, PadX, Top, Bottom, ThisMarker->FlipWriteCursor, Red);
   }
 }
+#endif
 
 internal LARGE_INTEGER
 Win32GetCurrentCounter()
@@ -364,7 +366,7 @@ DEBUG_PLATFORM_READ_FILE(DEBUGPlatformReadFile)
         }
         else
         {
-          DEBUGPlatformFreeFileMemory(Result.Content);
+          DEBUGPlatformFreeFileMemory(Context, Result.Content);
           Result.Content = 0;
         }
       }
@@ -528,9 +530,11 @@ internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int 
 internal void
 Win32ProcessKeyboardMessage(game_button_state *ButtonState, bool IsDown)
 {
-  Assert(ButtonState->EndedDown != IsDown);
-  ButtonState->EndedDown = IsDown;
-  ButtonState->HalfTransitionCount++;
+  if(ButtonState->EndedDown != IsDown)
+  {
+    ButtonState->EndedDown = IsDown;
+    ButtonState->HalfTransitionCount++;
+  }
 }
 
 
@@ -779,6 +783,7 @@ WinMain(HINSTANCE Instance,
     LPSTR CmdLine,
     int CmdShow)
 {
+  thread_context Context = {};
   win32_state Win32State = {};
 
   DWORD EXEPathLength = GetModuleFileNameA(0, Win32State.EXEPath, sizeof(Win32State.EXEPath));
@@ -814,10 +819,8 @@ WinMain(HINSTANCE Instance,
   UINT DesiredSchedulerMS = 1;
   bool SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
 
-  //TODO: How do we reliably query on this on windows?
-#define MonitorRefreshHz 60
-#define GameUpdateHz (MonitorRefreshHz / 2)
-  real32 TargetSecondsPerFrame = 1.0f / GameUpdateHz;
+
+
 
 
   LARGE_INTEGER PerfCountFrequencyResult;
@@ -852,8 +855,18 @@ WinMain(HINSTANCE Instance,
       0
     );
     if(Window){
-
       HDC DeviceContext = GetDC(Window);
+
+      int MonitorRefreshHz = 60;
+      int Win32RefreshRate = GetDeviceCaps(DeviceContext, VREFRESH);
+      if(Win32RefreshRate > 1)
+      {
+          MonitorRefreshHz = Win32RefreshRate;
+      }
+
+      int GameUpdateHz = MonitorRefreshHz / 2;
+      real32 TargetSecondsPerFrame = 1.0f / GameUpdateHz;
+
       Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 700);
 
       game_memory GameMemory = {};
@@ -919,7 +932,7 @@ WinMain(HINSTANCE Instance,
         uint64 LastCycleCounter = __rdtsc();
 
         int DebugTimeMarkerIndex = 0;
-        win32_debug_time_marker DebugTimeMarkers[GameUpdateHz / 2] = {0};
+        win32_debug_time_marker DebugTimeMarkers[30] = {0};
 
         DWORD AudioLantencyBytes = 0;
         real32 AudioLantencySeconds = 0;
@@ -940,6 +953,23 @@ WinMain(HINSTANCE Instance,
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           *NewKeyboardController = {};
+
+          POINT MouseP;
+          GetCursorPos(&MouseP);
+          ScreenToClient(Window, &MouseP);
+          NewInput->MouseX = MouseP.x;
+          NewInput->MouseY = MouseP.y;
+          NewInput->MouseZ = 0; // TODO(casey): Support mousewheel?
+          Win32ProcessKeyboardMessage(&NewInput->MouseButtons[0],
+                                      GetKeyState(VK_LBUTTON) & (1 << 15));
+          Win32ProcessKeyboardMessage(&NewInput->MouseButtons[1],
+                                      GetKeyState(VK_MBUTTON) & (1 << 15));
+          Win32ProcessKeyboardMessage(&NewInput->MouseButtons[2],
+                                      GetKeyState(VK_RBUTTON) & (1 << 15));
+          Win32ProcessKeyboardMessage(&NewInput->MouseButtons[3],
+                                      GetKeyState(VK_XBUTTON1) & (1 << 15));
+          Win32ProcessKeyboardMessage(&NewInput->MouseButtons[4],
+                                      GetKeyState(VK_XBUTTON2) & (1 << 15));
 
           for(int ButtonIndex = 0;
             ButtonIndex < ArrayCount(NewKeyboardController->Buttons);
@@ -1084,7 +1114,7 @@ WinMain(HINSTANCE Instance,
             Win32PlaybackInput(&Win32State, NewInput);
           }
 
-          Game.GameUpdateVideo(&GameMemory, NewInput, &Buffer);
+          Game.GameUpdateVideo(&Context, &GameMemory, NewInput, &Buffer);
 
           LARGE_INTEGER AudioClock = Win32GetCurrentCounter();
           real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipClock, AudioClock);
@@ -1146,9 +1176,9 @@ WinMain(HINSTANCE Instance,
             SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
             SoundBuffer.SampleCount = BytesToWrite / SoundOutput.BytesPerSample;
             SoundBuffer.Samples = Samples;
-            Game.GameUpdateAudio(&GameMemory, &SoundBuffer);
+            Game.GameUpdateAudio(&Context, &GameMemory, &SoundBuffer);
 
-#if HANDMADE_DEBUG
+#if 0
             win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex];
             Marker->OutputPlayCursor = PlayCursor;
             Marker->OutputWriteCursor = WriteCursor;
@@ -1207,7 +1237,7 @@ WinMain(HINSTANCE Instance,
           LastCounter = EndCounter;
           LastCycleCounter = EndCycleCounter;
 
-#if HANDMADE_DEBUG
+#if 0
           Win32DebugSyncDisplay(&GlobalBackbuffer, ArrayCount(DebugTimeMarkers), DebugTimeMarkers, DebugTimeMarkerIndex - 1, &SoundOutput, TargetSecondsPerFrame);
 #endif
 
@@ -1239,7 +1269,7 @@ WinMain(HINSTANCE Instance,
           OldInput = Temp;
 
 
-#if HANDMADE_DEBUG
+#if 0
           float MSPerFrame = CounterElapsed * 1000.0f  / GlobalPerfCounterFrequency ;
           float FPS = (float)GlobalPerfCounterFrequency / CounterElapsed ;
           float MCPF = (float)CyclesElapsed  / 1000 / 1000;
@@ -1248,7 +1278,7 @@ WinMain(HINSTANCE Instance,
           OutputDebugStringA(DebugBuffer);
 #endif
 
-#if HANDMADE_DEBUG
+#if 0
           ++DebugTimeMarkerIndex;
           if(DebugTimeMarkerIndex == ArrayCount(DebugTimeMarkers))
           {

@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-06-20 12:17:10
+* @Last Modified time: 2015-06-22 13:14:49
 */
 
 #include "handmade.h"
@@ -92,11 +92,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   if(!Memory->IsInitialized)
   {
     char *Filename = __FILE__;
-    debug_read_file_result File = Memory->DEBUGPlatformReadFile(Filename);
+    debug_read_file_result File = Memory->DEBUGPlatformReadFile(Context, Filename);
    if(File.Content)
     {
-      Memory->DEBUGPlatformWriteFile("test.txt", File.ContentSize, File.Content);
-      Memory->DEBUGPlatformFreeFileMemory(File.Content);
+      Memory->DEBUGPlatformWriteFile(Context, "test.txt", File.ContentSize, File.Content);
+      Memory->DEBUGPlatformFreeFileMemory(Context, File.Content);
     }
     GameState->ToneHz = 256;
     Memory->IsInitialized = true;
@@ -150,6 +150,16 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
   RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY);
+  RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
+  for(int Index = 0;
+    Index < ArrayCount(Input->MouseButtons);
+    Index++)
+  {
+    if(Input->MouseButtons[Index].EndedDown)
+    {
+      RenderPlayer(Buffer, 100, 100 + 20*Index);
+    }
+  }
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)

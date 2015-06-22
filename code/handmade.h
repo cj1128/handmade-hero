@@ -50,29 +50,12 @@ SafeTruncateUint64(uint64 Value)
 }
 
 
-#if HANDMADE_INTERNAL
-/*
-NOTE: These are NOT for doing anything for the shipping game
-      they are blocking and the write doesn't protect against lost data
- */
-struct debug_read_file_result
-{
-  uint32 ContentSize;
-  void *Content;
+
+
+
+struct thread_context {
+  int PlaceHolder;
 };
-
-
-#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(char *Filename)
-typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
-
-#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(char *Filename, uint32 Size, void *Content)
-typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
-
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void *Memory)
-typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
-
-#endif
-
 
 struct game_offscreen_buffer
 {
@@ -132,6 +115,8 @@ struct game_controller_input
 
 struct game_input
 {
+  game_button_state MouseButtons[5];
+  int MouseX, MouseY, MouseZ;
   game_controller_input Controllers[5];
 };
 
@@ -142,6 +127,28 @@ inline game_controller_input *GetController(game_input *Input, unsigned int Inde
   return Result;
 }
 
+#if HANDMADE_INTERNAL
+/*
+NOTE: These are NOT for doing anything for the shipping game
+      they are blocking and the write doesn't protect against lost data
+ */
+struct debug_read_file_result
+{
+  uint32 ContentSize;
+  void *Content;
+};
+
+
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Context, char *Filename)
+typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
+
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(thread_context *Context, char *Filename, uint32 Size, void *Content)
+typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
+
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Context, void *Memory)
+typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
+
+#endif
 //NOTE: this memory should be initialized to zero by platform!
 struct game_memory
 {
@@ -168,10 +175,10 @@ struct game_state
 };
 
 
-#define GAME_UPDATE_VIDEO(name) void name(game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
-#define GAME_UPDATE_AUDIO(name) void name(game_memory *Memory, game_sound_buffer *SoundBuffer)
-
+#define GAME_UPDATE_VIDEO(name) void name(thread_context *Context, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
+
+#define GAME_UPDATE_AUDIO(name) void name(thread_context *Context, game_memory *Memory, game_sound_buffer *SoundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
 
