@@ -867,7 +867,7 @@ WinMain(HINSTANCE Instance,
       int GameUpdateHz = MonitorRefreshHz / 2;
       real32 TargetSecondsPerFrame = 1.0f / GameUpdateHz;
 
-      Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 700);
+      Win32ResizeDIBSection(&GlobalBackbuffer, 960, 540);
 
       game_memory GameMemory = {};
       GameMemory.PermanentStorageSize = Megabytes(64);
@@ -943,6 +943,7 @@ WinMain(HINSTANCE Instance,
 
         while(GlobalRunning)
         {
+          NewInput->TimeForFrame = TargetSecondsPerFrame;
           FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
           if(CompareFileTime(&NewDLLWriteTime, &Game.DLLLastWriteTime) != 0)
           {

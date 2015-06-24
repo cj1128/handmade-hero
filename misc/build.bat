@@ -4,7 +4,7 @@ pushd ..\..\build
 
 set CommonCompilerFlags= -FC -MTd -nologo -Gm- -GR- -EHa- ^
   -Od -Oi -WX -W4 ^
-  -wd4201 -wd4100 -wd4189 -wd4800 ^
+  -wd4201 -wd4100 -wd4189 -wd4800 -wd4505^
   -DHANDMADE_DEBUG=1 -DHANDMADE_INTERNAL=1 ^
   -DHANDMADE_WIN32=1 ^
   -Z7

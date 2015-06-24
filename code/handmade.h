@@ -115,6 +115,7 @@ struct game_controller_input
 
 struct game_input
 {
+  real32 TimeForFrame;
   game_button_state MouseButtons[5];
   int MouseX, MouseY, MouseZ;
   game_controller_input Controllers[5];
@@ -166,12 +167,8 @@ struct game_memory
 
 struct game_state
 {
-  int ToneHz;
-  int BlueOffset;
-  int GreenOffset;
-  int PlayerX;
-  int PlayerY;
-  real32 tJump;
+  real32 PlayerX;
+  real32 PlayerY;
 };
 
 

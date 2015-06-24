@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-06-22 13:14:49
+* @Last Modified time: 2015-06-25 00:51:33
 */
 
 #include "handmade.h"
@@ -20,8 +20,12 @@ UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
   {
     float SineValue = sinf(tSine);
     int16_t SampleValue = (int16_t)(SineValue * ToneVolume);
+#if 0
     *SampleOut++ = SampleValue;
     *SampleOut++ = SampleValue;
+#else
+    *SampleOut = 0;
+#endif
     tSine += 2.0f * Pi32 / (float)(WavePeriod);
     if( tSine > 2.0f * Pi32 )
     {
@@ -30,6 +34,65 @@ UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
   }
 }
 
+internal int32
+RoundReal32ToInt32(real32 Value)
+{
+  int32 Result = (int32)(Value + 0.5f);
+  return Result;
+}
+
+internal uint32
+RoundReal32ToUInt32(real32 Value)
+{
+  uint32 Result = (uint32)(Value + 0.5f);
+  return Result;
+}
+
+internal void
+DrawRect(game_offscreen_buffer *Buffer, real32 MinX, real32 MaxX,
+  real32 MinY, real32 MaxY,
+  real32 R, real32 G, real32 B)
+{
+  int32 IntMinX = RoundReal32ToInt32(MinX);
+  int32 IntMaxX = RoundReal32ToInt32(MaxX);
+  int32 IntMinY = RoundReal32ToInt32(MinY);
+  int32 IntMaxY = RoundReal32ToInt32(MaxY);
+
+  uint32 IntR = RoundReal32ToUInt32(R * 255.0f);
+  uint32 IntG = RoundReal32ToUInt32(G * 255.0f);
+  uint32 IntB = RoundReal32ToUInt32(B * 255.0f);
+
+  uint32 Color = (IntR << 16) |
+    (IntG << 8) |
+    (IntB);
+
+  if(IntMinX < 0)
+  {
+    IntMinX = 0;
+  }
+  if(IntMaxX > Buffer->Width)
+  {
+    IntMaxX = Buffer->Width;
+  }
+  if(IntMinY < 0)
+  {
+    IntMinY = 0;
+  }
+  if(IntMaxY > Buffer->Height)
+  {
+    IntMaxY = Buffer->Height;
+  }
+  for(int Row = IntMinY; Row < IntMaxY; Row++)
+  {
+    for(int Column = IntMinX; Column < IntMaxX; Column++)
+    {
+      uint32 *Pixel = (uint32 *)((uint8 *)Buffer->Memory + Row * Buffer->Pitch + Column * Buffer->BytesPerPixel);
+      *Pixel = Color;
+    }
+  }
+}
+
+/*
 internal void
 RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffset)
 {
@@ -55,6 +118,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
     Row += Buffer->Pitch;
   }
 }
+*/
 
 internal void
 RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
@@ -91,14 +155,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   game_state *GameState = (game_state *)Memory->PermanentStorage;
   if(!Memory->IsInitialized)
   {
-    char *Filename = __FILE__;
-    debug_read_file_result File = Memory->DEBUGPlatformReadFile(Context, Filename);
-   if(File.Content)
-    {
-      Memory->DEBUGPlatformWriteFile(Context, "test.txt", File.ContentSize, File.Content);
-      Memory->DEBUGPlatformFreeFileMemory(Context, File.Content);
-    }
-    GameState->ToneHz = 256;
     Memory->IsInitialized = true;
   }
 
@@ -109,61 +165,75 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     game_controller_input *Controller = GetController(Input, ControllerIndex);
     if(Controller->IsAnalog)
     {
-      GameState->BlueOffset += (int)(4.0f * Controller->StickAverageX);
-      GameState->GreenOffset = 256 + (int)(128.0f * Controller->StickAverageY);
     }
-#define MOVE_NUMBER 10
     else
     {
+      int dx = 0;
+      int dy = 0;
       if(Controller->MoveLeft.EndedDown)
       {
-        GameState->BlueOffset -= 10;
-        GameState->PlayerX -= MOVE_NUMBER;
+        dx = -100;
       }
       else if(Controller->MoveRight.EndedDown)
       {
-        GameState->PlayerX += MOVE_NUMBER;
-       GameState->BlueOffset += 10;
+        dx = 100;
       }
       else if(Controller->MoveUp.EndedDown)
       {
-        GameState->PlayerY -= MOVE_NUMBER;
-        GameState->GreenOffset += 10;
+        dy = -60;
       }
       else if(Controller->MoveDown.EndedDown)
       {
-        GameState->PlayerY += MOVE_NUMBER;
-       GameState->GreenOffset -= 10;
+        dy = 60;
       }
-    }
 
-    if(GameState->tJump > 0)
-    {
-      GameState->PlayerY += (int)(5.0f * sinf(0.5f * Pi32 * GameState->tJump));
+      GameState->PlayerX += Input->TimeForFrame * dx;
+      GameState->PlayerY += Input->TimeForFrame * dy;
     }
-    if(Controller->ActionDown.EndedDown)
-    {
-      GameState->tJump = 4.0;
-    }
-    GameState->tJump -= 0.033f;
   }
 
-  RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
-  RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY);
-  RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
-  for(int Index = 0;
-    Index < ArrayCount(Input->MouseButtons);
-    Index++)
+  uint8 TileMap[10][10] =
   {
-    if(Input->MouseButtons[Index].EndedDown)
+    {1, 1, 1, 1,  1, 1, 0, 0,  0, 0},
+    {0, 1, 0, 0,  0, 1, 0, 0,  0, 0},
+    {0, 0, 0, 0,  0, 1, 0, 0,  0, 0},
+    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
+    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
+    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
+    {0, 0, 0, 0,  0, 0, 1, 1,  0, 0},
+    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
+    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
+    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
+  };
+
+  DrawRect(Buffer, 0.0f, (real32)Buffer->Width, 0.0f, (real32)Buffer->Height, 0.7f, 0.9f, 1.0f);
+  real32 TileWidth = 50;
+  real32 TileHeight = 50;
+
+  for(int y = 0; y < 10; y++)
+  {
+    for(int x = 0; x < 10; x++)
     {
-      RenderPlayer(Buffer, 100, 100 + 20*Index);
+      real32 gray = 0.5;
+      if(TileMap[x][y] == 1)
+      {
+        gray = 1.0;
+      }
+      DrawRect(Buffer, x * TileWidth,
+        x * TileWidth + TileWidth,
+        y * TileHeight,
+        y * TileHeight + TileHeight,
+        gray, gray, gray
+        );
     }
   }
+  real32 PX = GameState -> PlayerX;
+  real32 PY = GameState -> PlayerY;
+  DrawRect(Buffer, PX - TileWidth/2, PX + TileWidth/2, PY - TileHeight, PY, 0.7f, 0.8f, 0.9f);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)
 {
   game_state *GameState = (game_state *)Memory->PermanentStorage;
-  UpdateSound(SoundBuffer, GameState->ToneHz);
+  UpdateSound(SoundBuffer, 40);
 }
