@@ -171,6 +171,17 @@ struct game_state
   real32 PlayerY;
 };
 
+struct tile_map
+{
+  real32 UpperLeftX;
+  real32 UpperLeftY;
+  real32 TileWidth;
+  real32 TileHeight;
+  int32 CountX;
+  int32 CountY;
+  uint32 *Tiles;
+};
+
 
 #define GAME_UPDATE_VIDEO(name) void name(thread_context *Context, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);

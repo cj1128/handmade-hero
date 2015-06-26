@@ -2,7 +2,7 @@
 * @Author: dingxijin
 * @Date:   2015-04-21 08:09:18
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-06-25 00:51:33
+* @Last Modified time: 2015-06-26 13:49:22
 */
 
 #include "handmade.h"
@@ -103,7 +103,7 @@ RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffs
     ++Y)
   {
     uint32 *Pixel = (uint32 *)Row;
-    for(int X = 0;
+    for(int XX = 0;
       X < Buffer->Width;
       ++X)
     {
@@ -148,6 +148,27 @@ RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
   }
 }
 
+internal bool
+IsTileMapPointValid(tile_map *TileMap, real32 TestX, real32 TestY)
+{
+  bool Result = false;
+  int32 TileX = (int32)((TestX - TileMap->UpperLeftX) / TileMap->TileWidth);
+  int32 TileY = (int32)((TestY - TileMap->UpperLeftY) / TileMap->TileHeight);
+  if(TileX >= 0 && TileX < TileMap->CountX &&
+    TileY >= 0 && TileY < TileMap->CountY &&
+    TileMap->Tiles[TileY * TileMap->CountX + TileX] != 1)
+  {
+    Result = true;
+  }
+  return Result;
+}
+
+inline uint32
+GetTileValue(tile_map *TileMap, int32 Row, int32 Column)
+{
+  return TileMap->Tiles[Row * TileMap->CountX + Column];
+}
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 {
 
@@ -156,13 +177,47 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   if(!Memory->IsInitialized)
   {
     Memory->IsInitialized = true;
+    GameState->PlayerX = 150;
+    GameState->PlayerY = 150;
   }
 
-  for(int ControllerIndex = 0 ;
-    ControllerIndex < ArrayCount(Input->Controllers);
-    ControllerIndex++)
+  tile_map TileMaps[2][2] = {};
+
+  TileMaps[0][0].UpperLeftX = 30;
+  TileMaps[0][0].UpperLeftY = 30;
+  TileMaps[0][0].TileWidth = 50;
+  TileMaps[0][0].TileHeight = 50;
+#define TILE_MAP_COUNT_X 20
+#define TILE_MAP_COUNT_Y 10
+  TileMaps[0][0].CountX = TILE_MAP_COUNT_X;
+  TileMaps[0][0].CountY = TILE_MAP_COUNT_Y;
+
+  real32 PlayerWidth = 40;
+  real32 PlayerHeight = 40;
+
+  uint32 Tile00[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] =
   {
-    game_controller_input *Controller = GetController(Input, ControllerIndex);
+    {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1},
+    {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 1, 0,  0, 1},
+    {1, 0, 0, 0,  0, 1, 0, 1,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1},
+    {1, 0, 0, 0,  0, 0, 0, 1,  0, 0, 0, 0,  0, 1, 1, 0,  0, 1},
+    {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1},
+    {1, 0, 0, 0,  0, 1, 0, 1,  0, 0, 0, 0,  1, 0, 0, 0,  0, 1},
+    {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1},
+    {1, 0, 0, 0,  0, 1, 0, 0,  1, 1, 1, 1,  1, 0, 0, 0,  0, 1},
+    {1, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 0, 0, 0,  0, 1},
+    {1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1, 1, 1,  1, 1},
+  };
+
+  TileMaps[0][0].Tiles = (uint32 *)Tile00;
+  tile_map *TileMap = &TileMaps[0][0];
+
+
+  for(int Index = 0 ;
+    Index < ArrayCount(Input->Controllers) && Input->Controllers[Index].IsConnected;
+    Index++)
+  {
+    game_controller_input *Controller = GetController(Input, Index);
     if(Controller->IsAnalog)
     {
     }
@@ -172,64 +227,64 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       int dy = 0;
       if(Controller->MoveLeft.EndedDown)
       {
-        dx = -100;
+        dx = -1;
       }
       else if(Controller->MoveRight.EndedDown)
       {
-        dx = 100;
+        dx = 1;
       }
       else if(Controller->MoveUp.EndedDown)
       {
-        dy = -60;
+        dy = -1;
       }
       else if(Controller->MoveDown.EndedDown)
       {
-        dy = 60;
+        dy = 1;
       }
+      dx *= 60;
+      dy *= 60;
 
-      GameState->PlayerX += Input->TimeForFrame * dx;
-      GameState->PlayerY += Input->TimeForFrame * dy;
+      real32 NewPlayerX = GameState->PlayerX + Input->TimeForFrame * dx;
+      real32 NewPlayerY = GameState->PlayerY + Input->TimeForFrame * dy;
+
+      if(IsTileMapPointValid(TileMap, NewPlayerX, NewPlayerY) &&
+        IsTileMapPointValid(TileMap, NewPlayerX - PlayerWidth / 2, NewPlayerY) &&
+        IsTileMapPointValid(TileMap, NewPlayerX - PlayerWidth / 2, NewPlayerY - PlayerHeight) &&
+        IsTileMapPointValid(TileMap, NewPlayerX + PlayerWidth / 2, NewPlayerY - PlayerHeight) &&
+        IsTileMapPointValid(TileMap, NewPlayerX + PlayerWidth / 2, NewPlayerY))
+      {
+        GameState->PlayerX = NewPlayerX;
+        GameState->PlayerY = NewPlayerY;
+      }
     }
   }
 
-  uint8 TileMap[10][10] =
-  {
-    {1, 1, 1, 1,  1, 1, 0, 0,  0, 0},
-    {0, 1, 0, 0,  0, 1, 0, 0,  0, 0},
-    {0, 0, 0, 0,  0, 1, 0, 0,  0, 0},
-    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
-    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
-    {0, 0, 0, 0,  0, 0, 0, 0,  0, 0},
-    {0, 0, 0, 0,  0, 0, 1, 1,  0, 0},
-    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
-    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
-    {0, 0, 0, 0,  0, 1, 0, 1,  0, 0},
-  };
+
 
   DrawRect(Buffer, 0.0f, (real32)Buffer->Width, 0.0f, (real32)Buffer->Height, 0.7f, 0.9f, 1.0f);
-  real32 TileWidth = 50;
-  real32 TileHeight = 50;
 
-  for(int y = 0; y < 10; y++)
+
+  for(int Row = 0; Row < TILE_MAP_COUNT_Y; Row++)
   {
-    for(int x = 0; x < 10; x++)
+    for(int Column = 0; Column < TILE_MAP_COUNT_X; Column++)
     {
       real32 gray = 0.5;
-      if(TileMap[x][y] == 1)
+      if(GetTileValue(TileMap, Row, Column))
       {
         gray = 1.0;
       }
-      DrawRect(Buffer, x * TileWidth,
-        x * TileWidth + TileWidth,
-        y * TileHeight,
-        y * TileHeight + TileHeight,
+      real32 MinX = Column * TileMap->TileWidth + TileMap->UpperLeftX;
+      real32 MinY = Row * TileMap->TileHeight + TileMap->UpperLeftY;
+      real32 MaxX = MinX + TileMap->TileWidth;
+      real32 MaxY = MinY + TileMap->TileHeight;
+      DrawRect(Buffer, MinX, MaxX, MinY, MaxY,
         gray, gray, gray
-        );
+      );
     }
   }
   real32 PX = GameState -> PlayerX;
   real32 PY = GameState -> PlayerY;
-  DrawRect(Buffer, PX - TileWidth/2, PX + TileWidth/2, PY - TileHeight, PY, 0.7f, 0.8f, 0.9f);
+  DrawRect(Buffer, PX - PlayerWidth / 2, PX + PlayerWidth / 2, PY - PlayerHeight, PY, 0.7f, 0.8f, 0.9f);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)

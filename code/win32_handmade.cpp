@@ -542,7 +542,7 @@ internal void
 Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *KeyboardController)
 {
   MSG Message;
-  while( PeekMessage(&Message,0,0,0, PM_REMOVE) )
+  while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
   {
     switch(Message.message)
     {
@@ -581,7 +581,6 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
             {
               Win32ProcessKeyboardMessage(&KeyboardController->MoveDown, IsDown);
             } break;
-
             case 'D':
             {
               Win32ProcessKeyboardMessage(&KeyboardController->MoveRight, IsDown);
@@ -600,7 +599,14 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
               {
                 if(Win32State->InputRecordingIndex == 0)
                 {
-                  Win32BeginRecordingInput(Win32State, 1);
+                  if(Win32State->InputPlayingbackIndex == 0)
+                  {
+                    Win32BeginRecordingInput(Win32State, 1);
+                  }
+                  else
+                  {
+                    Win32EndInputPlayingback(Win32State);
+                  }
                 }
                 else
                 {
@@ -953,7 +959,8 @@ WinMain(HINSTANCE Instance,
 
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
-          *NewKeyboardController = {};
+          *NewKeyboardController = {0};
+          NewKeyboardController->IsConnected = true;
 
           POINT MouseP;
           GetCursorPos(&MouseP);
