@@ -169,17 +169,50 @@ struct game_state
 {
   real32 PlayerX;
   real32 PlayerY;
+
+  int32 TileMapX;
+  int32 TileMapY;
 };
 
 struct tile_map
 {
+  uint32 *Tiles;
+};
+
+struct world
+{
+  tile_map *TileMaps;
   real32 UpperLeftX;
   real32 UpperLeftY;
   real32 TileWidth;
   real32 TileHeight;
-  int32 CountX;
-  int32 CountY;
-  uint32 *Tiles;
+  int32 TileCountX;
+  int32 TileCountY;
+  int32 TileMapCountX;
+  int32 TileMapCountY;
+};
+
+struct raw_pos
+{
+  int32 TileMapX;
+  int32 TileMapY;
+
+  // these values are relative to game window
+  real32 X;
+  real32 Y;
+};
+
+struct canonical_pos
+{
+  int32 TileMapX;
+  int32 TileMapY;
+
+  int32 TileX;
+  int32 TileY;
+
+  // these values are reltavie to tile
+  real32 X;
+  real32 Y;
 };
 
 
