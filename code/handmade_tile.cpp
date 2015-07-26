@@ -2,34 +2,38 @@
 * @Author: dingxijin
 * @Date:   2015-07-23 11:01:27
 * @Last Modified by:   dingxijin
-* @Last Modified time: 2015-07-23 12:23:46
+* @Last Modified time: 2015-07-27 00:18:48
 */
 
 inline tile_chunk *
-GetTileChunk(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY)
+GetTileChunk(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ)
 {
   tile_chunk *Result = 0;
 
   uint32 TileChunkX = AbsTileX >> TileMap->ChunkShift;
   uint32 TileChunkY = AbsTileY >> TileMap->ChunkShift;
 
-  if(TileChunkX >= 0 && TileChunkX < TileMap->TileChunkCountX
-    && TileChunkY >= 0 && TileChunkY < TileMap->TileChunkCountY)
+  Assert(AbsTileZ >= 0 && AbsTileZ <= 1);
+
+  if(TileChunkX >= 0
+    && TileChunkX < TileMap->TileChunkCountX
+    && TileChunkY >= 0
+    && TileChunkY < TileMap->TileChunkCountY)
   {
-      Result = &TileMap->TileChunks[TileChunkY * TileMap->TileChunkCountX + TileChunkX];
+      Result = &TileMap->TileChunks[AbsTileZ * TileMap->TileChunkCountX * TileMap->TileChunkCountY + TileChunkY * TileMap->TileChunkCountX + TileChunkX];
   }
   return Result;
 }
 
 
 inline uint32
-GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY)
+GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ)
 {
   uint32 Result = 0;
-  tile_chunk *TileChunk = GetTileChunk(TileMap, AbsTileX, AbsTileY);
+  tile_chunk *TileChunk = GetTileChunk(TileMap, AbsTileX, AbsTileY, AbsTileZ);
   uint32 RelTileX = AbsTileX & TileMap->ChunkMask;
   uint32 RelTileY = AbsTileY & TileMap->ChunkMask;
-  if(TileChunk)
+  if(TileChunk && TileChunk->Tiles)
   {
     Result = TileChunk->Tiles[RelTileY * TileMap->ChunkDim + RelTileX];
   }
@@ -38,11 +42,22 @@ GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY)
 
 
 inline void
-SetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 Value)
+SetTileValue(memory_arena *WorldArena, tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ, uint32 Value)
 {
-    tile_chunk *TileChunk = GetTileChunk(TileMap, AbsTileX, AbsTileY);
+    tile_chunk *TileChunk = GetTileChunk(TileMap, AbsTileX, AbsTileY, AbsTileZ);
     uint32 RelTileX = AbsTileX & TileMap->ChunkMask;
     uint32 RelTileY = AbsTileY & TileMap->ChunkMask;
+    if(TileChunk && !TileChunk->Tiles)
+    {
+        int TileCount = TileMap->ChunkDim * TileMap->ChunkDim;
+        TileChunk->Tiles = PushArray(WorldArena, TileCount, uint32);
+        for(int TileIndex = 0;
+            TileIndex < TileCount;
+            TileIndex++)
+        {
+            TileChunk->Tiles[TileIndex] = 1;
+        }
+    }
     if(TileChunk)
     {
       TileChunk->Tiles[RelTileY * TileMap->ChunkDim + RelTileX] = Value;
@@ -73,7 +88,7 @@ internal bool
 IsWorldPointValid(tile_map *TileMap, tile_map_pos Pos)
 {
   bool Result = false;
-  if(GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY) == 0)
+  if(GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ) == 1)
   {
     Result = true;
   }

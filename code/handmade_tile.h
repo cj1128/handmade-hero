@@ -5,6 +5,7 @@ struct tile_map_pos
 {
   uint32 AbsTileX;
   uint32 AbsTileY;
+  uint32 AbsTileZ;
 
   real32 TileRelX;
   real32 TileRelY;
@@ -19,16 +20,15 @@ struct tile_map
 {
   tile_chunk *TileChunks;
 
-  int32 TileSideInPixels;
-  real32 TileSideInMeters;
-  real32 MetersToPixels;
-
   uint32 ChunkShift;
   uint32 ChunkMask;
   uint32 ChunkDim;
 
+  real32 TileSideInMeters;
+
   uint32 TileChunkCountX;
   uint32 TileChunkCountY;
+  uint32 TileChunkCountZ;
 };
 
 struct world

@@ -1,7 +1,8 @@
 #ifndef HANDMADE_H__
 #define HANDMADE_H__
 
-#include <math.H>
+#include <math.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 #define internal static
@@ -153,6 +154,27 @@ struct game_memory
 };
 
 
+struct memory_arena
+{
+  uint8 *Base;
+  uint64 Used;
+  uint64 Size;
+};
+
+
+#define PushSize(Arena, Type) (Type *)PushSize_(Arena, sizeof(Type))
+#define PushArray(Arena, Count, Type) (Type *)PushSize_(Arena, (Count) * sizeof(Type))
+
+internal uint8 *
+PushSize_(memory_arena *Arena, uint32 Size)
+{
+  Assert(Arena->Used + Size <= Arena->Size);
+  uint8 *Result = Arena->Base + Arena->Used;
+  Arena->Used += Size;
+  return Result;
+}
+
+
 #include "handmade_tile.h"
 #include "handmade_tile.cpp"
 
@@ -162,19 +184,14 @@ struct game_state
   world *World;
 };
 
-struct memory_arena
-{
-  uint8 *Base;
-  uint64 Used;
-  uint64 Size;
-};
-
 
 #define GAME_UPDATE_VIDEO(name) void name(thread_context *Context, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
 #define GAME_UPDATE_AUDIO(name) void name(thread_context *Context, game_memory *Memory, game_sound_buffer *SoundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
+
+
 
 
 #endif
