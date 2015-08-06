@@ -128,13 +128,13 @@ struct debug_read_file_result
 };
 
 
-#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Context, char *Filename)
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename)
 typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
 
-#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(thread_context *Context, char *Filename, uint32 Size, void *Content)
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(thread_context *Thread, char *Filename, uint32 Size, void *Content)
 typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Context, void *Memory)
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 
 #endif
@@ -151,6 +151,8 @@ struct game_memory
   debug_platform_read_file *DEBUGPlatformReadFile;
   debug_platform_write_file *DEBUGPlatformWriteFile;
   debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
+
+  uint32 *BMPPointer;
 };
 
 
@@ -185,10 +187,10 @@ struct game_state
 };
 
 
-#define GAME_UPDATE_VIDEO(name) void name(thread_context *Context, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+#define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
-#define GAME_UPDATE_AUDIO(name) void name(thread_context *Context, game_memory *Memory, game_sound_buffer *SoundBuffer)
+#define GAME_UPDATE_AUDIO(name) void name(thread_context *Thread, game_memory *Memory, game_sound_buffer *SoundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
 

@@ -40,6 +40,13 @@ GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTile
   return Result;
 }
 
+inline uint32
+GetTileValue(tile_map *TileMap, tile_map_pos Pos)
+{
+  uint32 Result = GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ);
+  return Result;
+}
+
 
 inline void
 SetTileValue(memory_arena *WorldArena, tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ, uint32 Value)
@@ -79,18 +86,32 @@ internal tile_map_pos
 RecanonicalizePos(tile_map *TileMap, tile_map_pos Pos)
 {
   tile_map_pos Result = Pos;
-  RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.TileRelX);
-  RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.TileRelY);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.OffsetX);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.OffsetY);
   return Result;
 }
 
+
 internal bool
-IsWorldPointValid(tile_map *TileMap, tile_map_pos Pos)
+IsTileMapPointValid(tile_map *TileMap, tile_map_pos Pos)
 {
   bool Result = false;
-  if(GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ) == 1)
+  int32 TileValue = GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ);
+  if(TileValue == 1 ||
+     TileValue == 3 ||
+     TileValue == 4)
   {
     Result = true;
   }
   return Result;
 }
+
+internal bool
+AreOnSameTile(tile_map_pos *A, tile_map_pos *B)
+{
+  bool Result = (A->AbsTileX == B->AbsTileX &&
+                 A->AbsTileY == B->AbsTileY &&
+                 A->AbsTileZ == B->AbsTileZ);
+  return Result;
+}
+

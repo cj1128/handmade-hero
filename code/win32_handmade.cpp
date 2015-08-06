@@ -366,7 +366,7 @@ DEBUG_PLATFORM_READ_FILE(DEBUGPlatformReadFile)
         }
         else
         {
-          DEBUGPlatformFreeFileMemory(Context, Result.Content);
+          DEBUGPlatformFreeFileMemory(Thread, Result.Content);
           Result.Content = 0;
         }
       }
@@ -415,6 +415,7 @@ DEBUG_PLATFORM_WRITE_FILE(DEBUGPlatformWriteFile)
   }
   return Result;
 }
+
 
 internal void
 Win32LoadXInput(void)

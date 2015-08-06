@@ -134,6 +134,35 @@ RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
   }
 }
 
+#pragma pack(push, 1)
+struct bitmap_header
+{
+	uint16   FileType;     /* File type, always 4D42h ("BM") */
+	uint32  FileSize;     /* Size of the file in bytes */
+	uint16   Reserved1;    /* Always 0 */
+	uint16   Reserved2;    /* Always 0 */
+	uint32  BitmapOffset; /* Starting position of image data in bytes */
+  uint32 Size;            /* Size of this header in bytes */
+	uint32  Width;           /* Image width in pixels */
+	uint32  Height;          /* Image height in pixels */
+	uint16  Planes;          /* Number of color planes */
+	uint16  BitsPerPixel;    /* Number of bits per pixel */
+};
+#pragma pack(pop)
+
+
+internal uint32 *
+DEBUGLoadBMP(thread_context *Thread, debug_platform_read_file *ReadFile, char *FileName)
+{
+  uint32 *Result = 0;
+  debug_read_file_result ReadContent = ReadFile(Thread, FileName);
+  bitmap_header *Header = (bitmap_header *)ReadContent.Content;
+  if(ReadContent.ContentSize != 0)
+  {
+    Result = (uint32 *)((uint8 *)ReadContent.Content + Header->BitmapOffset);
+  }
+  return Result;
+}
 
 
 
@@ -147,13 +176,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   if(!Memory->IsInitialized)
   {
+    Memory->BMPPointer = DEBUGLoadBMP(Thread, Memory->DEBUGPlatformReadFile, "test/test_background.bmp");
     Memory->IsInitialized = true;
 
     GameState->PlayerP.AbsTileX = 3;
     GameState->PlayerP.AbsTileY = 3;
     GameState->PlayerP.AbsTileZ = 0;
-    GameState->PlayerP.TileRelX = 1.0f;
-    GameState->PlayerP.TileRelY = 1.0f;
+    GameState->PlayerP.OffsetX = 1.0f;
+    GameState->PlayerP.OffsetY = 1.0f;
 
     memory_arena WorldArena = {};
     WorldArena.Base = (uint8 *)Memory->PermanentStorage + sizeof(game_state);
@@ -190,12 +220,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     bool DoorBottom = false;
     bool DoorLeft = false;
     bool DoorRight = false;
+    bool CreateZDoor = false;
 
     uint32 AbsTileZ = 0;
 
     for(int ScreenIndex = 0; ScreenIndex < 20; ScreenIndex++)
     {
       int RandomChoice;
+      CreateZDoor = false;
+
       if(DoorUp || DoorDown)
       {
         RandomChoice = rand() % 2;
@@ -206,6 +239,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       }
       if(RandomChoice == 2)
       {
+        CreateZDoor = true;
         if(AbsTileZ == 0)
         {
           DoorUp = true;
@@ -267,24 +301,32 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       DoorRight = false;
       DoorBottom = false;
 
-      if(DoorUp)
+      if(CreateZDoor)
       {
-        DoorDown = true;
-        DoorUp = false;
-        AbsTileZ = 1;
+        if(DoorUp)
+        {
+            DoorDown = true;
+            DoorUp = false;
+            AbsTileZ = 1;
+        }
+        else if(DoorDown)
+        {
+            DoorUp = true;
+            DoorDown = false;
+            AbsTileZ = 0;
+        }
       }
-      else if(DoorDown)
+      else
       {
-        DoorUp = true;
+        DoorUp = false;
         DoorDown = false;
-        AbsTileZ = 0;
       }
 
       if(RandomChoice == 0)
       {
         ScreenX += 1;
       }
-      else
+      else if(RandomChoice == 1)
       {
         ScreenY += 1;
       }
@@ -294,7 +336,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   world *World = GameState->World;
   tile_map *TileMap = World->TileMap;
 
-  real32 TileSideInPixels = 60;
+  real32 TileSideInPixels = 6;
   real32 MetersToPixels = TileSideInPixels / TileMap->TileSideInMeters;
 
   int32 UpperLeftX = 30;
@@ -341,22 +383,34 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       dy *= Speed;
 
       tile_map_pos NewPlayerP = GameState->PlayerP;
-      NewPlayerP.TileRelX += Input->TimeForFrame * dx;
-      NewPlayerP.TileRelY += Input->TimeForFrame * dy;
+      NewPlayerP.OffsetX += Input->TimeForFrame * dx;
+      NewPlayerP.OffsetY += Input->TimeForFrame * dy;
       NewPlayerP = RecanonicalizePos(TileMap, NewPlayerP);
 
       tile_map_pos LeftPlayerP = NewPlayerP;
-      LeftPlayerP.TileRelX -= PlayerWidth / 2;
+      LeftPlayerP.OffsetX -= PlayerWidth / 2;
       LeftPlayerP = RecanonicalizePos(TileMap, LeftPlayerP);
 
       tile_map_pos RightPlayerP = NewPlayerP;
-      RightPlayerP.TileRelX += PlayerWidth / 2;
+      RightPlayerP.OffsetX += PlayerWidth / 2;
       RightPlayerP = RecanonicalizePos(TileMap, RightPlayerP);
 
-      if(IsWorldPointValid(TileMap, NewPlayerP) &&
-        IsWorldPointValid(TileMap, LeftPlayerP) &&
-        IsWorldPointValid(TileMap, RightPlayerP))
+      if(IsTileMapPointValid(TileMap, NewPlayerP) &&
+          IsTileMapPointValid(TileMap, LeftPlayerP) &&
+          IsTileMapPointValid(TileMap, RightPlayerP))
       {
+        if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
+        {
+          uint32 TileValue = GetTileValue(TileMap, NewPlayerP);
+          if(TileValue == 3)
+          {
+            NewPlayerP.AbsTileZ++;
+          }
+          else if(TileValue == 4)
+          {
+            NewPlayerP.AbsTileZ--;
+          }
+        }
         GameState->PlayerP = NewPlayerP;
       }
     }
@@ -385,12 +439,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         {
           gray = 0.0;
         }
-        if(TileValue == 3)
+        if(TileValue == 3 || TileValue == 4)
         {
           gray = 0.25;
         }
-        real32 TileCenX = ScreenCenterX + (RelColumn * TileSideInPixels) - MetersToPixels * GameState->PlayerP.TileRelX;
-        real32 TileCenY = ScreenCenterY - (RelRow * TileSideInPixels) + MetersToPixels * GameState->PlayerP.TileRelY;
+        real32 TileCenX = ScreenCenterX + (RelColumn * TileSideInPixels) - MetersToPixels * GameState->PlayerP.OffsetX;
+        real32 TileCenY = ScreenCenterY - (RelRow * TileSideInPixels) + MetersToPixels * GameState->PlayerP.OffsetY;
         real32 MinX = TileCenX - 0.5f * TileSideInPixels;
         real32 MinY = TileCenY - 0.5f * TileSideInPixels;
         real32 MaxX = MinX + TileSideInPixels;
@@ -411,6 +465,21 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     PlayerTop,
     PlayerTop + PlayerHeight * MetersToPixels,
     0.7f, 0.8f, 0.9f);
+
+
+  uint32 *Source = Memory->BMPPointer;
+  uint32 *Dist = (uint32 *)Buffer->Memory;
+  for(int Y = 0;
+      Y < Buffer->Height;
+      Y++)
+    {
+      for(int X = 0;
+          X < Buffer->Width;
+          X++)
+        {
+          *Dist++ = *Source++; 
+        }
+    }
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)
