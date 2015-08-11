@@ -656,6 +656,8 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
 
 internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
+  // Memory Order: BB GG RR XX
+  // 0xXXRRGGBB
   if(Buffer->Memory){
     VirtualFree(Buffer->Memory, 0, MEM_RELEASE);
   }

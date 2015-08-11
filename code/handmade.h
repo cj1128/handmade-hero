@@ -28,9 +28,9 @@ typedef double real64;
 #define ArrayCount(Array) (sizeof((Array)) / sizeof((Array)[0]))
 
 #if HANDMADE_DEBUG
-  #define Assert(expression) if(!(expression)){ *(int *)0 = 0; }
+#define Assert(expression) if(!(expression)){ *(int *)0 = 0; }
 #elif
-  #define Assert(expression)
+#define Assert(expression)
 #endif
 
 #define Kilobytes(value) ((value)*1024LL)
@@ -42,89 +42,89 @@ typedef double real64;
 #include "handmade_intrinsics.cpp"
 
 struct thread_context {
-  int PlaceHolder;
+    int PlaceHolder;
 };
 
 struct game_offscreen_buffer
 {
-  void *Memory;
-  int Width;
-  int Height;
-  int Pitch;
-  int BytesPerPixel;
+    void *Memory;
+    int Width;
+    int Height;
+    int Pitch;
+    int BytesPerPixel;
 };
 
 struct game_sound_buffer
 {
-  int SampleCount;
-  int16 *Samples;
-  int SamplesPerSecond;
+    int SampleCount;
+    int16 *Samples;
+    int SamplesPerSecond;
 };
 
 struct game_button_state
 {
-  int HalfTransitionCount;
-  bool EndedDown;
+    int HalfTransitionCount;
+    bool EndedDown;
 };
 
 struct game_controller_input
 {
-  bool IsAnalog;
-  bool IsConnected;
-  real32 StickAverageX;
-  real32 StickAverageY;
+    bool IsAnalog;
+    bool IsConnected;
+    real32 StickAverageX;
+    real32 StickAverageY;
 
-  union
-  {
-    game_button_state Buttons[12];
-    struct
+    union
     {
-      game_button_state MoveUp;
-      game_button_state MoveDown;
-      game_button_state MoveLeft;
-      game_button_state MoveRight;
+        game_button_state Buttons[12];
+        struct
+        {
+            game_button_state MoveUp;
+            game_button_state MoveDown;
+            game_button_state MoveLeft;
+            game_button_state MoveRight;
 
-      game_button_state ActionUp;
-      game_button_state ActionDown;
-      game_button_state ActionLeft;
-      game_button_state ActionRight;
+            game_button_state ActionUp;
+            game_button_state ActionDown;
+            game_button_state ActionLeft;
+            game_button_state ActionRight;
 
-      game_button_state LeftShoulder;
-      game_button_state RightShoulder;
+            game_button_state LeftShoulder;
+            game_button_state RightShoulder;
 
-      game_button_state Start;
-      game_button_state Back;
+            game_button_state Start;
+            game_button_state Back;
 
-      //NOTE: All buttons must be added above terminator
-      game_button_state Terminator;
+            //NOTE: All buttons must be added above terminator
+            game_button_state Terminator;
+        };
     };
-  };
 };
 
 struct game_input
 {
-  real32 TimeForFrame;
-  game_button_state MouseButtons[5];
-  int MouseX, MouseY, MouseZ;
-  game_controller_input Controllers[5];
+    real32 TimeForFrame;
+    game_button_state MouseButtons[5];
+    int MouseX, MouseY, MouseZ;
+    game_controller_input Controllers[5];
 };
 
 inline game_controller_input *GetController(game_input *Input, unsigned int Index)
 {
-  Assert(Index < ArrayCount(Input->Controllers));
-  game_controller_input *Result = &Input->Controllers[Index];
-  return Result;
+    Assert(Index < ArrayCount(Input->Controllers));
+    game_controller_input *Result = &Input->Controllers[Index];
+    return Result;
 }
 
 #if HANDMADE_INTERNAL
 /*
-NOTE: These are NOT for doing anything for the shipping game
-      they are blocking and the write doesn't protect against lost data
- */
+  NOTE: These are NOT for doing anything for the shipping game
+  they are blocking and the write doesn't protect against lost data
+*/
 struct debug_read_file_result
 {
-  uint32 ContentSize;
-  void *Content;
+    uint32 ContentSize;
+    void *Content;
 };
 
 
@@ -141,26 +141,25 @@ typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 //NOTE: this memory should be initialized to zero by platform!
 struct game_memory
 {
-  bool IsInitialized;
-  uint64 PermanentStorageSize;
-  void *PermanentStorage;
+    bool IsInitialized;
+    uint64 PermanentStorageSize;
+    void *PermanentStorage;
 
-  uint64 TransientStorageSize;
-  void *TransientStorage;
+    uint64 TransientStorageSize;
+    void *TransientStorage;
 
-  debug_platform_read_file *DEBUGPlatformReadFile;
-  debug_platform_write_file *DEBUGPlatformWriteFile;
-  debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
+    debug_platform_read_file *DEBUGPlatformReadFile;
+    debug_platform_write_file *DEBUGPlatformWriteFile;
+    debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
 
-  uint32 *BMPPointer;
 };
 
 
 struct memory_arena
 {
-  uint8 *Base;
-  uint64 Used;
-  uint64 Size;
+    uint8 *Base;
+    uint64 Used;
+    uint64 Size;
 };
 
 
@@ -170,21 +169,34 @@ struct memory_arena
 internal uint8 *
 PushSize_(memory_arena *Arena, uint32 Size)
 {
-  Assert(Arena->Used + Size <= Arena->Size);
-  uint8 *Result = Arena->Base + Arena->Used;
-  Arena->Used += Size;
-  return Result;
+    Assert(Arena->Used + Size <= Arena->Size);
+    uint8 *Result = Arena->Base + Arena->Used;
+    Arena->Used += Size;
+    return Result;
 }
 
 
 #include "handmade_tile.h"
 #include "handmade_tile.cpp"
 
+struct loaded_bitmap
+{
+    uint32 *Pixels;
+    int32 Width;
+    int32 Height;
+};
+
 struct game_state
 {
-  tile_map_pos PlayerP;
-  world *World;
+    tile_map_pos PlayerP;
+    world *World;
+
+    loaded_bitmap Background;
+    loaded_bitmap HeroHead;
+    loaded_bitmap HeroCape;
+    loaded_bitmap HeroTorso;
 };
+
 
 
 #define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
