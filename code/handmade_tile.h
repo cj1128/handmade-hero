@@ -31,10 +31,4 @@ struct tile_map
   uint32 TileChunkCountZ;
 };
 
-struct world
-{
-    tile_map *TileMap;
-};
-
-
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include "handmade.h"
+#include "handmade_tile.cpp"
 
 internal void
 UpdateSound(game_sound_buffer *SoundBuffer, int ToneHz)
@@ -64,7 +65,28 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap *Bitmap, real32 StartX, 
         for(int Column = MinX; Column < MaxX; Column++)
         {
             int Offset = Column - MinX;
-            *(DestRow + Offset) = *(SourceRow + Offset);
+
+            uint32 *Source = SourceRow + Offset;
+            uint32 *Dest = DestRow + Offset;
+
+            real32 A = (*Source >> 24) / 255.0f;
+
+            uint8 SR = (*Source >> 16) & 0xff;
+            uint8 SG = (*Source >> 8) & 0xff;
+            uint8 SB = (*Source >> 0) & 0xff;
+
+            uint8 DR = (*Dest >> 16) & 0xff;
+            uint8 DG = (*Dest >> 8) & 0xff;
+            uint8 DB = (*Dest >> 0) & 0xff;
+
+            real32 R = (1 - A)*DR + SR * A;
+            real32 G = (1 - A)*DG + SG * A;
+            real32 B = (1 - A)*DB + SB * A;
+
+            *Dest = (((uint32)(R + 0.5f) << 16) |
+                     ((uint32)(G + 0.5f) << 8) |
+                     ((uint32)(B + 0.5f) << 0));
+                     
         }
         SourceRow -= Bitmap->Width;
         DestRow += Buffer->Width;
@@ -196,25 +218,21 @@ struct bitmap_header
 #pragma pack(pop)
 
 
-internal uint8
-GetUint8FromUint32(uint32 Value)
-{
-    uint8 *Pointer = (uint8 *)&Value;
-    while(*Pointer == 0)
-    {
-        Pointer++;
-    }
-    return *Pointer;
-}
-
 internal loaded_bitmap
 DEBUGLoadBMP(thread_context *Thread, debug_platform_read_file *ReadFile, char *FileName)
 {
     loaded_bitmap Result = {};
     debug_read_file_result ReadContent = ReadFile(Thread, FileName);
     bitmap_header *Header = (bitmap_header *)ReadContent.Content;
+
+    Assert(Header->Compression == 3);
+
+    uint32 AlphaMask = ~(Header->RedMask |
+                        Header->GreenMask |
+                        Header->BlueMask);
     Result.Width = Header->Width;
     Result.Height = Header->Height;
+
     if(ReadContent.ContentSize != 0)
     {
         Result.Pixels = (uint32 *)((uint8 *)ReadContent.Content + Header->BitmapOffset);
@@ -228,10 +246,20 @@ DEBUGLoadBMP(thread_context *Thread, debug_platform_read_file *ReadFile, char *F
             X < Header->Width;
             X++)
         {
-            uint8 Red = GetUint8FromUint32(*Pointer & Header->RedMask);
-            uint8 Green = GetUint8FromUint32(*Pointer & Header->GreenMask);
-            uint8 Blue = GetUint8FromUint32(*Pointer & Header->BlueMask);
-            *Pointer = (Red << 16) | (Green << 8) | (Blue);
+            uint32 RedShift = BitScanForward(Header->RedMask).Index;
+            uint32 GreenShift = BitScanForward(Header->GreenMask).Index;
+            uint32 BlueShift = BitScanForward(Header->BlueMask).Index;
+            uint32 AlphaShift = BitScanForward(AlphaMask).Index;
+
+            uint32 R = *Pointer & Header->RedMask;
+            uint32 G = *Pointer & Header->GreenMask;
+            uint32 B = *Pointer & Header->BlueMask;
+            uint32 A = *Pointer & AlphaMask;
+
+            *Pointer = (((A >> AlphaShift) << 24) |
+                        ((R >> RedShift) << 16) |
+                        ((G >> GreenShift) << 8) |
+                        (B >> BlueShift));
             Pointer++;
         }
     }
@@ -544,33 +572,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
                &GameState->HeroHead,
                PlayerLeft,
                PlayerTop);
-    DrawBitmap(Buffer,
-               &GameState->HeroCape,
-               PlayerLeft + 200,
-               PlayerTop);
-    // DrawBitmap(Buffer,
-    //            &GameState->HeroTorso,
-    //            PlayerLeft,
-    //            PlayerTop + 40);
     DrawRect(Buffer,
              PlayerLeft,
              PlayerLeft + PlayerWidth * MetersToPixels,
              PlayerTop,
              PlayerTop + PlayerHeight * MetersToPixels,
              0.7f, 0.8f, 0.9f);
-
-    // DrawBitmap(Buffer,
-    //            &GameState->HeroHeadj,
-    //            0,
-    //            0);
-    // DrawBitmap(Buffer,
-    //            &GameState->Background,
-    //            0,
-    //            0);
-    // DrawBitmap(Buffer,
-    //            &GameState->Background,
-    //            0,
-    //            0);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio)
