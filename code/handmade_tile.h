@@ -1,6 +1,13 @@
 #ifndef HANDMADE_TILE_H
 #define HANDMADE_TILE_H
 
+struct tile_map_difference
+{
+    real32 dX;
+    real32 dY;
+    real32 dZ;
+};
+
 struct tile_map_pos
 {
   uint32 AbsTileX;

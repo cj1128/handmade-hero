@@ -48,7 +48,7 @@ GetTileValue(tile_map *TileMap, tile_map_pos Pos)
 }
 
 
-inline void
+internal void
 SetTileValue(memory_arena *WorldArena, tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ, uint32 Value)
 {
     tile_chunk *TileChunk = GetTileChunk(TileMap, AbsTileX, AbsTileY, AbsTileZ);
@@ -71,7 +71,7 @@ SetTileValue(memory_arena *WorldArena, tile_map *TileMap, uint32 AbsTileX, uint3
     }
 }
 
-internal void
+inline void
 RecanonicalizeCoord(tile_map *TileMap, uint32 *AbsTile, real32 *TileRel)
 {
   int32 Offset = RoundReal32ToInt32((*TileRel) / TileMap->TileSideInMeters);
@@ -92,7 +92,7 @@ RecanonicalizePos(tile_map *TileMap, tile_map_pos Pos)
 }
 
 
-internal bool
+inline bool
 IsTileMapPointValid(tile_map *TileMap, tile_map_pos Pos)
 {
   bool Result = false;
@@ -106,12 +106,29 @@ IsTileMapPointValid(tile_map *TileMap, tile_map_pos Pos)
   return Result;
 }
 
-internal bool
+inline bool
 AreOnSameTile(tile_map_pos *A, tile_map_pos *B)
 {
   bool Result = (A->AbsTileX == B->AbsTileX &&
                  A->AbsTileY == B->AbsTileY &&
                  A->AbsTileZ == B->AbsTileZ);
   return Result;
+}
+
+inline tile_map_difference
+Subtract(tile_map *TileMap, tile_map_pos *Left, tile_map_pos *Right)
+{
+    tile_map_difference Result = {};
+
+    // TODO: we may need to figure out what dz means
+    Result.dZ = 0;
+
+    Result.dX = Left->OffsetX - Right->OffsetX;
+    Result.dY = Left->OffsetY - Right->OffsetY;
+
+    Result.dX += ((real32)Left->AbsTileX - (real32)Right->AbsTileX) * TileMap->TileSideInMeters;
+    Result.dY += ((real32)Left->AbsTileY - (real32)Right->AbsTileY) * TileMap->TileSideInMeters;
+
+    return Result;
 }
 
