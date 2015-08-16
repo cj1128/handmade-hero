@@ -86,8 +86,8 @@ internal tile_map_pos
 RecanonicalizePos(tile_map *TileMap, tile_map_pos Pos)
 {
   tile_map_pos Result = Pos;
-  RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.OffsetX);
-  RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.OffsetY);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.Offset.X);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.Offset.Y);
   return Result;
 }
 
@@ -122,12 +122,13 @@ Subtract(tile_map *TileMap, tile_map_pos *Left, tile_map_pos *Right)
 
     // TODO: we may need to figure out what dz means
     Result.dZ = 0;
+    Result.dXY = {};
 
-    Result.dX = Left->OffsetX - Right->OffsetX;
-    Result.dY = Left->OffsetY - Right->OffsetY;
+    Result.dXY = Left->Offset - Right->Offset;
+    v2 TiledXY= {((real32)Left->AbsTileX - (real32)Right->AbsTileX) * TileMap->TileSideInMeters,
+                 ((real32)Left->AbsTileY - (real32)Right->AbsTileY) * TileMap->TileSideInMeters};
 
-    Result.dX += ((real32)Left->AbsTileX - (real32)Right->AbsTileX) * TileMap->TileSideInMeters;
-    Result.dY += ((real32)Left->AbsTileY - (real32)Right->AbsTileY) * TileMap->TileSideInMeters;
+    Result.dXY += TiledXY;
 
     return Result;
 }

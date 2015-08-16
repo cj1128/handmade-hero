@@ -3,6 +3,7 @@
 
 #include "handmade_platform.h"
 #include "handmade_random.h"
+#include "handmade_math.h"
 
 #define internal static
 #define local_persist static
@@ -75,8 +76,7 @@ struct hero_bitmaps
     loaded_bitmap Head;
     loaded_bitmap Cape;
     loaded_bitmap Torso;
-    int32 AlignX;
-    int32 AlignY;
+    v2 Align;
 };
 
 struct game_state
