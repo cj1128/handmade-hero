@@ -32,6 +32,7 @@ global_variable win32_offscreen_buffer GlobalBackbuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalPerfCounterFrequency;
 global_variable bool GlobalPause;
+global_variable WINDOWPLACEMENT GlobalWindowPosition = { sizeof(GlobalWindowPosition) };
 
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
 typedef X_INPUT_GET_STATE(x_input_get_state);
@@ -520,20 +521,61 @@ Win32GetWindowDimension(HWND Window){
 internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int WindowHeight,
                                          win32_offscreen_buffer *Buffer)
 {
-    int32 OffsetX = 10;
-    int32 OffsetY = 10;
+    if(WindowWidth >= 2 * Buffer->Width &&
+       WindowHeight >= 2 * Buffer->Height)
+    {
+        StretchDIBits(DeviceContext,
+                      0, 0, Buffer->Width * 2, Buffer->Height * 2,
+                      0, 0, Buffer->Width, Buffer->Height,
+                      Buffer->Memory,
+                      &Buffer->Info,
+                      DIB_RGB_COLORS, SRCCOPY);
+    }
+    else
+    {
+        int32 OffsetY = 10;
+        int32 OffsetX = 10;
 
-    PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
-    PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
-    PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight - OffsetY - Buffer->Height, BLACKNESS);
-    PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth - OffsetX - Buffer->Width, WindowHeight, BLACKNESS);
+        PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+        PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+        PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight - OffsetY - Buffer->Height, BLACKNESS);
+        PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth - OffsetX - Buffer->Width, WindowHeight, BLACKNESS);
 
-    StretchDIBits(DeviceContext,
-                  OffsetX, OffsetY, Buffer->Width, Buffer->Height,
-                  0, 0, Buffer->Width, Buffer->Height,
-                  Buffer->Memory,
-                  &Buffer->Info,
-                  DIB_RGB_COLORS, SRCCOPY);
+        StretchDIBits(DeviceContext,
+                    OffsetX, OffsetY, Buffer->Width, Buffer->Height,
+                    0, 0, Buffer->Width, Buffer->Height,
+                    Buffer->Memory,
+                    &Buffer->Info,
+                    DIB_RGB_COLORS, SRCCOPY);
+    }
+}
+
+
+void ToggleFullscreen(HWND Window)
+{
+  DWORD Style = GetWindowLong(Window, GWL_STYLE);
+  if (Style & WS_OVERLAPPEDWINDOW) {
+    MONITORINFO MonitorInfo = { sizeof(MonitorInfo) };
+    if (GetWindowPlacement(Window, &GlobalWindowPosition) &&
+        GetMonitorInfo(MonitorFromWindow(Window,
+                       MONITOR_DEFAULTTOPRIMARY), &MonitorInfo)) {
+      SetWindowLong(Window, GWL_STYLE,
+                    Style & ~WS_OVERLAPPEDWINDOW);
+
+      SetWindowPos(Window, HWND_TOP,
+                   MonitorInfo.rcMonitor.left, MonitorInfo.rcMonitor.top,
+                   MonitorInfo.rcMonitor.right - MonitorInfo.rcMonitor.left,
+                   MonitorInfo.rcMonitor.bottom - MonitorInfo.rcMonitor.top,
+                   SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+  } else {
+    SetWindowLong(Window, GWL_STYLE,
+                  Style | WS_OVERLAPPEDWINDOW);
+    SetWindowPlacement(Window, &GlobalWindowPosition);
+    SetWindowPos(Window, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  }
 }
 
 internal void
@@ -648,6 +690,13 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
                 {
                     Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
                 } break;
+                case VK_RETURN:
+                {
+                    if(IsDown)
+                    {
+                        ToggleFullscreen(Message.hwnd);
+                    }
+                } break;
                 }
             }
         } break;
@@ -706,6 +755,13 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     case WM_ACTIVATEAPP:
     {
         OutputDebugStringA("ACTIVATEAPP\n");
+    } break;
+
+    case WM_SETCURSOR:
+    {
+#ifndef HANDMADE_INTERNAL
+        SetCursor(0);
+#endif
     } break;
 
     case WM_PAINT:
@@ -852,6 +908,7 @@ WinMain(HINSTANCE Instance,
     WindowClass.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
     WindowClass.lpfnWndProc = MainWindowCallback;
     WindowClass.hInstance = Instance;
+    WindowClass.hCursor = LoadCursor(0, IDC_CROSS);
     // HICON     hIcon;
     WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 

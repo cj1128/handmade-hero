@@ -25,7 +25,6 @@ struct win32_sound_output
     int WavePeriod;
     int BytesPerSample;
     uint32 SecondaryBufferSize;
-    float  tSine;
     int LatencySampleCount;
     int SafetyBytes;
 };
