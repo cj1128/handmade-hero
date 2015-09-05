@@ -40,7 +40,7 @@ SafeTruncateUint64(uint64 Value)
 
 struct bit_scan_result
 {
-    bool Found;
+    bool32 Found;
     uint32 Index;
 };
 

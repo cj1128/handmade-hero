@@ -359,13 +359,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         int ScreenX = 0;
         int ScreenY = 0;
 
-        bool DoorUp = false;
-        bool DoorDown = false;
-        bool DoorTop = false;
-        bool DoorBottom = false;
-        bool DoorLeft = false;
-        bool DoorRight = false;
-        bool CreateZDoor = false;
+        bool32 DoorUp = false;
+        bool32 DoorDown = false;
+        bool32 DoorTop = false;
+        bool32 DoorBottom = false;
+        bool32 DoorLeft = false;
+        bool32 DoorRight = false;
+        bool32 CreateZDoor = false;
 
         uint32 AbsTileZ = 0;
 
@@ -553,7 +553,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             RightPlayerP.Offset.X += PlayerWidth / 2;
             RightPlayerP = RecanonicalizePos(TileMap, RightPlayerP);
 
-            bool Collided = false;
+            bool32 Collided = false;
             tile_map_pos CollidedP = {};
             if(!IsTileMapPointValid(TileMap, NewPlayerP)) {
                 Collided = true;

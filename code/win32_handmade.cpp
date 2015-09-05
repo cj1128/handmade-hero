@@ -27,11 +27,11 @@
   JUST A PARTIAL LIST OF STUFF!
 */
 
-global_variable bool GlobalRunning;
+global_variable bool32 GlobalRunning;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalPerfCounterFrequency;
-global_variable bool GlobalPause;
+global_variable bool32 GlobalPause;
 global_variable WINDOWPLACEMENT GlobalWindowPosition = { sizeof(GlobalWindowPosition) };
 
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
@@ -390,7 +390,7 @@ DEBUG_PLATFORM_READ_FILE(DEBUGPlatformReadFile)
 
 DEBUG_PLATFORM_WRITE_FILE(DEBUGPlatformWriteFile)
 {
-    bool Result = false;
+    bool32 Result = false;
     HANDLE FileHandle = CreateFile(Filename, GENERIC_WRITE,
                                    0,
                                    0,
@@ -579,7 +579,7 @@ void ToggleFullscreen(HWND Window)
 }
 
 internal void
-Win32ProcessKeyboardMessage(game_button_state *ButtonState, bool IsDown)
+Win32ProcessKeyboardMessage(game_button_state *ButtonState, bool32 IsDown)
 {
     if(ButtonState->EndedDown != IsDown)
     {
@@ -608,8 +608,8 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
         case WM_KEYUP:
         {
             uint32 VKCode = (uint32)Message.wParam;
-            bool WasDown = ((Message.lParam & (1 << 30)) != 0);
-            bool IsDown = ((Message.lParam & (1<< 31)) == 0 );
+            bool32 WasDown = ((Message.lParam & (1 << 30)) != 0);
+            bool32 IsDown = ((Message.lParam & (1<< 31)) == 0 );
             if(WasDown != IsDown)
             {
                 switch(VKCode){
@@ -890,7 +890,7 @@ WinMain(HINSTANCE Instance,
         );
 
     UINT DesiredSchedulerMS = 1;
-    bool SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
+    bool32 SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
 
 
 
@@ -1010,7 +1010,7 @@ WinMain(HINSTANCE Instance,
 
                 DWORD AudioLantencyBytes = 0;
                 real32 AudioLantencySeconds = 0;
-                bool SoundIsValid = false;
+                bool32 SoundIsValid = false;
 
                 win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath, TempGameCodeDLLFullPath);
 
@@ -1222,7 +1222,7 @@ WinMain(HINSTANCE Instance,
                         Assert(SafeWriteCursor > PlayCursor);
                         SafeWriteCursor += SoundOutput.SafetyBytes;
 
-                        bool AudioIsLowLatency = (SafeWriteCursor < ExpectedFrameBoundaryByte);
+                        bool32 AudioIsLowLatency = (SafeWriteCursor < ExpectedFrameBoundaryByte);
 
                         DWORD TargetCursor = 0;
                         if(AudioIsLowLatency)

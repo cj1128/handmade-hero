@@ -26,6 +26,8 @@ typedef int16_t int16;
 typedef int32_t int32;
 typedef int64_t int64;
 
+typedef int32 bool32;
+
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
@@ -56,7 +58,7 @@ struct debug_read_file_result
 #define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename)
 typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
 
-#define DEBUG_PLATFORM_WRITE_FILE(name) bool name(thread_context *Thread, char *Filename, uint32 Size, void *Content)
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(thread_context *Thread, char *Filename, uint32 Size, void *Content)
 typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
@@ -84,13 +86,13 @@ struct game_sound_buffer
 struct game_button_state
 {
     int HalfTransitionCount;
-    bool EndedDown;
+    bool32 EndedDown;
 };
 
 struct game_controller_input
 {
-    bool IsAnalog;
-    bool IsConnected;
+    bool32 IsAnalog;
+    bool32 IsConnected;
     real32 StickAverageX;
     real32 StickAverageY;
 
@@ -133,7 +135,7 @@ struct game_input
 //NOTE: this memory should be initialized to zero by platform!
 struct game_memory
 {
-    bool IsInitialized;
+    bool32 IsInitialized;
     uint64 PermanentStorageSize;
     void *PermanentStorage;
 
