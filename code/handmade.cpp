@@ -514,12 +514,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             }
             if(Controller->MoveUp.EndedDown)
             {
-                ddPlayerP.Y = 1;
+                ddPlayerP.Y = -1;
                 GameState->HeroFacingDirection = 0;
             }
             if(Controller->MoveDown.EndedDown)
             {
-                ddPlayerP.Y = -1;
+                ddPlayerP.Y = 1;
                 GameState->HeroFacingDirection = 2;
             }
             if(Controller->ActionUp.EndedDown)
@@ -553,9 +553,43 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             RightPlayerP.Offset.X += PlayerWidth / 2;
             RightPlayerP = RecanonicalizePos(TileMap, RightPlayerP);
 
-            if(IsTileMapPointValid(TileMap, NewPlayerP) &&
-               IsTileMapPointValid(TileMap, LeftPlayerP) &&
-               IsTileMapPointValid(TileMap, RightPlayerP))
+            bool Collided = false;
+            tile_map_pos CollidedP = {};
+            if(!IsTileMapPointValid(TileMap, NewPlayerP)) {
+                Collided = true;
+                CollidedP = NewPlayerP;
+            }
+            if(!IsTileMapPointValid(TileMap, LeftPlayerP)) {
+                Collided = true;
+                CollidedP = LeftPlayerP;
+            }
+            if(!IsTileMapPointValid(TileMap, RightPlayerP)) {
+                Collided = true;
+                CollidedP = RightPlayerP;
+            }
+
+            if(Collided)
+            {
+                v2 r = {};
+                if(CollidedP.AbsTileX < GameState->PlayerP.AbsTileX)
+                {
+                    r = v2{1, 0};
+                }
+                if(CollidedP.AbsTileX > GameState->PlayerP.AbsTileX)
+                {
+                    r = v2{1, 0};
+                }
+                if(CollidedP.AbsTileY < GameState->PlayerP.AbsTileY)
+                {
+                    r = v2{0, 1};
+                }
+                if(CollidedP.AbsTileY > GameState->PlayerP.AbsTileY)
+                {
+                    r = v2{0, 1};
+                }
+                GameState->dPlayerP = GameState->dPlayerP - 2 * Inner(r, GameState->dPlayerP) * r;
+            }
+            else
             {
                 if(!AreOnSameTile(&GameState->PlayerP, &NewPlayerP))
                 {
@@ -624,7 +658,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
                 }
                 v2 TileCen = {};
                 TileCen.X = ScreenCenter.X + (RelColumn * TileSideInPixels) - MetersToPixels * GameState->CameraP.Offset.X;
-                TileCen.Y = ScreenCenter.Y - (RelRow * TileSideInPixels) + MetersToPixels * GameState->CameraP.Offset.Y;
+                TileCen.Y = ScreenCenter.Y + (RelRow * TileSideInPixels) - MetersToPixels * GameState->CameraP.Offset.Y;
 
                 v2 Min = TileCen - V2(0.5f * TileSideInPixels, 0.5f * TileSideInPixels);
                 v2 Max = Min + V2(TileSideInPixels, TileSideInPixels);
@@ -641,7 +675,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     v2 PlayerGroundPosition = {};
     PlayerGroundPosition.X = ScreenCenter.X + Diff.dXY.X * MetersToPixels;
-    PlayerGroundPosition.Y = ScreenCenter.Y - Diff.dXY.Y * MetersToPixels;
+    PlayerGroundPosition.Y = ScreenCenter.Y + Diff.dXY.Y * MetersToPixels;
 
     v2 PlayerLeftTop = {PlayerGroundPosition.X - 0.5f * MetersToPixels * PlayerWidth,
                         PlayerGroundPosition.Y - 1.0f * MetersToPixels * PlayerHeight};
