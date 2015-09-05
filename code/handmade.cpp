@@ -500,42 +500,49 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         }
         else
         {
-            v2 dXY = {};
-            real32 Speed = 2;
+            v2 ddPlayerP = {};
+            real32 Speed = 20;
             if(Controller->MoveLeft.EndedDown)
             {
-                dXY.X = -1;
+                ddPlayerP.X = -1;
                 GameState->HeroFacingDirection = 3;
             }
             if(Controller->MoveRight.EndedDown)
             {
-                dXY.X = 1;
+                ddPlayerP.X = 1;
                 GameState->HeroFacingDirection = 1;
             }
             if(Controller->MoveUp.EndedDown)
             {
-                dXY.Y = 1;
+                ddPlayerP.Y = 1;
                 GameState->HeroFacingDirection = 0;
             }
             if(Controller->MoveDown.EndedDown)
             {
-                dXY.Y = -1;
+                ddPlayerP.Y = -1;
                 GameState->HeroFacingDirection = 2;
             }
             if(Controller->ActionUp.EndedDown)
             {
-                Speed = 10;
+                Speed = 50;
             }
 
-            dXY *= Speed;
+            ddPlayerP *= Speed;
  
-            if(dXY.X != 0 && dXY.Y != 0)
+            if(ddPlayerP.X != 0 && ddPlayerP.Y != 0)
             {
-                dXY *= 0.707106781185f;
+                ddPlayerP *= 0.707106781185f;
             }
+
+            //NOTE(CJ): ODE
+            ddPlayerP += -2.5f * GameState->dPlayerP;
 
             tile_map_pos NewPlayerP = GameState->PlayerP;
-            NewPlayerP.Offset += Input->TimeForFrame * dXY;
+            NewPlayerP.Offset = 0.5f * ddPlayerP * Square(Input->TimeForFrame) +
+                GameState->dPlayerP * Input->TimeForFrame +
+                NewPlayerP.Offset;
+            GameState->dPlayerP = GameState->dPlayerP + ddPlayerP * Input->TimeForFrame;
+
             NewPlayerP = RecanonicalizePos(TileMap, NewPlayerP);
 
             tile_map_pos LeftPlayerP = NewPlayerP;

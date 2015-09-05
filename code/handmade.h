@@ -83,6 +83,7 @@ struct game_state
 {
     tile_map_pos PlayerP;
     tile_map_pos CameraP;
+    v2 dPlayerP;
     world *World;
 
     loaded_bitmap Backdrop;

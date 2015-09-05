@@ -79,6 +79,13 @@ operator+=(v2 &A, const v2 &B)
     return A;
 }
 
+inline real32
+Square(real32 A)
+{
+    real32 Result = A * A;
+    return Result;
+}
+
  
 
 #define HANDMADE_MATH_h
