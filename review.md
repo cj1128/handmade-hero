@@ -77,6 +77,15 @@ I forgot to write ...
 - Search in time VS. Search in position in terms of collision detection
 - Need to watch day 46 to figure out what the geometric search means
 
+### Day 46 - Basic Multiplayer Support
+
+- Fix previous bug, controller->IsAnalog
+- struct Entity to store character position and velocity
+- Initialize, initialise player position (AbsTileX, AbsTileY, OffsetX, OffsetY)
+- CameraFollowingEntity
+- PlayerIndexForController
+- fabs
+
 
 
 ## Windows Programming

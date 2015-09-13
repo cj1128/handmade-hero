@@ -20,7 +20,7 @@ REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link %CommonLi
 
 REM 64-bit build
 del *.pdb > NUL 2> NUL
-cl %CommonCompilerFlags% ..\handmade\code\handmade.cpp -Fmhandmade.map /LD /link %CommonLinkerFlags% -PDB:handmade_%datetimef%.pdb -EXPORT:GameUpdateAudio -EXPORT:GameUpdateVideo
-cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp -Fmwin32_handmade.map /link %CommonLinkerFlags%
+cl %CommonCompilerFlags% ..\work\code\handmade.cpp -Fmhandmade.map /LD /link %CommonLinkerFlags% -PDB:handmade_%datetimef%.pdb -EXPORT:GameUpdateAudio -EXPORT:GameUpdateVideo
+cl %CommonCompilerFlags% ..\work\code\win32_handmade.cpp -Fmwin32_handmade.map /link %CommonLinkerFlags%
 popd
 
