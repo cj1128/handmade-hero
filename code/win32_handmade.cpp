@@ -684,11 +684,11 @@ Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *Keyb
                 } break;
                 case VK_ESCAPE:
                 {
-                    Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
+                    Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
                 } break;
                 case VK_SPACE:
                 {
-                    Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
+                    Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
                 } break;
                 case VK_RETURN:
                 {
@@ -1035,7 +1035,7 @@ WinMain(HINSTANCE Instance,
                     ScreenToClient(Window, &MouseP);
                     NewInput->MouseX = MouseP.x;
                     NewInput->MouseY = MouseP.y;
-                    NewInput->MouseZ = 0; // TODO(casey): Support mousewheel?
+                    NewInput->MouseZ = 0;
                     Win32ProcessKeyboardMessage(&NewInput->MouseButtons[0],
                                                 GetKeyState(VK_LBUTTON) & (1 << 15));
                     Win32ProcessKeyboardMessage(&NewInput->MouseButtons[1],

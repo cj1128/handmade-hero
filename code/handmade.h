@@ -27,7 +27,7 @@
 
 
 
-inline game_controller_input *GetController(game_input *Input, unsigned int Index)
+inline game_controller_input *GetController(game_input *Input, uint32 Index)
 {
     Assert(Index < ArrayCount(Input->Controllers));
     game_controller_input *Result = &Input->Controllers[Index];
@@ -79,16 +79,27 @@ struct hero_bitmaps
     v2 Align;
 };
 
+struct entity
+{
+    bool32 Exists;
+    tile_map_pos P;
+    v2 dP;
+    uint32 FacingDirection;
+    real32 Height;
+    real32 Width;
+};
+
 struct game_state
 {
-    tile_map_pos PlayerP;
     tile_map_pos CameraP;
-    v2 dPlayerP;
     world *World;
+    entity Entities[256];
+    uint32 PlayerIndexForController[ArrayCount(((game_input *)0)->Controllers)];
+    uint32 CameraFollowingEntityIndex;
+    uint32 EntityCount;
 
     loaded_bitmap Backdrop;
     hero_bitmaps HeroBitmaps[4];
-    uint32 HeroFacingDirection;
 };
 
 #endif

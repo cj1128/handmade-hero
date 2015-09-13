@@ -8,6 +8,13 @@
 
 #include <math.h>
 
+inline real32
+AbsoluteValue(real32 Value)
+{
+    real32 Result = fabs(Value);
+    return Result;
+}
+
 inline int32
 RoundReal32ToInt32(real32 Value)
 {
