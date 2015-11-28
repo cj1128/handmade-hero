@@ -9,6 +9,13 @@
 #include <math.h>
 
 inline real32
+SquareRoot(real32 Value)
+{
+    real32 Result = sqrtf(Value);
+    return Result;
+}
+
+inline real32
 AbsoluteValue(real32 Value)
 {
     real32 Result = fabs(Value);

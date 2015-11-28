@@ -292,24 +292,25 @@ internal void
 MovePlayer(tile_map *TileMap, entity *Entity, v2 ddP, real32 dt)
 {
     real32 Speed = 50;
-    ddP *= Speed;
-
-    if(ddP.X != 0 && ddP.Y != 0)
+    real32 ddPLengthSq = LengthSq(ddP);
+    if(ddPLengthSq > 1.0f)
     {
-        ddP *= 0.707106781185f;
+        ddP *= (1.0f / SquareRoot(ddPLengthSq));
     }
+
+    ddP *= Speed;
 
     //NOTE(CJ): ODE
     ddP += -7.5f * Entity->dP;
 
     tile_map_pos NewPlayerP = Entity->P;
-    NewPlayerP.Offset = 0.5f * ddP * Square(dt) +
-        Entity->dP * dt +
-        NewPlayerP.Offset;
+    v2 PlayerDelta = (Entity->dP * dt + 0.5f * ddP * Square(dt));
+    NewPlayerP.Offset += PlayerDelta;
     Entity->dP = Entity->dP + ddP * dt;
 
     NewPlayerP = RecanonicalizePos(TileMap, NewPlayerP);
 
+#if 1
     tile_map_pos LeftPlayerP = NewPlayerP;
     LeftPlayerP.Offset.X -= Entity->Width / 2;
     LeftPlayerP = RecanonicalizePos(TileMap, LeftPlayerP);
@@ -356,19 +357,40 @@ MovePlayer(tile_map *TileMap, entity *Entity, v2 ddP, real32 dt)
     }
     else
     {
-        if(!AreOnSameTile(&Entity->P, &NewPlayerP))
-        {
-            uint32 TileValue = GetTileValue(TileMap, NewPlayerP);
-            if(TileValue == 3)
-            {
-                NewPlayerP.AbsTileZ++;
-            }
-            else if(TileValue == 4)
-            {
-                NewPlayerP.AbsTileZ--;
-            }
-        }
         Entity->P = NewPlayerP;
+    }
+#else
+    uint32 MinTileX = Minimum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX);
+    uint32 MinTileY = Minimum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY);
+    uint32 OnePastMaxTileX = Maximum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX) + 1;
+    uint32 OnePastMaxTileY = Maximum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY) + 1;
+    uint32 AbsTileZ = Entity->P.AbsTileZ;
+    real32 tMin = 1.0f;
+    for(uint32 AbsTileY = MinTileY;
+        AbsTileY != OnePastMaxTileY;
+        AbsTileY++)
+    {
+        for(uint32 AbsTileX = MinTileX;
+            AbsTileX != OnePastMaxTileX;
+            AbsTileX++)
+        {
+            tile_map_position TestTileP = CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ);
+            uint32 TileValue = GetTileValue(TileMap, TestTileP);
+        }
+    }
+#endif
+
+    if(!AreOnSameTile(&Entity->P, &NewPlayerP))
+    {
+        uint32 TileValue = GetTileValue(TileMap, NewPlayerP);
+        if(TileValue == 3)
+        {
+            NewPlayerP.AbsTileZ++;
+        }
+        else if(TileValue == 4)
+        {
+            NewPlayerP.AbsTileZ--;
+        }
     }
     if((Entity->dP.X == 0.0f) && (Entity->dP.Y == 0.0f))
     {

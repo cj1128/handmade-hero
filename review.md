@@ -86,6 +86,12 @@ I forgot to write ...
 - PlayerIndexForController
 - fabs
 
+### Day 47 - Vector Lengths
+
+- Normalize ddP's length
+- sqrtf
+- Search in time rather than search in position cause search in position is so complicated
+
 
 
 ## Windows Programming

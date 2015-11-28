@@ -133,3 +133,15 @@ Subtract(tile_map *TileMap, tile_map_pos *Left, tile_map_pos *Right)
     return Result;
 }
 
+inline tile_map_position
+CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ)
+{
+    tile_map_position Result = {};
+
+    Result.AbsTileX = AbsTileX;
+    Result.AbsTileY = AbsTileY;
+    Result.AbsTileZ = AbsTileZ;
+
+    return Result;
+}
+
