@@ -16,7 +16,7 @@
 
 #if HANDMADE_DEBUG
 #define Assert(expression) if(!(expression)){ *(int *)0 = 0; }
-#elif
+#else
 #define Assert(expression)
 #endif
 
