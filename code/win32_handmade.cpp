@@ -180,13 +180,13 @@ Win32LoadGameCode(char *SourceDLLPath, char *TempDLLPath)
             OutputDebugStringA("Can't load Functions in module!");
             exit(1);
         }
+        return Result;
     }
     else
     {
         OutputDebugStringA("Error! Can't load game module!");
         exit(1);
     }
-    return Result;
 }
 
 internal void
@@ -518,8 +518,9 @@ Win32GetWindowDimension(HWND Window){
     return Result;
 }
 
-internal void Win32DisplayBufferInWindow(HDC DeviceContext,int WindowWidth, int WindowHeight,
-                                         win32_offscreen_buffer *Buffer)
+internal void Win32DisplayBufferInWindow(HDC DeviceContext,
+    int WindowWidth, int WindowHeight,
+    win32_offscreen_buffer *Buffer)
 {
     if(WindowWidth >= 2 * Buffer->Width &&
        WindowHeight >= 2 * Buffer->Height)
@@ -590,7 +591,8 @@ Win32ProcessKeyboardMessage(game_button_state *ButtonState, bool32 IsDown)
 
 
 internal void
-Win32ProcessPendingMessages(win32_state *Win32State, game_controller_input *KeyboardController)
+Win32ProcessPendingMessages(win32_state *Win32State, 
+    game_controller_input *KeyboardController)
 {
     MSG Message;
     while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
@@ -768,7 +770,7 @@ LRESULT CALLBACK MainWindowCallback(HWND Window,
     {
         OutputDebugStringA("WM Paint");
         PAINTSTRUCT Paint;
-        HDC DeviceContext = BeginPaint(Window,&Paint);
+        HDC DeviceContext = BeginPaint(Window, &Paint);
         win32_window_dimension Dimension = Win32GetWindowDimension(Window);
         Win32DisplayBufferInWindow(DeviceContext, Dimension.Width, Dimension.Height, &GlobalBackbuffer);
         EndPaint(Window,&Paint);
@@ -860,7 +862,9 @@ WinMain(HINSTANCE Instance,
     win32_state Win32State = {};
 
     DWORD EXEPathLength = GetModuleFileNameA(0, Win32State.EXEPath, sizeof(Win32State.EXEPath));
+
     Win32State.OnePastLastEXEPathSlash = Win32State.EXEPath;
+
     for(char *Scan = Win32State.EXEPath;
         *Scan;
         Scan++)
@@ -1000,7 +1004,7 @@ WinMain(HINSTANCE Instance,
                 game_input *NewInput = &Input[0];
                 game_input *OldInput = &Input[1];
 
-                //For time measure
+                //For time measurement
                 LARGE_INTEGER LastCounter = Win32GetCurrentCounter();
                 LARGE_INTEGER FlipClock = Win32GetCurrentCounter();
                 uint64 LastCycleCounter = __rdtsc();

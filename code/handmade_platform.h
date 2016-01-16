@@ -149,10 +149,17 @@ struct game_memory
 };
 
 
-#define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+#define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, \
+    game_memory *Memory, \
+    game_input *Input, \
+    game_offscreen_buffer *Buffer)
+
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
-#define GAME_UPDATE_AUDIO(name) void name(thread_context *Thread, game_memory *Memory, game_sound_buffer *SoundBuffer)
+#define GAME_UPDATE_AUDIO(name) void name(thread_context *Thread, \
+    game_memory *Memory, \
+    game_sound_buffer *SoundBuffer)
+
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
 #ifdef __cplusplus
