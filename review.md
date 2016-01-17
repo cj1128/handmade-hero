@@ -92,6 +92,11 @@ I forgot to write ...
 - sqrtf
 - Search in time rather than search in position cause search in position is so complicated
 
+### Day 48 - Line Segment Intersection Collisions
+
+- Implements TestWall for four directions
+- tEpsilon to make some tolerance
+
 
 
 ## Windows Programming

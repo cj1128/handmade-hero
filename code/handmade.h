@@ -9,6 +9,9 @@
 #define local_persist static
 #define global_variable static
 
+#define Minimum(A, B) ((A < B) ? (A) : (B))
+#define Maximum(A, B) ((A > B) ? (A) : (B))
+
 //TODO: Implements sinf by myself
 #define Pi32 3.14159265359f
 

@@ -289,9 +289,27 @@ InitializePlayer(entity *Entity)
 }
 
 internal void
+TestWall(real32 WallX, real32 RelX, real32 RelY, 
+    real32 PlayerDeltaX, real32 PlayerDeltaY, 
+    real32 MinCornerY, real32 MaxCornerY,
+    real32 *tMin)
+{
+    real32 tEpsilon = 0.01f;
+    if(PlayerDeltaX != 0.0f) {
+        real32 tResult = (WallX - RelX) / PlayerDeltaX;
+        if(tResult >= 0.0f && tResult < *tMin) {
+            real32 Y = RelY + tResult * PlayerDeltaY;
+            if((Y >= MinCornerY) && (Y <= MaxCornerY)) {
+                *tMin = Maximum(0.0f, tResult - tEpsilon);
+            }
+        }
+    }
+}
+
+internal void
 MovePlayer(tile_map *TileMap, entity *Entity, v2 ddP, real32 dt)
 {
-    real32 Speed = 50;
+    real32 Speed = 50;  
     real32 ddPLengthSq = LengthSq(ddP);
     if(ddPLengthSq > 1.0f)
     {
@@ -303,14 +321,13 @@ MovePlayer(tile_map *TileMap, entity *Entity, v2 ddP, real32 dt)
     //NOTE(CJ): ODE
     ddP += -7.5f * Entity->dP;
 
-    tile_map_pos NewPlayerP = Entity->P;
-    v2 PlayerDelta = (Entity->dP * dt + 0.5f * ddP * Square(dt));
+    tile_map_pos OldPlayerP = Entity->P;
+    tile_map_pos NewPlayerP = OldPlayerP;
+    v2 PlayerDelta = (0.5f * ddP * Square(dt) + Entity->dP * dt);
     NewPlayerP.Offset += PlayerDelta;
     Entity->dP = Entity->dP + ddP * dt;
-
     NewPlayerP = RecanonicalizePos(TileMap, NewPlayerP);
-
-#if 1
+#if 0
     tile_map_pos LeftPlayerP = NewPlayerP;
     LeftPlayerP.Offset.X -= Entity->Width / 2;
     LeftPlayerP = RecanonicalizePos(TileMap, LeftPlayerP);
@@ -374,22 +391,48 @@ MovePlayer(tile_map *TileMap, entity *Entity, v2 ddP, real32 dt)
             AbsTileX != OnePastMaxTileX;
             AbsTileX++)
         {
-            tile_map_position TestTileP = CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ);
-            uint32 TileValue = GetTileValue(TileMap, TestTileP);
+            tile_map_pos TestTileP = CenteredTilePoint(AbsTileX, AbsTileY, AbsTileZ);
+            if(!IsTileMapPointValid(TileMap, TestTileP)) {
+                v2 MinCorner = -0.5f * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
+                v2 MaxCorner = 0.5f * v2{TileMap->TileSideInMeters, TileMap->TileSideInMeters};
+                tile_map_difference RelOldPlayerP = Subtract(TileMap, &OldPlayerP, &TestTileP);
+                v2 Rel = RelOldPlayerP.dXY;
+
+                TestWall(MinCorner.X, Rel.X, Rel.Y, 
+                    PlayerDelta.X, PlayerDelta.Y, 
+                    MinCorner.Y, MaxCorner.Y,
+                    &tMin);
+                TestWall(MaxCorner.X, Rel.X, Rel.Y, 
+                    PlayerDelta.X, PlayerDelta.Y, 
+                    MinCorner.Y, MaxCorner.Y,
+                    &tMin);
+                TestWall(MinCorner.Y, Rel.Y, Rel.X, 
+                    PlayerDelta.Y, PlayerDelta.X, 
+                    MinCorner.X, MaxCorner.X,
+                    &tMin);
+                TestWall(MaxCorner.Y, Rel.Y, Rel.X, 
+                    PlayerDelta.Y, PlayerDelta.X, 
+                    MinCorner.X, MaxCorner.X,
+                    &tMin);
+            }
         }
     }
+
+    NewPlayerP = OldPlayerP;
+    NewPlayerP.Offset += tMin * PlayerDelta;
+    Entity->P = RecanonicalizePos(TileMap, NewPlayerP);
 #endif
 
-    if(!AreOnSameTile(&Entity->P, &NewPlayerP))
+    if(!AreOnSameTile(&Entity->P, &OldPlayerP))
     {
-        uint32 TileValue = GetTileValue(TileMap, NewPlayerP);
+        uint32 TileValue = GetTileValue(TileMap, Entity->P);
         if(TileValue == 3)
         {
-            NewPlayerP.AbsTileZ++;
+            Entity->P.AbsTileZ++;
         }
         else if(TileValue == 4)
         {
-            NewPlayerP.AbsTileZ--;
+            Entity->P.AbsTileZ--;
         }
     }
     if((Entity->dP.X == 0.0f) && (Entity->dP.Y == 0.0f))
@@ -746,8 +789,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
                 TileCen.X = ScreenCenter.X + (RelColumn * TileSideInPixels) - MetersToPixels * GameState->CameraP.Offset.X;
                 TileCen.Y = ScreenCenter.Y + (RelRow * TileSideInPixels) - MetersToPixels * GameState->CameraP.Offset.Y;
 
-                v2 Min = TileCen - V2(0.5f * TileSideInPixels, 0.5f * TileSideInPixels);
-                v2 Max = Min + V2(TileSideInPixels, TileSideInPixels);
+                v2 TileSide = v2{0.5f * TileSideInPixels, 0.5f * TileSideInPixels};
+                v2 Min = TileCen - 0.9f * TileSide;
+                v2 Max = TileCen + 0.9f * TileSide;
 
                 DrawRect(Buffer,
                          Min,
