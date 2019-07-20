@@ -1,4 +1,3 @@
 @echo off
-call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x64
-set path=w:\work\misc;%path%
-w:
+call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\vsdevcmd" -arch=x64 -no_logo
+set path=w:\handmade\misc;%path%
