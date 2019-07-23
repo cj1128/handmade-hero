@@ -1,0 +1,18 @@
+{
+	"build_systems":
+	[
+		{
+			// "file_regex": "^(.+[^:]*):([0-9]+):?([0-9]+)?:? (.*)$",
+      "file_regex": "^(.+)(\\(\\d+\\))(): (.+)",
+			"name": "HandmadeHero",
+			"shell_cmd": "w:/handmade/misc/build.bat",
+			"working_dir": "w:/build"
+		}
+	],
+	"folders":
+	[
+		{
+			"path": "W:"
+		}
+	]
+}
