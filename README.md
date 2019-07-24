@@ -36,3 +36,15 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `CreateWindow`, `CreateWindowEx`
 - `GetMessage`, `TranslateMessage`, `DispatchMessage`
 - `BeginPaint`, `EndPaint`, `PatBlt`
+
+### Day 3: Allocating a Back Buffer
+
+- `PostQuitMessage`
+- #define `global_variable` and `internal` to `static`
+- Resize buffer when receive WM_RESIZE
+- `GetClientRect`
+- `CreateDIBSection`
+- `StretchDIBits`
+- `DeleteObject`
+- `CreateCompatibleDC`
+- `ReleaseDC`

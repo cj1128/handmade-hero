@@ -11,18 +11,37 @@
 			"file": "code/win32_handmade.cpp",
 			"settings":
 			{
-				"buffer_size": 1702,
+				"buffer_size": 2246,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "handmade.sublime-project",
+			"file": "README.md",
 			"settings":
 			{
-				"buffer_size": 292,
+				"buffer_size": 1349,
 				"encoding": "UTF-8",
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "misc/CLOutput.sublime-syntax",
+			"settings":
+			{
+				"buffer_size": 563,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "A subdirectory or file w:\\build already exists.\n用于 x64 的 Microsoft (R) C/C++ 优化编译器 19.21.27702.2 版\n版权所有(C) Microsoft Corporation。保留所有权利。\n\nwin32_handmade.cpp\nMicrosoft (R) Incremental Linker Version 14.21.27702.2\nCopyright (C) Microsoft Corporation.  All rights reserved.\n\n/out:win32_handmade.exe \n/debug \nwin32_handmade.obj \nuser32.lib \ngdi32.lib \n[Finished in 0.5s]",
+			"settings":
+			{
+				"buffer_size": 366,
+				"line_ending": "Windows",
+				"name": "Build output",
+				"scratch": true
 			}
 		}
 	],
@@ -82,6 +101,14 @@
 		"selected_items":
 		[
 			[
+				"ssclout",
+				"Set Syntax: CLOutout"
+			],
+			[
+				"keyb",
+				"Preferences: Key Bindings"
+			],
+			[
 				"packins",
 				"Package Control: Install Package"
 			],
@@ -139,14 +166,19 @@
 	},
 	"expanded_folders":
 	[
-		"/W"
+		"/W",
+		"/W/handmade",
+		"/W/handmade/misc"
 	],
 	"file_history":
 	[
-		"/W/tmp.txt",
-		"/W/handmade/handmade.sublime-project",
 		"/W/handmade/README.md",
+		"/W/handmade/misc/Default.sublime-keymap",
+		"/W/handmade/misc/Preferences.sublime-settings",
 		"/W/handmade/misc/build.bat",
+		"/C/Users/CJ/AppData/Roaming/Sublime Text 3/Packages/User/CLOutout.yaml",
+		"/W/handmade/handmade.sublime-project",
+		"/W/tmp.txt",
 		"/W/handmade/misc/subl.bat",
 		"/C/Users/CJ/AppData/Roaming/Sublime Text 3/Packages/User/handmade.sublime-build",
 		"/W/handmade/handmadehero.sublime-project",
@@ -180,6 +212,8 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"wndclass",
+			"instance",
 			"wndclass"
 		],
 		"highlight": true,
@@ -207,15 +241,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1702,
+						"buffer_size": 2246,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								121,
-								121
+								2207,
+								2207
 							]
 						],
 						"settings":
@@ -223,7 +257,7 @@
 							"syntax": "Packages/C++/C++.sublime-syntax"
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2139.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
@@ -231,37 +265,94 @@
 				},
 				{
 					"buffer": 1,
-					"file": "handmade.sublime-project",
+					"file": "README.md",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 292,
+						"buffer_size": 1349,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								163,
-								163
+								1056,
+								1056
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/JavaScript/JSON.sublime-syntax"
+							"syntax": "Packages/Markdown/Markdown.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 851.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "misc/CLOutput.sublime-syntax",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 563,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								362,
+								362
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/YAML/YAML.sublime-syntax"
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
 		},
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 3,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 366,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								366,
+								366
+							]
+						],
+						"settings":
+						{
+							"buildview.silence_modified_warning": false,
+							"syntax": "Packages/User/CLOutout.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -271,7 +362,7 @@
 	},
 	"input":
 	{
-		"height": 43.0
+		"height": 49.0
 	},
 	"layout":
 	{
@@ -315,7 +406,7 @@
 	"project": "handmade.sublime-project",
 	"replace":
 	{
-		"height": 90.0
+		"height": 70.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -325,16 +416,20 @@
 		"selected_items":
 		[
 			[
+				"readme",
+				"handmade\\README.md"
+			],
+			[
+				"build",
+				"handmade\\misc\\build.bat"
+			],
+			[
 				"han.su",
 				"handmade\\handmade.sublime-project"
 			],
 			[
 				"subl",
 				"handmade\\misc\\subl.bat"
-			],
-			[
-				"readme",
-				"handmade\\README.md"
 			]
 		],
 		"width": 0.0
@@ -357,7 +452,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 1,
+	"selected_group": 0,
 	"settings":
 	{
 	},
