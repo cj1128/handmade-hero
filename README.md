@@ -8,9 +8,11 @@
 
 ## Intro
 
-- This is my personal study notes of [Handmade Hero](https://handmadehero.org).
-- If you think **writing a professional-quality game from scratch on your own (no engine no library)** is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
-- Deepest thanks to *Casey Muratori* for this excellent project. It's really helpful.
+This is my personal study notes of [Handmade Hero](https://handmadehero.org).
+
+If you think **writing a professional-quality game from scratch on your own (no engine no library)** is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
+
+Deepest thanks to *Casey Muratori* for this excellent project. It's really helpful.
 
 ## Env
 
@@ -48,3 +50,12 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `DeleteObject`
 - `CreateCompatibleDC`
 - `ReleaseDC`
+
+### Day 4: Animating the Back Buffer
+
+- Use `VirtualAlloc` to alloc bit map memory instead of `CreateDIBSection`
+- `VirtualFree`, `VirtualProtect`
+- Set `biHeight` to negative value so we the image origin if top-left
+- Render a simple gradient. Each pixel has a value of form `0xXXRRGGBB`
+- use `PeekMessage` instead of `GetMessage`, because it doesn't block
+- `GetDC`, `ReleaseDC`
