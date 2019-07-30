@@ -59,3 +59,9 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Render a simple gradient. Each pixel has a value of form `0xXXRRGGBB`
 - use `PeekMessage` instead of `GetMessage`, because it doesn't block
 - `GetDC`, `ReleaseDC`
+
+### Day 5: Windows Graphics Review
+
+- `HREDRAW` and `VREDRAW` are used to tell Windows to redraw the whole window
+- Use `win32_offscreen_buffer` to bundle all global variables
+- Create the back buffer just once, move it out of `WM_SIZE`
