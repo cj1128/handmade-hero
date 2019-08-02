@@ -18,6 +18,10 @@ Deepest thanks to *Casey Muratori* for this excellent project. It's really helpf
 
 Windows 10 with Visual Studio 2019 and Sublime Text 3.
 
+## Windows Programming
+
+- `dir /s [keyword]`: search something
+
 ## Roadmap
 
 ### Day 1: Setting Up the Windows Build
@@ -65,3 +69,12 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `HREDRAW` and `VREDRAW` are used to tell Windows to redraw the whole window
 - Use `win32_offscreen_buffer` to bundle all global variables
 - Create the back buffer just once, move it out of `WM_SIZE`
+
+### Day 6: Gamepad and Keyboard Input
+
+- `XInput`, `XInputGetState`, `XInputSetState`, `XUSER_MAX_COUNT`
+- Loading windows functions ourselves
+- Use XInput 1.3
+- `LoadLibrary`, `GetProcAddress`
+- `WM_SYSKEYUP`, `WM_SYSKEYDOWN`, `WM_KEYUP`, `WM_KEYDOWN`
+- Get IsDown and WasDown status from LParam
