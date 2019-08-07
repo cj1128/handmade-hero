@@ -78,3 +78,13 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `LoadLibrary`, `GetProcAddress`
 - `WM_SYSKEYUP`, `WM_SYSKEYDOWN`, `WM_KEYUP`, `WM_KEYDOWN`
 - Get IsDown and WasDown status from LParam
+
+### Day 7: Initializing DirectSound
+
+- Return `ERROR_DEVICE_NOT_CONNECTED` in xinput stub functions
+- Implement `Alt+F4` to close the window
+- Use bool32 if we only care if the value is 0 or not 0
+- `dsound.h`, [IDirectSound8 Interface](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee418035(v=vs.85))
+- `DirectSoundCreate`, `SetCooperativeLevel`, `CreateSoundBuffer`, `SetFormat`
+- Remember to clear `DSBUFFERDESC` to zero
+- Add `MEM_RESERVE` to `VirtualAlloc`
