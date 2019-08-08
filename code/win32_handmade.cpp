@@ -55,9 +55,10 @@ global_variable bool GlobalRunning = true;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable int GlobalXOffset;
 global_variable int GlobalYOffset;
+global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
 
 internal void
-Win32InitDSound(HWND Window, int32 SamplesPerSec, int32 BufferSize) {
+Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize) {
   HMODULE Library = LoadLibraryA("dsound.dll");
   if(Library) {
     direct_sound_create *DirectSoundCreate = (direct_sound_create *)GetProcAddress(Library, "DirectSoundCreate");
@@ -74,7 +75,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSec, int32 BufferSize) {
       WAVEFORMATEX WaveFormat  = {};
       WaveFormat.wFormatTag = WAVE_FORMAT_PCM;
       WaveFormat.nChannels = 2;
-      WaveFormat.nSamplesPerSec = SamplesPerSec;
+      WaveFormat.nSamplesPerSec = SamplesPerSecond;
       WaveFormat.wBitsPerSample = 16;
       WaveFormat.nBlockAlign = WaveFormat.nChannels * WaveFormat.wBitsPerSample / 8;
       WaveFormat.nAvgBytesPerSec = WaveFormat.nSamplesPerSec * WaveFormat.nBlockAlign;
@@ -100,8 +101,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSec, int32 BufferSize) {
         BufferDesc.dwFlags = 0;
         BufferDesc.dwBufferBytes = BufferSize;
         BufferDesc.lpwfxFormat = &WaveFormat;
-        LPDIRECTSOUNDBUFFER  SecondaryBuffer;
-        if(SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &SecondaryBuffer, 0))) {
+        if(SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &GlobalSoundBuffer, 0))) {
           OutputDebugStringA("Secondary buffer created\n");
         } else {
           // TODO: logging
@@ -315,7 +315,17 @@ WinMain(
     );
 
     if(Window) {
-      Win32InitDSound(Window, 48000, 48000 * 2 * 2);
+      int32 SamplesPerSecond = 48000;
+      int32 BytesPerSample = 4;
+      int32 SoundBufferSize = SamplesPerSecond * BytesPerSample;
+      int ToneHz = 256;
+      int16 ToneVolume = 3000;
+      int WavePeriod = SamplesPerSecond / ToneHz;
+      int32 HalfWavePeriod = WavePeriod / 2;
+      uint32 RunningSampleIndex = 0;
+
+      Win32InitDSound(Window, SamplesPerSecond, SoundBufferSize);
+      GlobalSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
       Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
 
       while(GlobalRunning) {
@@ -354,6 +364,50 @@ WinMain(
         }
 
         RenderWeirdGradeint(&GlobalBackBuffer, GlobalXOffset, GlobalYOffset);
+
+        DWORD PlayCursor;
+        DWORD WriteCursor;
+        if(SUCCEEDED(GlobalSoundBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor))) {
+          DWORD LockOffset = RunningSampleIndex * BytesPerSample % SoundBufferSize;
+          void *Region1;
+          DWORD Region1Size;
+          void *Region2;
+          DWORD Region2Size;
+          DWORD BytesToLock;
+
+          if(PlayCursor == LockOffset) {
+            BytesToLock = SoundBufferSize;
+          } else if(LockOffset > PlayCursor) {
+            BytesToLock = SoundBufferSize - LockOffset + PlayCursor;
+          } else {
+            BytesToLock = PlayCursor - LockOffset;
+          }
+
+          if(SUCCEEDED(GlobalSoundBuffer->Lock(
+            LockOffset,
+            BytesToLock,
+            &Region1, &Region1Size,
+            &Region2, &Region2Size,
+            0
+          ))) {
+            int16 *SampleOut = (int16 *)Region1;
+            for(int i = 0; i < Region1Size / BytesPerSample; i++) {
+              int16 Value = ((RunningSampleIndex++ / HalfWavePeriod) % 2) ? ToneVolume : -ToneVolume;
+              *SampleOut++ = Value;
+              *SampleOut++ = Value;
+            }
+
+            SampleOut = (int16 *)Region2;
+            for(int i = 0; i < Region2Size / BytesPerSample; i++) {
+              int16 Value = ((RunningSampleIndex++ / HalfWavePeriod) % 2) ? ToneVolume : -ToneVolume;
+              *SampleOut++ = Value;
+              *SampleOut++ = Value;
+            }
+
+            GlobalSoundBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
+          }
+        }
+
         HDC DeviceContext = GetDC(Window);
         win32_window_dimension Dimension = Win32GetWindowDimension(Window);
         Win32UpdateWindow(

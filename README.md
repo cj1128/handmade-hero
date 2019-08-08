@@ -88,3 +88,9 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `DirectSoundCreate`, `SetCooperativeLevel`, `CreateSoundBuffer`, `SetFormat`
 - Remember to clear `DSBUFFERDESC` to zero
 - Add `MEM_RESERVE` to `VirtualAlloc`
+
+### Day 8: Writing a Square Wave to DirectSound
+
+- [IDirectSouondBuffer8 Interface](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee418055%28v%3dvs.85%29)
+- `Lock`, `Unlock`, `GetCurrentPosition`, `Play`
+
