@@ -94,3 +94,10 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - [IDirectSouondBuffer8 Interface](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ee418055%28v%3dvs.85%29)
 - `Lock`, `Unlock`, `GetCurrentPosition`, `Play`
 
+### Day 9: Variable-Pitch Sine Wave Output
+
+- `sinf`
+- `win32_sound_output`, `Win32FillSoundBuffer`
+- `tSine`, `LatencySampleCount`
+- We need to handle xinput deadzone in the future
+- Use `DefWindowProcA` instead of `DefWindowProc`
