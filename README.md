@@ -101,3 +101,9 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `tSine`, `LatencySampleCount`
 - We need to handle xinput deadzone in the future
 - Use `DefWindowProcA` instead of `DefWindowProc`
+
+### Day 10: QueryPerformanceCounter and RDTSC
+
+- `QueryPerformanceCounter`, `LARGE_INTEGER`, `QuyerPerformanceFrequency`
+- `wsprintf`, `__rdtsc`
+- Intrinsic: looks like a function call, but it's used to tell the compiler we want a specific assembly instruction here.

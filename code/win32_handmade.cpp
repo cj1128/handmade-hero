@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <xinput.h>
 #include <dsound.h>
+#include <stdio.h>
 #include <math.h>
 
 typedef int8_t int8;
@@ -346,6 +347,8 @@ WinMain(
   LPSTR     CmdLine,
   int       ShowCmd
   ) {
+  LARGE_INTEGER CounterPerSecond;
+  QueryPerformanceFrequency(&CounterPerSecond);
   Win32LoadXInput();
 
   WNDCLASS WindowClass = {};
@@ -390,6 +393,9 @@ WinMain(
 
       Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
 
+      LARGE_INTEGER LastCounter;
+      uint64 LastCycleCounter = __rdtsc();
+      QueryPerformanceCounter(&LastCounter);
       while(GlobalRunning) {
         MSG Message = {};
 
@@ -457,6 +463,24 @@ WinMain(
           &GlobalBackBuffer
           );
         ReleaseDC(Window, DeviceContext);
+
+        uint64 CurrentCycleCounter = __rdtsc();
+        LARGE_INTEGER CurrentCounter;
+        QueryPerformanceCounter(&CurrentCounter);
+
+        int64 CounterElapsed = CurrentCounter.QuadPart - LastCounter.QuadPart;
+        uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;
+
+        real32 MSPerFrame = 1000.0f * (real32)CounterElapsed / (real32)CounterPerSecond.QuadPart;
+        real32 FPS = (real32)CounterPerSecond.QuadPart / (real32)CounterElapsed;
+        real32 MCPF = (real32)CycleElapsed / (1000.0f * 1000.0f);
+
+        char Buffer[256];
+        sprintf(Buffer, "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
+        OutputDebugStringA(Buffer);
+
+        LastCounter = CurrentCounter;
+        LastCycleCounter = CurrentCycleCounter;
       }
     } else {
       // TODO: Logging
