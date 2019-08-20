@@ -1,8 +1,4 @@
-#include <windows.h>
 #include <stdint.h>
-#include <xinput.h>
-#include <dsound.h>
-#include <stdio.h>
 #include <math.h>
 
 typedef int8_t int8;
@@ -18,9 +14,15 @@ typedef float real32;
 typedef double real64;
 
 #define Pi32 3.14159265359
-
 #define global_variable static
 #define internal static
+
+#include "handmade.cpp"
+
+#include <windows.h>
+#include <xinput.h>
+#include <dsound.h>
+#include <stdio.h>
 
 struct win32_offscreen_buffer {
   void *Memory;
@@ -193,24 +195,6 @@ Win32GetWindowDimension(HWND Window) {
   Result.Width = ClientRect.right - ClientRect.left;
   Result.Height = ClientRect.bottom - ClientRect.top;
   return Result;
-}
-
-internal void
-RenderWeirdGradeint(win32_offscreen_buffer *Buffer, int XOffset, int YOffset) {
-  uint8 *Row = (uint8 *)Buffer->Memory;
-
-  for(int Y = 0; Y < Buffer->Height; Y++) {
-    uint32 *Pixel = (uint32 *)Row;
-
-    for(int X = 0; X < Buffer->Width; X++) {
-      uint8 Blue = X + XOffset;
-      uint8 Green = Y + YOffset;
-      // 0xXXRRGGBB
-      *Pixel++ = (Green << 8) | Blue;
-    }
-
-    Row = Row + Buffer->Width * Buffer->BytesPerPixel;
-  }
 }
 
 internal void
@@ -431,7 +415,13 @@ WinMain(
           }
         }
 
-        RenderWeirdGradeint(&GlobalBackBuffer, GlobalXOffset, GlobalYOffset);
+        game_offscreen_buffer Buffer = {};
+        Buffer.Memory = GlobalBackBuffer.Memory;
+        Buffer.BytesPerPixel = GlobalBackBuffer.BytesPerPixel;
+        Buffer.Width = GlobalBackBuffer.Width;
+        Buffer.Height = GlobalBackBuffer.Height;
+        GameUpdateAndRender(&Buffer, GlobalXOffset, GlobalYOffset);
+
         if(GlobalYOffset <= 1000 && GlobalYOffset >= -1000) {
           int Tmp = (int)(((real32)GlobalYOffset / 1000) * 256) + 512;
           SoundOutput.ToneHz = Tmp;
@@ -475,9 +465,9 @@ WinMain(
         real32 FPS = (real32)CounterPerSecond.QuadPart / (real32)CounterElapsed;
         real32 MCPF = (real32)CycleElapsed / (1000.0f * 1000.0f);
 
-        char Buffer[256];
-        sprintf(Buffer, "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
-        OutputDebugStringA(Buffer);
+        char OutputBuffer[256];
+        sprintf(OutputBuffer, "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
+        OutputDebugStringA(OutputBuffer);
 
         LastCounter = CurrentCounter;
         LastCycleCounter = CurrentCycleCounter;

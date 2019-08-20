@@ -107,3 +107,23 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - `QueryPerformanceCounter`, `LARGE_INTEGER`, `QuyerPerformanceFrequency`
 - `wsprintf`, `__rdtsc`
 - Intrinsic: looks like a function call, but it's used to tell the compiler we want a specific assembly instruction here.
+
+### Day 11: The Basics of Platform API Design
+
+- Win32 platform todo list:
+  - Saved game location
+  - Getting a handle to our executable
+  - Asset loading
+  - Threading
+  - Raw input (support for multiple keyboards)
+  - Sleep/timeBeginPeriod
+  - ClipCursor() (for multimonitor)
+  - Fullscreen
+  - WM_SETCURSOR (control cursor visibility)
+  - QueryCancelAutoplay
+  - WM_ACTIVATEAPP (for when we are not the active application)
+  - Blit speed improvements
+  - Hardware acceleration
+  - GetKeyboardLayout (for French keyboards)
+- For each platform, we will have a big [platform]\_handmade.cpp file. Inside this file, we #include other files.
+- Treat our game as a service, rather than the operating system.
