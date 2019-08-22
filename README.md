@@ -127,3 +127,8 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
   - GetKeyboardLayout (for French keyboards)
 - For each platform, we will have a big [platform]\_handmade.cpp file. Inside this file, we #include other files.
 - Treat our game as a service, rather than the operating system.
+
+### Day 12: Platform-Independent Sound Output
+
+- `_alloca`: Allocate some memory in the stack, freeed when the function exists rather than leave out of the enclosing scope
+- Move sound rendering logic to handmade.cpp

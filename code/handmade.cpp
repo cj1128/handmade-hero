@@ -19,6 +19,25 @@ RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
 }
 
 internal void
-GameUpdateAndRender(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
+RenderSineWave(game_sound_buffer *Buffer) {
+  local_persist real32 tSine;
+  int WavePeriod = Buffer->SamplesPerSecond / Buffer->ToneHz;
+
+  int16* Output = Buffer->Memory;
+  for(int SampleIndex = 0; SampleIndex < Buffer->SampleCount; SampleIndex++) {
+    int16 Value = (int16)(sinf(tSine) * Buffer->ToneVolume);
+    *Output++ = Value;
+    *Output++ = Value;
+    tSine += 2.0f * Pi32 * (1.0f / (real32)WavePeriod);
+  }
+}
+
+internal void
+GameUpdateAndRender(
+  game_offscreen_buffer *Buffer,
+  game_sound_buffer *SoundBuffer,
+  int XOffset, int YOffset
+) {
   RenderWeirdGradeint(Buffer, XOffset, YOffset);
+  RenderSineWave(SoundBuffer);
 }
