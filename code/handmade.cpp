@@ -34,10 +34,10 @@ RenderSineWave(game_sound_buffer *Buffer) {
 
 internal void
 GameUpdateAndRender(
+  game_input *Input,
   game_offscreen_buffer *Buffer,
-  game_sound_buffer *SoundBuffer,
-  int XOffset, int YOffset
+  game_sound_buffer *SoundBuffer
 ) {
-  RenderWeirdGradeint(Buffer, XOffset, YOffset);
+  RenderWeirdGradeint(Buffer, 0, 0);
   RenderSineWave(SoundBuffer);
 }

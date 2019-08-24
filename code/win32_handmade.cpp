@@ -17,6 +17,7 @@ typedef double real64;
 #define global_variable static
 #define local_persist static
 #define internal static
+#define ArrayCount(arr) (sizeof((arr)) / (sizeof((arr)[0])))
 
 #include "handmade.cpp"
 
@@ -76,6 +77,17 @@ global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable int GlobalXOffset;
 global_variable int GlobalYOffset;
 global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
+
+internal void
+Win32ProcessButtonState(
+  game_button_state *NewButtonState,
+  game_button_state *OldButtonState,
+  DWORD Buttons,
+  DWORD ButtonBit
+) {
+  NewButtonState->HalfTransitionCount = OldButtonState->IsEndedDown == NewButtonState->IsEndedDown ? 0 : 1;
+  NewButtonState->IsEndedDown = Buttons & ButtonBit;
+}
 
 internal void
 Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize) {
@@ -408,6 +420,10 @@ WinMain(
 
       Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
 
+      game_input Input[2] = {};
+      game_input *OldInput = &Input[0];
+      game_input *NewInput = &Input[1];
+
       LARGE_INTEGER LastCounter;
       uint64 LastCycleCounter = __rdtsc();
       QueryPerformanceCounter(&LastCounter);
@@ -419,27 +435,82 @@ WinMain(
           DispatchMessage(&Message);
         }
 
-        for(int i=0; i< XUSER_MAX_COUNT; i++) {
+        int ControllerCount = XUSER_MAX_COUNT;
+        if(ControllerCount > ArrayCount(NewInput->Controllers)) {
+          ControllerCount = ArrayCount(NewInput->Controllers);
+        }
+
+        for(int i=0; i< ControllerCount; i++) {
           XINPUT_STATE state;
+
+          game_controller_input *OldController = &OldInput->Controllers[i];
+          game_controller_input *NewController = &NewInput->Controllers[i];
+
           ZeroMemory(&state, sizeof(XINPUT_STATE));
           if(XInputGetState(i, &state) == ERROR_SUCCESS ) {
+            NewController->IsAnalog = true;
+
             XINPUT_GAMEPAD *Pad = &state.Gamepad;
 
-            bool32 Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-            bool32 Down = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-            bool32 Left = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-            bool32 Right = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-            bool32 Start = (Pad->wButtons & XINPUT_GAMEPAD_START);
-            bool32 Back = (Pad->wButtons & XINPUT_GAMEPAD_BACK);
-            bool32 LeftShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-            bool32 RightShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-            bool32 AButton = (Pad->wButtons & XINPUT_GAMEPAD_A);
-            bool32 BButton = (Pad->wButtons & XINPUT_GAMEPAD_B);
-            bool32 XButton = (Pad->wButtons & XINPUT_GAMEPAD_X);
-            bool32 YButton = (Pad->wButtons & XINPUT_GAMEPAD_Y);
+            // bool32 Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+            // bool32 Down = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+            // bool32 Left = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+            // bool32 Right = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+            // bool32 Start = (Pad->wButtons & XINPUT_GAMEPAD_START);
+            // bool32 Back = (Pad->wButtons & XINPUT_GAMEPAD_BACK);
+            // bool32 LeftShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+            // bool32 RightShoulder = (Pad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+            // bool32 AButton = (Pad->wButtons & XINPUT_GAMEPAD_A);
+            // bool32 BButton = (Pad->wButtons & XINPUT_GAMEPAD_B);
+            // bool32 XButton = (Pad->wButtons & XINPUT_GAMEPAD_X);
+            // bool32 YButton = (Pad->wButtons & XINPUT_GAMEPAD_Y);
+
+            Win32ProcessButtonState(
+              &NewController->A, &OldController->A,
+              Pad->wButtons, XINPUT_GAMEPAD_A
+            );
+            Win32ProcessButtonState(
+              &NewController->B, &OldController->B,
+              Pad->wButtons, XINPUT_GAMEPAD_B
+            );
+            Win32ProcessButtonState(
+              &NewController->X, &OldController->X,
+              Pad->wButtons, XINPUT_GAMEPAD_X
+            );
+            Win32ProcessButtonState(
+              &NewController->Y, &OldController->Y,
+              Pad->wButtons, XINPUT_GAMEPAD_Y
+            );
+            Win32ProcessButtonState(
+              &NewController->LeftShoulder, &OldController->LeftShoulder,
+              Pad->wButtons, XINPUT_GAMEPAD_LEFT_SHOULDER
+            );
+            Win32ProcessButtonState(
+              &NewController->RightShoulder, &OldController->RightShoulder,
+              Pad->wButtons, XINPUT_GAMEPAD_RIGHT_SHOULDER
+            );
 
             int16 StickX = Pad->sThumbLX;
             int16 StickY = Pad->sThumbLY;
+
+            real32 X;
+            if(StickX > 0) {
+              X = StickX  / 32767;
+            } else {
+              X = StickX  / 32768;
+            }
+
+            NewController->StartX = OldController->EndX;
+            NewController->EndX = NewController->MinX = NewController->MaxX = X;
+
+            real32 Y;
+            if(StickY > 0) {
+              Y = StickY  / 32767;
+            } else {
+              Y = StickY  / 32768;
+            }
+            NewController->StartY = OldController->EndY;
+            NewController->EndY = NewController->MinY = NewController->MaxY = Y;
           }
           else{
             // Controller is not connected
@@ -479,7 +550,7 @@ WinMain(
         SoundBuffer.ToneVolume = SoundOutput.ToneVolume;
         SoundBuffer.Memory = SoundMemory;
 
-        GameUpdateAndRender(&Buffer, &SoundBuffer, GlobalXOffset, GlobalYOffset);
+        GameUpdateAndRender(NewInput, &Buffer, &SoundBuffer);
 
         if(GlobalYOffset <= 1000 && GlobalYOffset >= -1000) {
           int Tmp = (int)(((real32)GlobalYOffset / 1000) * 256) + 512;
@@ -500,6 +571,11 @@ WinMain(
           );
         ReleaseDC(Window, DeviceContext);
 
+        game_input *Tmp = OldInput;
+        OldInput = NewInput;
+        NewInput = OldInput;
+
+        // Performance counter
         uint64 CurrentCycleCounter = __rdtsc();
         LARGE_INTEGER CurrentCounter;
         QueryPerformanceCounter(&CurrentCounter);

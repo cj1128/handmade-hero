@@ -106,7 +106,7 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 
 - `QueryPerformanceCounter`, `LARGE_INTEGER`, `QuyerPerformanceFrequency`
 - `wsprintf`, `__rdtsc`
-- Intrinsic: looks like a function call, but it's used to tell the compiler we want a specific assembly instruction here.
+- Intrinsic: looks like a function call, but it's used to tell the compiler we want a specific assembly instruction here
 
 ### Day 11: The Basics of Platform API Design
 
@@ -132,3 +132,9 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 
 - `_alloca`: Allocate some memory in the stack, freeed when the function exists rather than leave out of the enclosing scope
 - Move sound rendering logic to handmade.cpp
+
+### Day 13: Platform-Independent User Input
+
+- Define `game_input`, `game_controller_input`, `game_button_state`
+- Store OldInput and NewInput and do ping-pang at end of every frame
+- Define `ArrayCount` macro
