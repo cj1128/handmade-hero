@@ -19,9 +19,9 @@ RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
 }
 
 internal void
-RenderSineWave(game_sound_buffer *Buffer) {
+RenderSineWave(game_sound_buffer *Buffer, int ToneHz) {
   local_persist real32 tSine;
-  int WavePeriod = Buffer->SamplesPerSecond / Buffer->ToneHz;
+  int WavePeriod = Buffer->SamplesPerSecond / ToneHz;
 
   int16* Output = Buffer->Memory;
   for(int SampleIndex = 0; SampleIndex < Buffer->SampleCount; SampleIndex++) {
@@ -34,10 +34,19 @@ RenderSineWave(game_sound_buffer *Buffer) {
 
 internal void
 GameUpdateAndRender(
+  game_memory *Memory,
   game_input *Input,
   game_offscreen_buffer *Buffer,
   game_sound_buffer *SoundBuffer
 ) {
-  RenderWeirdGradeint(Buffer, 0, 0);
-  RenderSineWave(SoundBuffer);
+  game_state *State = (game_state *)Memory->PermanentStorage;
+  Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
+  if(!Memory->IsInitialized) {
+    State->ToneHz = 256;
+
+    Memory->IsInitialized = true;
+  }
+
+  RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
+  RenderSineWave(SoundBuffer, State->ToneHz);
 }

@@ -138,3 +138,13 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Define `game_input`, `game_controller_input`, `game_button_state`
 - Store OldInput and NewInput and do ping-pang at end of every frame
 - Define `ArrayCount` macro
+
+### Day 14: Platform-Independent Game Memory
+
+- Use a `game_memory` struct to handle all memory related stuff
+- We have permannent storage and trasient storage in our memory
+- Define `Kilobytes`, `Megabytes` and `GigaBytes` macros
+- We require the memory allocated to be cleared to zero
+- Define `Assert` macro
+- Use `cl -Dname=val` to define `HANDMADE_INTERNAL` and `HANDMADE_SLOW` compiler flags
+- Specify base address when we do `VirtualAlloc` for debugging purpose in internal build

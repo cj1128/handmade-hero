@@ -1,4 +1,20 @@
-#if !defined(HANDMADE_H)
+#ifndef HANDMADE_H
+
+#ifdef HANDMADE_SLOW
+#define Assert(expression) if(!(expression)) { *(int*) 0 = 0; }
+#else
+#define Assert(expression)
+#endif
+
+/*
+  HANDMADE_INTERNAL:
+    0: public build
+    1: internal build
+
+  HANDMADE_SLOW:
+    1: slow code allowed
+    0: no slow code
+*/
 
 struct game_offscreen_buffer {
   void *Memory;
@@ -10,7 +26,6 @@ struct game_offscreen_buffer {
 struct game_sound_buffer {
   int SamplesPerSecond;
   int SampleCount;
-  int ToneHz;
   int ToneVolume;
   int16 *Memory;
 };
@@ -50,11 +65,32 @@ struct game_input {
   game_controller_input Controllers[4];
 };
 
+struct game_memory {
+  bool32 IsInitialized;
+
+  uint64 PermanentStorageSize;
+  void *PermanentStorage; // required to be cleared to zero
+
+  uint64 TransientStorageSize;
+  void *TransientStorage;
+};
+
 void GameUpdateAndRender(
+  game_memory *Memory,
   game_input *Input,
   game_offscreen_buffer* Buffer,
   game_sound_buffer* SoundBuffer
 );
+
+//
+// not needed by platform layer
+//
+
+struct game_state {
+  int XOffset;
+  int YOffset;
+  int ToneHz;
+};
 
 #define HANDMADE_H
 #endif
