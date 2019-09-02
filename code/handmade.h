@@ -1,5 +1,11 @@
 #ifndef HANDMADE_H
 
+#define ArrayCount(arr) (sizeof((arr)) / (sizeof((arr)[0])))
+#define Kilobytes(number) ((number) * 1024ull)
+#define Megabytes(number) (Kilobytes(number) * 1024ull)
+#define Gigabytes(number) (Megabytes(number) * 1024ull)
+#define Terabytes(number) (Gigabytes(number) * 1024ull)
+
 #ifdef HANDMADE_SLOW
 #define Assert(expression) if(!(expression)) { *(int*) 0 = 0; }
 #else
@@ -15,6 +21,23 @@
     1: slow code allowed
     0: no slow code
 */
+
+inline uint32
+SafeTruncateUInt64(uint64 Value) {
+  Assert(Value <= 0xFFFFFFFF)
+  uint32 Result = (uint32)Value;
+  return Result;
+}
+
+#ifdef HANDMADE_INTERNAL
+struct debug_read_file_result {
+  uint32 Size;
+  void *Memory;
+};
+debug_read_file_result DebugPlatformReadFile(char *FileName);
+bool32 DebugPlatformWriteFile(char *FileName, void *Memory, uint32 Size);
+void DebugPlatformFreeFileMemory(void *Memory);
+#endif
 
 struct game_offscreen_buffer {
   void *Memory;

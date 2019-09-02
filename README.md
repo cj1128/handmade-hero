@@ -148,3 +148,10 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Define `Assert` macro
 - Use `cl -Dname=val` to define `HANDMADE_INTERNAL` and `HANDMADE_SLOW` compiler flags
 - Specify base address when we do `VirtualAlloc` for debugging purpose in internal build
+
+### Day 15: Platform-Independent Debug File
+
+- Define `DebugPlatformReadFile`, `DebugPlatformWriteFile` and `DebugPlatformFreeFileMemory` only when we are using internal build
+- Define `SafeTruncateUInt64` inline functions
+- `CreateFile`, `GetFileSizeEx`, `ReadFile`
+- `__FIEL__` is a compile time macro points to current file

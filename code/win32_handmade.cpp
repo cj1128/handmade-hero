@@ -17,11 +17,6 @@ typedef double real64;
 #define global_variable static
 #define local_persist static
 #define internal static
-#define ArrayCount(arr) (sizeof((arr)) / (sizeof((arr)[0])))
-#define Kilobytes(number) ((number) * 1024ull)
-#define Megabytes(number) (Kilobytes(number) * 1024ull)
-#define Gigabytes(number) (Megabytes(number) * 1024ull)
-#define Terabytes(number) (Gigabytes(number) * 1024ull)
 
 #include "handmade.cpp"
 
@@ -81,6 +76,84 @@ global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable int GlobalXOffset;
 global_variable int GlobalYOffset;
 global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
+
+debug_read_file_result DebugPlatformReadFile(char *FileName) {
+  debug_read_file_result Result = {};
+
+  HANDLE File = CreateFileA(
+    FileName,
+    GENERIC_READ,
+    0,
+    0,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0
+  );
+
+  LARGE_INTEGER FileSize;
+
+  if(File != INVALID_HANDLE_VALUE) {
+    if(GetFileSizeEx(File, &FileSize)) {
+      uint32 FileSize32 = SafeTruncateUInt64(FileSize.QuadPart);
+      void *Memory = VirtualAlloc(0, FileSize32, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+      if(Memory) {
+        DWORD BytesRead;
+        if(ReadFile(File, Memory, FileSize32, &BytesRead, 0) && BytesRead == FileSize32){
+          Result.Size = FileSize32;
+          Result.Memory = Memory;
+        } else {
+          // TODO: logging
+        }
+      } else {
+        // TODO: logging
+      }
+    } else {
+      // TODO: logging
+    }
+
+    CloseHandle(File);
+  } else {
+    // TODO: logging
+  }
+
+  return Result;
+}
+
+bool32
+DebugPlatformWriteFile(char *FileName, void *Memory, uint32 FileSize) {
+  bool32 Result = false;
+
+  HANDLE File = CreateFileA(
+    FileName,
+    GENERIC_WRITE,
+    0,
+    0,
+    CREATE_ALWAYS,
+    FILE_ATTRIBUTE_NORMAL,
+    0
+  );
+
+  if(File != INVALID_HANDLE_VALUE) {
+    DWORD BytesWritten;
+    if(WriteFile(File, Memory, FileSize, &BytesWritten, 0)) {
+      Result = BytesWritten == FileSize;
+    } else {
+      // TODO: logging
+    }
+
+    CloseHandle(File);
+  } else {
+    // TODO: logging
+  }
+
+  return Result;
+}
+
+void
+DebugPlatformFreeFileMemory(void *Memory) {
+  VirtualFree(Memory, 0, MEM_RELEASE);
+}
+
 
 internal void
 Win32ProcessButtonState(
