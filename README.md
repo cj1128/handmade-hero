@@ -155,3 +155,19 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Define `SafeTruncateUInt64` inline functions
 - `CreateFile`, `GetFileSizeEx`, `ReadFile`
 - `__FIEL__` is a compile time macro points to current file
+
+### Day 16: Visual Studio Compiler Switches
+- VS compiler switches:
+  - `-WX`, `-W4`: enable warning level 4 and treat warnings as errors
+  - `-wd`: turn off some warnings
+  - `-MT`: static link C runtime library
+  - `-Oi`: generates intrinsic functions.
+  - `-Od`: disable optimization
+  - `-GR-`: disable run-time type information, we don't need this
+  - `-Gm-`: disable minimal rebuild
+  - `-EHa-`: disable exception-handling
+  - `-nologo`: don't print compiler info
+  - `-FC`: full Path of Source Code File in Diagnostics
+- Init `vsdevcmd` using `-arch=x86` flags to build a 32-bit version of our program
+- Use `/link` to pass linker options to make a valid Windows XP executable
+  - `-subsystem:windows,5.1`

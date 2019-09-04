@@ -30,6 +30,7 @@
   "show_encoding": true,
   "show_errors_inline": false,
   "show_git_status": false,
+  "show_panel_on_build": false,
   "tab_size": 2,
   "translate_tabs_to_spaces": true,
   "trim_trailing_white_space_on_save": true,
