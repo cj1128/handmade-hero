@@ -39,6 +39,8 @@ GameUpdateAndRender(
   game_offscreen_buffer *Buffer,
   game_sound_buffer *SoundBuffer
 ) {
+  Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
+
   game_state *State = (game_state *)Memory->PermanentStorage;
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
@@ -47,18 +49,19 @@ GameUpdateAndRender(
     Memory->IsInitialized = true;
   }
 
+  int delta = 5;
   game_controller_input *Controller = &Input->Controllers[0];
-  if(Controller->Up.IsEndedDown) {
-    State->YOffset += 10;
+  if(Controller->MoveUp.IsEndedDown) {
+    State->YOffset += delta;
   }
-  if(Controller->Down.IsEndedDown) {
-    State->YOffset -= 10;
+  if(Controller->MoveDown.IsEndedDown) {
+    State->YOffset -= delta;
   }
-  if(Controller->Left.IsEndedDown) {
-    State->XOffset -= 10;
+  if(Controller->MoveLeft.IsEndedDown) {
+    State->XOffset -= delta;
   }
-  if(Controller->Right.IsEndedDown) {
-    State->XOffset += 10;
+  if(Controller->MoveRight.IsEndedDown) {
+    State->XOffset += delta;
   }
   if(State->YOffset <= 1000 && State->YOffset >= -1000) {
     int Tmp = (int)(((real32)State->YOffset / 1000) * 256) + 512;

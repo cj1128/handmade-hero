@@ -171,3 +171,12 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Init `vsdevcmd` using `-arch=x86` flags to build a 32-bit version of our program
 - Use `/link` to pass linker options to make a valid Windows XP executable
   - `-subsystem:windows,5.1`
+
+### Day 17: Unified Keyboard and Gamepad Input
+
+- Add one controller, so we have 5 controllers now
+- Extract `CommonCompilerFlags` and `CommonLinkerFlags` in build.bat
+- Copy old keyboard button state to new keyboard button state
+- Add MoveUp, MoveDown, MoveLeft, MoveRight buttons
+- Handle XInput dead zone
+- Check whether union in game_controller_input is aligned
