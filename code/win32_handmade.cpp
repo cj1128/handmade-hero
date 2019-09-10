@@ -26,28 +26,7 @@ typedef double real64;
 #include <dsound.h>
 #include <stdio.h>
 
-struct win32_offscreen_buffer {
-  void *Memory;
-  BITMAPINFO Info;
-  int BytesPerPixel;
-  int Width;
-  int Height;
-};
-
-struct win32_window_dimension {
-  int Width;
-  int Height;
-};
-
-struct win32_sound_output {
-      int32 SamplesPerSecond;
-      int32 BytesPerSample;
-      int32 BufferSize;
-      int32 LatencySampleCount;
-      int ToneHz;
-      int16 ToneVolume;
-      uint32 RunningSampleIndex;
-};
+#include "win32_handmade.h"
 
 // XInputGetState
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
@@ -74,6 +53,7 @@ typedef DIRECT_SOUND_CREATE(direct_sound_create);
 global_variable bool GlobalRunning = true;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
+global_variable uint64 GlobalPerfCounterFrequency;
 
 debug_read_file_result DebugPlatformReadFile(char *FileName) {
   debug_read_file_result Result = {};
@@ -515,6 +495,20 @@ Win32MainWindowCallback(
   return Result;
 }
 
+inline real32
+Win32GetSecondsElapsed(uint64 Start, uint64 End) {
+  real32 Result = 0;
+  Result = (real32)(End - Start) / (real32)GlobalPerfCounterFrequency;
+  return Result;
+}
+
+inline uint64
+Win32GetPerfCounter() {
+  LARGE_INTEGER Result;
+  QueryPerformanceCounter(&Result);
+  return Result.QuadPart;
+}
+
 int CALLBACK
 WinMain(
   HINSTANCE Instance,
@@ -522,8 +516,15 @@ WinMain(
   LPSTR     CmdLine,
   int       ShowCmd
 ) {
+  bool32 SleepIsGranular = timeBeginPeriod(1) == TIMERR_NOERROR ;
+  int MonitorRefreshHz = 60;
+  int GameUpdateHz = MonitorRefreshHz / 2;
+  real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
+
   LARGE_INTEGER CounterPerSecond;
   QueryPerformanceFrequency(&CounterPerSecond);
+  GlobalPerfCounterFrequency = CounterPerSecond.QuadPart;
+
   Win32LoadXInput();
 
   WNDCLASS WindowClass = {};
@@ -590,9 +591,8 @@ WinMain(
         game_input *OldInput = &Input[0];
         game_input *NewInput = &Input[1];
 
-        LARGE_INTEGER LastCounter;
+        uint64 LastCounter = Win32GetPerfCounter();
         uint64 LastCycleCounter = __rdtsc();
-        QueryPerformanceCounter(&LastCounter);
         while(GlobalRunning) {
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
@@ -746,6 +746,18 @@ WinMain(
             Win32FillSoundBuffer(&SoundOutput, &SoundBuffer, LockOffset, BytesToLock);
           }
 
+          real32 SecondsElapsed = Win32GetSecondsElapsed(LastCounter, Win32GetPerfCounter());
+          while(SecondsElapsed < TargetSecondsPerFrame) {
+            if(SleepIsGranular) {
+              DWORD SleepMS = (DWORD)(1000 * (TargetSecondsPerFrame - SecondsElapsed));
+              if(SleepMS > 0 ) {
+                Sleep(SleepMS);
+              }
+            }
+
+            SecondsElapsed = Win32GetSecondsElapsed(LastCounter, Win32GetPerfCounter());
+          }
+
           HDC DeviceContext = GetDC(Window);
           win32_window_dimension Dimension = Win32GetWindowDimension(Window);
           Win32UpdateWindow(
@@ -762,10 +774,9 @@ WinMain(
 
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
-          LARGE_INTEGER CurrentCounter;
-          QueryPerformanceCounter(&CurrentCounter);
+          uint64 CurrentCounter = Win32GetPerfCounter();
 
-          int64 CounterElapsed = CurrentCounter.QuadPart - LastCounter.QuadPart;
+          int64 CounterElapsed = CurrentCounter - LastCounter;
           uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;
 
           real32 MSPerFrame = 1000.0f * (real32)CounterElapsed / (real32)CounterPerSecond.QuadPart;

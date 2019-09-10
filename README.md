@@ -180,3 +180,10 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Add MoveUp, MoveDown, MoveLeft, MoveRight buttons
 - Handle XInput dead zone
 - Check whether union in game_controller_input is aligned
+
+### Day 18: Enforcing a Video Frame Rate
+
+- We need to find a way to reliably retrieve monitor refresh rate?
+- We define `GameUpdateHz` based on `MonitorRefreshHz`
+- Use `Sleep` to wait for the remaining time
+- Use `timeBeginPeriod` to modify scheduler granularity
