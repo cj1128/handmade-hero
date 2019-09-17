@@ -187,3 +187,9 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - We define `GameUpdateHz` based on `MonitorRefreshHz`
 - Use `Sleep` to wait for the remaining time
 - Use `timeBeginPeriod` to modify scheduler granularity
+
+### Day 19: Improving Audio Synchronization
+
+- Record last play cursor and write cursor
+- Define `Win32DebugSyncPlay` to draw it
+- Use a while loop to test direct sound audio update frequency

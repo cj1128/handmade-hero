@@ -1,7 +1,8 @@
 #ifndef WIN32_HANDMADE_H
+
 struct win32_offscreen_buffer
 {
-  // Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
+  // Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX, 0xXXRRGGBB
   BITMAPINFO Info;
   void *Memory;
   int Width;
@@ -24,6 +25,11 @@ struct win32_sound_output {
   int ToneHz;
   int16 ToneVolume;
   uint32 RunningSampleIndex;
+};
+
+struct win32_debug_sound_marker {
+  DWORD PlayCursor;
+  DWORD WriteCursor;
 };
 
 #define WIN32_HANDMADE_H
