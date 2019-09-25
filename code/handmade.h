@@ -1,5 +1,25 @@
 #ifndef HANDMADE_H
 
+#include <stdint.h>
+#include <math.h>
+
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+typedef int32 bool32;
+typedef float real32;
+typedef double real64;
+
+#define Pi32 3.14159265359
+#define global_variable static
+#define local_persist static
+#define internal static
+
 #define ArrayCount(arr) (sizeof((arr)) / (sizeof((arr)[0])))
 #define Kilobytes(number) ((number) * 1024ull)
 #define Megabytes(number) (Kilobytes(number) * 1024ull)
@@ -30,13 +50,21 @@ SafeTruncateUInt64(uint64 Value) {
 }
 
 #ifdef HANDMADE_INTERNAL
+
 struct debug_read_file_result {
   uint32 Size;
   void *Memory;
 };
-debug_read_file_result DebugPlatformReadFile(char *FileName);
-bool32 DebugPlatformWriteFile(char *FileName, void *Memory, uint32 Size);
-void DebugPlatformFreeFileMemory(void *Memory);
+
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(char *FileName)
+typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
+
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(char *FileName, void *Memory, uint32 FileSize)
+typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
+
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void *Memory)
+typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
+
 #endif
 
 struct game_offscreen_buffer {
@@ -103,18 +131,17 @@ struct game_memory {
 
   uint64 TransientStorageSize;
   void *TransientStorage;
+
+  debug_platform_read_file *DebugPlatformReadFile;
+  debug_platform_write_file *DebugPlatformWriteFile;
+  debug_platform_free_file_memory *DebugPlatformFreeFileMemory;
 };
 
-void GameUpdateVideo(
-  game_memory *Memory,
-  game_input *Input,
-  game_offscreen_buffer* Buffer
-);
+#define GAME_UPDATE_VIDEO(name) void name(game_memory *Memory, game_input *Input, game_offscreen_buffer* Buffer)
+typedef GAME_UPDATE_VIDEO(game_update_video);
 
-void GameUpdateAudio(
-  game_memory *Memory,
-  game_sound_buffer* SoundBuffer
-);
+#define GAME_UPDATE_AUDIO(name) void name(game_memory *Memory, game_sound_buffer* SoundBuffer)
+typedef GAME_UPDATE_AUDIO(game_update_audio);
 
 //
 // not needed by platform layer

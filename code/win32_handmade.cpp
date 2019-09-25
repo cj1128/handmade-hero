@@ -1,44 +1,30 @@
-#include <stdint.h>
-#include <math.h>
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-typedef int32 bool32;
-typedef float real32;
-typedef double real64;
-
-#define Pi32 3.14159265359
-#define global_variable static
-#define local_persist static
-#define internal static
-
-#include "handmade.cpp"
-
 #include <windows.h>
 #include <malloc.h>
 #include <xinput.h>
 #include <dsound.h>
 #include <stdio.h>
 
+#include "handmade.h"
 #include "win32_handmade.h"
 
-// XInputGetState
+// Function Types
 #define XINPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE* pState)
 typedef XINPUT_GET_STATE(x_input_get_state);
+
+#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
+typedef XINPUT_SET_STATE(x_input_set_state);
+
+#define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
+typedef DIRECT_SOUND_CREATE(direct_sound_create);
+
+
+// XInputGetState
 XINPUT_GET_STATE(XInputGetStateStub) {
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 global_variable x_input_get_state *XInputGetState_ = XInputGetStateStub;
 
 // XInputSetState
-#define XINPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
-typedef XINPUT_SET_STATE(x_input_set_state);
 XINPUT_SET_STATE(XInputSetStateStub) {
   return ERROR_DEVICE_NOT_CONNECTED;
 }
@@ -47,16 +33,13 @@ global_variable x_input_set_state *XInputSetState_ = XInputSetStateStub;
 #define XInputGetState XInputGetState_
 #define XInputSetState XInputSetState_
 
-#define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
-typedef DIRECT_SOUND_CREATE(direct_sound_create);
-
 global_variable bool GlobalRunning = true;
 global_variable bool GlobalDebugUpdateWindow = true;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
 global_variable uint64 GlobalPerfCounterFrequency;
 
-debug_read_file_result DebugPlatformReadFile(char *FileName) {
+DEBUG_PLATFORM_READ_FILE(DebugPlatformReadFile) {
   debug_read_file_result Result = {};
 
   HANDLE File = CreateFileA(
@@ -98,8 +81,7 @@ debug_read_file_result DebugPlatformReadFile(char *FileName) {
   return Result;
 }
 
-bool32
-DebugPlatformWriteFile(char *FileName, void *Memory, uint32 FileSize) {
+DEBUG_PLATFORM_WRITE_FILE(DebugPlatformWriteFile) {
   bool32 Result = false;
 
   HANDLE File = CreateFileA(
@@ -128,9 +110,37 @@ DebugPlatformWriteFile(char *FileName, void *Memory, uint32 FileSize) {
   return Result;
 }
 
-void
-DebugPlatformFreeFileMemory(void *Memory) {
+DEBUG_PLATFORM_FREE_FILE_MEMORY(DebugPlatformFreeFileMemory) {
   VirtualFree(Memory, 0, MEM_RELEASE);
+}
+
+win32_game_code
+Win32LoadGameCode(void) {
+  win32_game_code Result = {};
+
+  CopyFile("handmade.dll", "handmade_temp.dll", FALSE);
+  HMODULE Library = LoadLibraryA("handmade_temp.dll");
+
+  if(Library) {
+    Result.GameDLL = Library;
+    Result.GameUpdateVideo = (game_update_video *)(GetProcAddress(Library, "GameUpdateVideo"));
+    Result.GameUpdateAudio = (game_update_audio *)(GetProcAddress(Library, "GameUpdateAudio"));
+    Result.IsValid = Result.GameUpdateVideo && Result.GameUpdateVideo;
+  }
+
+  return Result;
+}
+
+void
+Win32UnloadGameCode(win32_game_code *Code) {
+  if(Code->GameDLL) {
+    FreeLibrary(Code->GameDLL);
+    Code->GameDLL = 0;
+  }
+
+  Code->IsValid = false;
+  Code->GameUpdateVideo = NULL;
+  Code->GameUpdateAudio = NULL;
 }
 
 internal real32
@@ -674,6 +684,9 @@ WinMain(
       int16 *SoundMemory = (int16 *)VirtualAlloc(0, SoundOutput.BufferSize, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
 
       game_memory Memory = {};
+      Memory.DebugPlatformReadFile = DebugPlatformReadFile;
+      Memory.DebugPlatformWriteFile = DebugPlatformWriteFile;
+      Memory.DebugPlatformFreeFileMemory = DebugPlatformFreeFileMemory;
       Memory.PermanentStorageSize = Megabytes(64);
       Memory.TransientStorageSize = Gigabytes((uint64)1);
 #ifdef HANDMADE_INTERNAL
@@ -719,7 +732,17 @@ WinMain(
         int DebugSoundMarkerIndex = 0;
         win32_debug_sound_marker DebugSoundMarkers[15] = {};
 
+        uint32 GameLoadCounter = 0;
+        win32_game_code Game = Win32LoadGameCode();
         while(GlobalRunning) {
+          if(GameLoadCounter++ == 120) {
+            Win32UnloadGameCode(&Game);
+            Game = Win32LoadGameCode();
+            GameLoadCounter = 0;
+          }
+
+          Assert(Game.IsValid);
+
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
           *NewKeyboardController = {};
@@ -839,7 +862,7 @@ WinMain(
           Buffer.BytesPerPixel = GlobalBackBuffer.BytesPerPixel;
           Buffer.Width = GlobalBackBuffer.Width;
           Buffer.Height = GlobalBackBuffer.Height;
-          GameUpdateVideo(&Memory, NewInput, &Buffer);
+          Game.GameUpdateVideo(&Memory, NewInput, &Buffer);
 
           {
             uint64 AudioCounter = Win32GetPerfCounter();
@@ -884,7 +907,7 @@ WinMain(
               SoundBuffer.SampleCount = BytesToLock / SoundOutput.BytesPerSample;
               SoundBuffer.ToneVolume = SoundOutput.ToneVolume;
               SoundBuffer.Memory = SoundMemory;
-              GameUpdateAudio(&Memory, &SoundBuffer);
+              Game.GameUpdateAudio(&Memory, &SoundBuffer);
 
 #if HANDMADE_INTERNAL
               win32_debug_sound_marker *Marker = &DebugSoundMarkers[DebugSoundMarkerIndex];

@@ -38,18 +38,22 @@ RenderSineWave(
   }
 }
 
-void
-GameUpdateVideo(
-  game_memory *Memory,
-  game_input *Input,
-  game_offscreen_buffer *Buffer
-) {
+extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
 
   game_state *State = (game_state *)Memory->PermanentStorage;
 
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
   if(!Memory->IsInitialized) {
+    char *Filename = __FILE__;
+
+    debug_read_file_result File = Memory->DebugPlatformReadFile(Filename);
+    if(File.Memory)
+    {
+        Memory->DebugPlatformWriteFile("test.out", File.Memory, File.Size);
+        Memory->DebugPlatformFreeFileMemory(File.Memory);
+    }
+
     State->ToneHz = 256;
     State->tSine = 0;
     Memory->IsInitialized = true;
@@ -77,11 +81,7 @@ GameUpdateVideo(
   RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
 }
 
-void
-GameUpdateAudio(
-  game_memory *Memory,
-  game_sound_buffer* SoundBuffer
-) {
+extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {
   game_state *State = (game_state *)Memory->PermanentStorage;
   RenderSineWave(State, SoundBuffer);
 }

@@ -202,3 +202,15 @@ I didn't take many notes because I was really confused and I didn't understand m
 
 - Compute audio latency seconds using write cursor - play cursor
 - Define `GameGetSoundSamples`
+
+### Day 21: Loading Game Code Dynamically
+
+- Compile win32_handmade and handmade separaely
+- Define win32_game_code and
+- Put platform debug functions to game memroy
+- /LD build dll
+- Use /EXPORT linker flags to export dll functions
+- We don't need to define `DllMain` entry point in our dll
+- extern "C" to prevent name mangling
+- Turn off incremental link
+- Use `CopyFile` to copy the dll

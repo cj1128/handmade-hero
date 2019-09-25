@@ -36,5 +36,12 @@ struct win32_debug_sound_marker {
   DWORD ExpectedFlipPlayCursor;
 };
 
+struct win32_game_code {
+  HMODULE GameDLL;
+  bool32 IsValid;
+  game_update_video *GameUpdateVideo;
+  game_update_audio *GameUpdateAudio;
+};
+
 #define WIN32_HANDMADE_H
 #endif
