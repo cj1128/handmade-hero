@@ -19,25 +19,30 @@ RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
 }
 
 internal void
-RenderSineWave(game_sound_buffer *Buffer, int ToneHz) {
-  local_persist real32 tSine;
+RenderSineWave(
+  game_state *State,
+  game_sound_buffer *Buffer
+) {
+  int ToneHz = State->ToneHz;
   int WavePeriod = Buffer->SamplesPerSecond / ToneHz;
 
   int16* Output = Buffer->Memory;
   for(int SampleIndex = 0; SampleIndex < Buffer->SampleCount; SampleIndex++) {
-    int16 Value = (int16)(sinf(tSine) * Buffer->ToneVolume);
+    int16 Value = (int16)(sinf(State->tSine) * Buffer->ToneVolume);
     *Output++ = Value;
     *Output++ = Value;
-    tSine += (real32)(2.0f * Pi32 * (1.0f / (real32)WavePeriod));
+    State->tSine += (real32)(2.0f * Pi32 * (1.0f / (real32)WavePeriod));
+    if(State->tSine > 2.0f * Pi32) {
+      State->tSine -= (real32)(2.0f * Pi32);
+    }
   }
 }
 
 void
-GameUpdateAndRender(
+GameUpdateVideo(
   game_memory *Memory,
   game_input *Input,
-  game_offscreen_buffer *Buffer,
-  game_sound_buffer *SoundBuffer
+  game_offscreen_buffer *Buffer
 ) {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
 
@@ -46,6 +51,7 @@ GameUpdateAndRender(
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
   if(!Memory->IsInitialized) {
     State->ToneHz = 256;
+    State->tSine = 0;
     Memory->IsInitialized = true;
   }
 
@@ -69,5 +75,13 @@ GameUpdateAndRender(
   }
 
   RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
-  RenderSineWave(SoundBuffer, State->ToneHz);
+}
+
+void
+GameUpdateAudio(
+  game_memory *Memory,
+  game_sound_buffer* SoundBuffer
+) {
+  game_state *State = (game_state *)Memory->PermanentStorage;
+  RenderSineWave(State, SoundBuffer);
 }

@@ -193,3 +193,12 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 - Record last play cursor and write cursor
 - Define `Win32DebugSyncPlay` to draw it
 - Use a while loop to test direct sound audio update frequency
+
+### Day 20: Debugging the Audio Sync
+
+**The audio sync logic is indeed very hard and complicated**.
+
+I didn't take many notes because I was really confused and I didn't understand much.
+
+- Compute audio latency seconds using write cursor - play cursor
+- Define `GameGetSoundSamples`

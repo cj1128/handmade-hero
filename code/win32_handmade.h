@@ -20,16 +20,20 @@ struct win32_window_dimension
 struct win32_sound_output {
   int32 SamplesPerSecond;
   int32 BytesPerSample;
-  int32 BufferSize;
-  int32 LatencySampleCount;
-  int ToneHz;
+  DWORD BufferSize;
+  int32 SafetyBytes;
   int16 ToneVolume;
   uint32 RunningSampleIndex;
 };
 
 struct win32_debug_sound_marker {
-  DWORD PlayCursor;
-  DWORD WriteCursor;
+  DWORD FlipPlayCursor;
+  DWORD FlipWriteCursor;
+  DWORD OutputPlayCursor;
+  DWORD OutputWriteCursor;
+  DWORD LockOffset;
+  DWORD BytesToLock;
+  DWORD ExpectedFlipPlayCursor;
 };
 
 #define WIN32_HANDMADE_H

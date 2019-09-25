@@ -105,10 +105,14 @@ struct game_memory {
   void *TransientStorage;
 };
 
-void GameUpdateAndRender(
+void GameUpdateVideo(
   game_memory *Memory,
   game_input *Input,
-  game_offscreen_buffer* Buffer,
+  game_offscreen_buffer* Buffer
+);
+
+void GameUpdateAudio(
+  game_memory *Memory,
   game_sound_buffer* SoundBuffer
 );
 
@@ -120,6 +124,7 @@ struct game_state {
   int XOffset;
   int YOffset;
   int ToneHz;
+  real32 tSine;
 };
 
 #define HANDMADE_H
