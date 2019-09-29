@@ -11,7 +11,7 @@ RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
       uint8 Blue = (uint8)(X + XOffset);
       uint8 Green = (uint8)(Y + YOffset);
       // 0xXXRRGGBB
-      *Pixel++ = (Green << 8) | Blue;
+      *Pixel++ = (Green << 16) | Blue;
     }
 
     Row = Row + Buffer->Width * Buffer->BytesPerPixel;

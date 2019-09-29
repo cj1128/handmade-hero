@@ -114,12 +114,31 @@ DEBUG_PLATFORM_FREE_FILE_MEMORY(DebugPlatformFreeFileMemory) {
   VirtualFree(Memory, 0, MEM_RELEASE);
 }
 
-win32_game_code
-Win32LoadGameCode(void) {
-  win32_game_code Result = {};
+inline FILETIME
+Win32GetFileLastWriteTime(char *FileName) {
+  FILETIME Result = {};
+  WIN32_FIND_DATA FindData;
+  HANDLE Handle = FindFirstFileA(FileName, &FindData);
+  if(Handle != INVALID_HANDLE_VALUE) {
+    Result = FindData.ftLastWriteTime;
+    FindClose(Handle);
+  }
 
-  CopyFile("handmade.dll", "handmade_temp.dll", FALSE);
-  HMODULE Library = LoadLibraryA("handmade_temp.dll");
+  return Result;
+}
+
+win32_game_code
+Win32LoadGameCode(char *DLLPath, char *DLLTempPath) {
+  win32_game_code Result = {};
+  Result.GameDLLLastWriteTime = Win32GetFileLastWriteTime(DLLPath);
+
+  // CopyFile may fail the first few times
+  while(1) {
+    if(CopyFile(DLLPath, DLLTempPath, FALSE)) break;
+    if(GetLastError() == ERROR_FILE_NOT_FOUND) break;
+  }
+
+  HMODULE Library = LoadLibraryA(DLLTempPath);
 
   if(Library) {
     Result.GameDLL = Library;
@@ -377,7 +396,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize) {
 
     if(SUCCEEDED(DirectSoundCreate(0, &DirectSound, 0))) {
       if(SUCCEEDED(DirectSound->SetCooperativeLevel(Window, DSSCL_PRIORITY))) {
-        OutputDebugStringA("Set cooperative level ok\n");
+        // OutputDebugStringA("Set cooperative level ok\n");
       } else {
         // TODO: logging
       }
@@ -396,9 +415,9 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize) {
         BufferDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
         LPDIRECTSOUNDBUFFER  PrimaryBuffer;
         if(SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &PrimaryBuffer, 0))) {
-          OutputDebugStringA("Create primary buffer ok\n");
+          // OutputDebugStringA("Create primary buffer ok\n");
           if(SUCCEEDED(PrimaryBuffer->SetFormat(&WaveFormat))) {
-            OutputDebugStringA("Primary buffer set format ok\n");
+            // OutputDebugStringA("Primary buffer set format ok\n");
           } else {
             // TDOO: logging
           }
@@ -412,7 +431,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize) {
         BufferDesc.dwBufferBytes = BufferSize;
         BufferDesc.lpwfxFormat = &WaveFormat;
         if(SUCCEEDED(DirectSound->CreateSoundBuffer(&BufferDesc, &GlobalSoundBuffer, 0))) {
-          OutputDebugStringA("Secondary buffer created\n");
+          // OutputDebugStringA("Secondary buffer created\n");
         } else {
           // TODO: logging
         }
@@ -732,13 +751,34 @@ WinMain(
         int DebugSoundMarkerIndex = 0;
         win32_debug_sound_marker DebugSoundMarkers[15] = {};
 
-        uint32 GameLoadCounter = 0;
-        win32_game_code Game = Win32LoadGameCode();
+        char EXEPath[MAX_PATH];
+        DWORD FilenameSize = GetModuleFileNameA(NULL, EXEPath, sizeof(EXEPath));
+        char *OnePastLastSlash = EXEPath;
+        for(char *Scan = EXEPath + FilenameSize; ; --Scan) {
+          if(*Scan == '\\') {
+            OnePastLastSlash = Scan + 1;
+            break;
+          }
+        }
+        uint64_t EXEDirLength = OnePastLastSlash - EXEPath;
+
+        char GameDLLName[] = "handmade.dll";
+        char GameDLLPath[MAX_PATH];
+        strncpy_s(GameDLLPath, sizeof(GameDLLPath), EXEPath, EXEDirLength);
+        strncpy_s(GameDLLPath + EXEDirLength, sizeof(GameDLLPath) - EXEDirLength, GameDLLName, sizeof(GameDLLName));
+
+        char GameTempDLLName[] = "handmade_temp.dll";
+        char GameTempDLLPath[MAX_PATH];
+        strncpy_s(GameTempDLLPath, sizeof(GameTempDLLPath), EXEPath, EXEDirLength);
+        strncpy_s(GameTempDLLPath + EXEDirLength, sizeof(GameTempDLLPath) - EXEDirLength, GameTempDLLName, sizeof(GameTempDLLName));
+
+        win32_game_code Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath);
         while(GlobalRunning) {
-          if(GameLoadCounter++ == 120) {
+          FILETIME NewDLLWriteTime = Win32GetFileLastWriteTime(GameDLLPath);
+          if(CompareFileTime(&NewDLLWriteTime, &Game.GameDLLLastWriteTime) != 0) {
+            OutputDebugStringA("Updated!");
             Win32UnloadGameCode(&Game);
-            Game = Win32LoadGameCode();
-            GameLoadCounter = 0;
+            Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath);
           }
 
           Assert(Game.IsValid);
@@ -926,7 +966,7 @@ WinMain(
 
               char AudioTextBuffer[256];
               sprintf_s(AudioTextBuffer, "LockOffset: %d, TargetCursor: %d, BytesToLock: %d, PlayCursor: %d, WriteCursor: %d, AudioLatencyBytes: %d, AudioLatencySeconds: %f\n", LockOffset, TargetCursor, BytesToLock, PlayCursor, WriteCursor, AudioLantencyBytes, AudioLatencySeconds);
-              OutputDebugStringA(AudioTextBuffer);
+              // OutputDebugStringA(AudioTextBuffer);
 #endif
 
               Win32FillSoundBuffer(&SoundOutput, &SoundBuffer, LockOffset, BytesToLock);
@@ -1005,7 +1045,7 @@ WinMain(
 
           char OutputBuffer[256];
           sprintf_s(OutputBuffer, sizeof(OutputBuffer), "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
-          OutputDebugStringA(OutputBuffer);
+          // OutputDebugStringA(OutputBuffer);
 
           LastCounter = EndCounter;
           LastCycleCounter = CurrentCycleCounter;

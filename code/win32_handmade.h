@@ -38,6 +38,7 @@ struct win32_debug_sound_marker {
 
 struct win32_game_code {
   HMODULE GameDLL;
+  FILETIME  GameDLLLastWriteTime;
   bool32 IsValid;
   game_update_video *GameUpdateVideo;
   game_update_audio *GameUpdateAudio;

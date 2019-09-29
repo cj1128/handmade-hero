@@ -214,3 +214,15 @@ I didn't take many notes because I was really confused and I didn't understand m
 - extern "C" to prevent name mangling
 - Turn off incremental link
 - Use `CopyFile` to copy the dll
+
+### Day 22: Instantaneous Live Code Editing
+
+Note: `CopyFile` may fail the first time, We use a while loop to do it. This is debug code so We don't care the performance;
+
+- Use /PDB:name linker options to specify pdb file name
+- Add timestamp to output pdb file name
+- Delete PDB files and pipe del output to NUL
+- Use `FindFirstFile` to get file write time
+- Use `CompareFileTime` to compare file time
+- Use `GetModuleFileName` to get exe path and use it to build full dll path
+- We can use MAX_PATH macro to define length of path buffer
