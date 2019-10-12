@@ -44,5 +44,16 @@ struct win32_game_code {
   game_update_audio *GameUpdateAudio;
 };
 
+struct win32_state {
+  int InputRecordingIndex;
+  int InputPlayingBackIndex;
+
+  HANDLE RecordingHandle;
+  HANDLE PlayingBackHandle;
+
+  void *GameMemory;
+  uint64 MemorySize;
+};
+
 #define WIN32_HANDMADE_H
 #endif

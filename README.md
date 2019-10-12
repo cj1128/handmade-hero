@@ -20,7 +20,14 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 
 ## Windows Programming
 
+### Bash
+
 - `dir /s [keyword]`: search something
+
+### Win32
+
+- `WS_EX_TOPMOST`: make window in front of others
+- `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
 
 ## Roadmap
 
@@ -226,3 +233,12 @@ Note: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 - Use `CompareFileTime` to compare file time
 - Use `GetModuleFileName` to get exe path and use it to build full dll path
 - We can use MAX_PATH macro to define length of path buffer
+
+### Day 23: Looped Live Code Editing
+
+- Define `win32_state` to store InputRecordIndex and InputPlayingIndex, we only support one slot now
+- Press L to toggle input recording
+- Store input and memory into files
+- Use a simple jump to test our looped editing
+- We can use `WS_EX_TOPMOST` and `WS_EX_LAYERED` to make our window the top most one and has some opacity
+- We can do it in `WM_ACTIVATEAPP` message so when the game loses focus it will be transparent

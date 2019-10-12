@@ -114,6 +114,77 @@ DEBUG_PLATFORM_FREE_FILE_MEMORY(DebugPlatformFreeFileMemory) {
   VirtualFree(Memory, 0, MEM_RELEASE);
 }
 
+internal void
+Win32BeginInputRecording(win32_state *State, int Index) {
+  State->InputRecordingIndex = Index;
+  State->RecordingHandle = CreateFileA(
+    "w:\\build\\handmade.hmi",
+    GENERIC_WRITE,
+    0,
+    0,
+    CREATE_ALWAYS,
+    FILE_ATTRIBUTE_NORMAL,
+    0
+  );
+
+  DWORD BytesWritten;
+  Assert(State->MemorySize <= 0xFFFFFFFF);
+  // write 4GB maximum one time
+  WriteFile(State->RecordingHandle, State->GameMemory, uint32(State->MemorySize), &BytesWritten, 0);
+}
+
+internal void
+Win32EndInputRecording(win32_state *State) {
+  CloseHandle(State->RecordingHandle);
+  State->InputRecordingIndex = 0;
+}
+
+internal void
+Win32RecordInput(win32_state *State, game_input *Input) {
+  DWORD BytesWritten;
+  WriteFile(State->RecordingHandle, Input, sizeof(*Input), &BytesWritten, 0);
+}
+
+internal void
+Win32BeginInputPlayingBack(win32_state *State, int Index) {
+  State->InputPlayingBackIndex = Index;
+  State->PlayingBackHandle = CreateFileA(
+    "w:\\build\\handmade.hmi",
+    GENERIC_READ,
+    0,
+    0,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0
+  );
+
+  DWORD BytesRead;
+  ReadFile(State->PlayingBackHandle, State->GameMemory, (uint32)State->MemorySize, &BytesRead, 0);
+  Assert(BytesRead == State->MemorySize);
+}
+
+internal void
+Win32EndInputPlayingBack(win32_state *State) {
+  CloseHandle(State->PlayingBackHandle);
+  State->InputPlayingBackIndex = 0;
+}
+
+internal void
+Win32PlayBackInput(win32_state *State, game_input *Input) {
+  DWORD BytesRead;
+  if(ReadFile(State->PlayingBackHandle, Input, sizeof(*Input), &BytesRead, 0)) {
+    // hit the end of the stream
+    if(BytesRead == 0) {
+      int Index = State->InputPlayingBackIndex;
+      Win32EndInputPlayingBack(State);
+      Win32BeginInputPlayingBack(State, Index);
+      ReadFile(State->PlayingBackHandle, Input, sizeof(*Input), &BytesRead, 0);
+    }
+
+    Assert(BytesRead == sizeof(*Input));
+  }
+}
+
 inline FILETIME
 Win32GetFileLastWriteTime(char *FileName) {
   FILETIME Result = {};
@@ -300,7 +371,7 @@ Win32ProcessXInputButtonState(
 }
 
 internal void
-Win32ProcessMessages(game_controller_input *KeyboardController) {
+Win32ProcessMessages(win32_state *Win32State, game_controller_input *KeyboardController) {
   MSG Message = {};
 
   while(PeekMessageA(&Message, 0, 0, 0, PM_REMOVE)) {
@@ -373,6 +444,17 @@ Win32ProcessMessages(game_controller_input *KeyboardController) {
             // right shoulder
             case 'E': {
               Win32ProcessKeyboardButtonState(&KeyboardController->RightShoulder, IsDown);
+            } break;
+
+            case 'L': {
+              if(IsDown) {
+                if(Win32State->InputRecordingIndex == 0) {
+                  Win32BeginInputRecording(Win32State, 1);
+                } else {
+                  Win32EndInputRecording(Win32State);
+                  Win32BeginInputPlayingBack(Win32State, 1);
+                }
+              }
             } break;
           }
         }
@@ -707,7 +789,7 @@ WinMain(
       Memory.DebugPlatformWriteFile = DebugPlatformWriteFile;
       Memory.DebugPlatformFreeFileMemory = DebugPlatformFreeFileMemory;
       Memory.PermanentStorageSize = Megabytes(64);
-      Memory.TransientStorageSize = Gigabytes((uint64)1);
+      Memory.TransientStorageSize = Megabytes((uint64)1);
 #ifdef HANDMADE_INTERNAL
       LPVOID BaseAddress = (LPVOID)Terabytes(2);
 #else
@@ -736,6 +818,10 @@ WinMain(
           OutputDebugStringA(Buffer);
         }
 #endif
+
+        win32_state Win32State = {};
+        Win32State.GameMemory = Memory.PermanentStorage;
+        Win32State.MemorySize = Memory.PermanentStorageSize;
 
         Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
 
@@ -792,7 +878,7 @@ WinMain(
             NewKeyboardController->Buttons[i].IsEndedDown = OldKeyboardController->Buttons[i].IsEndedDown;
           }
 
-          Win32ProcessMessages(NewKeyboardController);
+          Win32ProcessMessages(&Win32State, NewKeyboardController);
 
           int ControllerCount = XUSER_MAX_COUNT;
           if(ControllerCount > (ArrayCount(NewInput->Controllers) - 1)) {
@@ -902,6 +988,14 @@ WinMain(
           Buffer.BytesPerPixel = GlobalBackBuffer.BytesPerPixel;
           Buffer.Width = GlobalBackBuffer.Width;
           Buffer.Height = GlobalBackBuffer.Height;
+          Buffer.Pitch = Buffer.Width * Buffer.BytesPerPixel;
+
+          if(Win32State.InputRecordingIndex != 0) {
+            Win32RecordInput(&Win32State, NewInput);
+          }
+          if(Win32State.InputPlayingBackIndex != 0) {
+            Win32PlayBackInput(&Win32State, NewInput);
+          }
           Game.GameUpdateVideo(&Memory, NewInput, &Buffer);
 
           {

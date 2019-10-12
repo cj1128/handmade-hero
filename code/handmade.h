@@ -71,6 +71,7 @@ struct game_offscreen_buffer {
   void *Memory;
   int BytesPerPixel;
   int Width;
+  int Pitch;
   int Height;
 };
 
@@ -151,7 +152,12 @@ struct game_state {
   int XOffset;
   int YOffset;
   int ToneHz;
+
+  int PlayerX;
+  int PlayerY;
+
   real32 tSine;
+  real32 tJump;
 };
 
 #define HANDMADE_H

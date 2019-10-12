@@ -1,6 +1,30 @@
 #include "handmade.h"
 
 internal void
+RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY) {
+  uint8 *Start = (uint8 *)Buffer->Memory;
+  uint8 *EndOfBuffer = Start + Buffer->Pitch * Buffer->Height;
+
+  // 10 x 10 square
+  if(PlayerX >= 0 && PlayerX < Buffer->Width - 10 && PlayerY >= 0 && PlayerY < Buffer->Height - 10) {
+
+    uint8 *Row = Start + PlayerY * Buffer->Pitch + PlayerX * Buffer->BytesPerPixel;
+
+    for(int Y = 0; Y < 10; Y++) {
+      uint8 *Pixel = Row;
+
+      for(int X = 0; X < 10; X++) {
+        Assert(Pixel >= Buffer->Memory && Pixel < EndOfBuffer);
+        *((uint32*)Pixel) = 0xFFFFFFFF;
+        Pixel += Buffer->BytesPerPixel;
+      }
+
+      Row += Buffer->Pitch;
+    }
+  }
+}
+
+internal void
 RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
   uint8 *Row = (uint8 *)Buffer->Memory;
 
@@ -14,7 +38,7 @@ RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
       *Pixel++ = (Green << 16) | Blue;
     }
 
-    Row = Row + Buffer->Width * Buffer->BytesPerPixel;
+    Row = Row + Buffer->Pitch;
   }
 }
 
@@ -50,35 +74,52 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     debug_read_file_result File = Memory->DebugPlatformReadFile(Filename);
     if(File.Memory)
     {
-        Memory->DebugPlatformWriteFile("test.out", File.Memory, File.Size);
+        Memory->DebugPlatformWriteFile("w:\\build\\test.out", File.Memory, File.Size);
         Memory->DebugPlatformFreeFileMemory(File.Memory);
     }
 
     State->ToneHz = 256;
     State->tSine = 0;
+    State->PlayerX = 10;
+    State->PlayerY = 10;
     Memory->IsInitialized = true;
   }
 
   int delta = 5;
   game_controller_input *Controller = &Input->Controllers[0];
   if(Controller->MoveUp.IsEndedDown) {
-    State->YOffset += delta;
+    State->PlayerY -= delta;
+    // State->YOffset += delta;
   }
   if(Controller->MoveDown.IsEndedDown) {
-    State->YOffset -= delta;
+    State->PlayerY += delta;
+    // State->YOffset -= delta;
   }
   if(Controller->MoveLeft.IsEndedDown) {
-    State->XOffset -= delta;
+    State->PlayerX -= delta;
+    // State->XOffset -= delta;
   }
   if(Controller->MoveRight.IsEndedDown) {
-    State->XOffset += delta;
+    State->PlayerX += delta;
+    // State->XOffset += delta;
   }
+
+  if(Controller->ActionUp.IsEndedDown) {
+    State->tJump = (real32)(2.0f * Pi32);
+  }
+  if(State->tJump > 0) {
+    State->PlayerX += 5;
+    State->PlayerY += (int)(sinf(State->tJump) * 20);
+    State->tJump -= 0.2f;
+  }
+
   if(State->YOffset <= 1000 && State->YOffset >= -1000) {
     int Tmp = (int)(((real32)State->YOffset / 1000) * 256) + 512;
     State->ToneHz = Tmp;
   }
 
   RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
+  RenderPlayer(Buffer, State->PlayerX, State->PlayerY);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {
