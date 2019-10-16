@@ -242,3 +242,12 @@ Note: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 - Use a simple jump to test our looped editing
 - We can use `WS_EX_TOPMOST` and `WS_EX_LAYERED` to make our window the top most one and has some opacity
 - We can do it in `WM_ACTIVATEAPP` message so when the game loses focus it will be transparent
+
+### Day 24: Win32 Platform Layer Cleanup
+
+- Fix the audio bug (I have already fixed that in previous day)
+- Change blit mode to 1-to-1 pixles
+- Use `%random%` for pdb files
+- Change compiler flag `MT` to `MTd`
+- Store EXE directory in Win32State and put record input file to build dir
+- Use `GetFileAttributeEx` instead of `FindFirstFile` to get last write time of a file

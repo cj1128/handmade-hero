@@ -44,6 +44,7 @@ struct win32_game_code {
   game_update_audio *GameUpdateAudio;
 };
 
+#define WIN32_MAX_PATH MAX_PATH
 struct win32_state {
   int InputRecordingIndex;
   int InputPlayingBackIndex;
@@ -53,6 +54,9 @@ struct win32_state {
 
   void *GameMemory;
   uint64 MemorySize;
+
+  char EXEPath[WIN32_MAX_PATH];
+  int EXEDirLength;
 };
 
 #define WIN32_HANDMADE_H
