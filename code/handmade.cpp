@@ -71,11 +71,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   if(!Memory->IsInitialized) {
     char *Filename = __FILE__;
 
-    debug_read_file_result File = Memory->DebugPlatformReadFile(Filename);
+    debug_read_file_result File = Memory->DebugPlatformReadFile(Thread, Filename);
     if(File.Memory)
     {
-        Memory->DebugPlatformWriteFile("w:\\build\\test.out", File.Memory, File.Size);
-        Memory->DebugPlatformFreeFileMemory(File.Memory);
+        Memory->DebugPlatformWriteFile(Thread, "w:\\build\\test.out", File.Memory, File.Size);
+        Memory->DebugPlatformFreeFileMemory(Thread, File.Memory);
     }
 
     State->ToneHz = 256;
@@ -120,6 +120,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
   RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
   RenderPlayer(Buffer, State->PlayerX, State->PlayerY);
+  RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
+
+  for(int i = 0; i < ArrayCount(Input->MouseButtons); i++) {
+    if(Input->MouseButtons[i].IsEndedDown) {
+      RenderPlayer(Buffer, 10, 50 + 10 * i);
+    }
+  }
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {

@@ -49,23 +49,9 @@ SafeTruncateUInt64(uint64 Value) {
   return Result;
 }
 
-#ifdef HANDMADE_INTERNAL
-
-struct debug_read_file_result {
-  uint32 Size;
-  void *Memory;
+struct thread_context {
+  int Placeholder;
 };
-
-#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(char *FileName)
-typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
-
-#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(char *FileName, void *Memory, uint32 FileSize)
-typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
-
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(void *Memory)
-typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
-
-#endif
 
 struct game_offscreen_buffer {
   void *Memory;
@@ -121,8 +107,27 @@ struct game_controller_input {
 };
 
 struct game_input {
+  int32 MouseX, MouseY;
+  game_button_state MouseButtons[5];
+
   game_controller_input Controllers[5];
 };
+
+#ifdef HANDMADE_INTERNAL
+struct debug_read_file_result {
+  uint32 Size;
+  void *Memory;
+};
+
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Thread, char *FileName)
+typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
+
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(thread_context *Thread, char *FileName, void *Memory, uint32 FileSize)
+typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
+
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
+typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
+#endif
 
 struct game_memory {
   bool32 IsInitialized;
@@ -138,10 +143,10 @@ struct game_memory {
   debug_platform_free_file_memory *DebugPlatformFreeFileMemory;
 };
 
-#define GAME_UPDATE_VIDEO(name) void name(game_memory *Memory, game_input *Input, game_offscreen_buffer* Buffer)
+#define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer* Buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
-#define GAME_UPDATE_AUDIO(name) void name(game_memory *Memory, game_sound_buffer* SoundBuffer)
+#define GAME_UPDATE_AUDIO(name) void name(thread_context *Thread, game_memory *Memory, game_sound_buffer* SoundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
 //

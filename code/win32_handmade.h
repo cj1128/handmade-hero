@@ -45,12 +45,17 @@ struct win32_game_code {
 };
 
 #define WIN32_MAX_PATH MAX_PATH
-struct win32_state {
-  int InputRecordingIndex;
-  int InputPlayingBackIndex;
 
-  HANDLE RecordingHandle;
-  HANDLE PlayingBackHandle;
+struct win32_replay_buffer {
+  HANDLE InputHandle;
+  void *Memory;
+};
+
+struct win32_state {
+  int InputRecordingIndex; // 1-based
+  int InputPlayingBackIndex; // 1-based
+
+  win32_replay_buffer ReplayBuffers[4];
 
   void *GameMemory;
   uint64 MemorySize;

@@ -139,11 +139,38 @@ Win32GetEXEPath(win32_state *State) {
   State->EXEDirLength = (int)(OnePastLastSlash - State->EXEPath);
 }
 
+internal win32_replay_buffer *
+Win32GetReplayBuffer(win32_state *State, int Index) {
+  return &State->ReplayBuffers[Index - 1];
+}
+
+internal void
+Win32GetReplayInputFilePath(
+  win32_state *State,
+  int Index,
+  char FilePath[],
+  int FilePathSize
+) {
+  char FileName[30];
+  sprintf_s(FileName, sizeof(FileName), "handmade_input_%d.hmi", Index);
+  Win32BuildPathInEXEDir(
+    State,
+    FileName,
+    int(strlen(FileName)),
+    FilePath,
+    FilePathSize
+  );
+}
+
 internal void
 Win32BeginInputRecording(win32_state *State, int Index) {
   State->InputRecordingIndex = Index;
-  State->RecordingHandle = CreateFileA(
-    "w:\\build\\handmade.hmi",
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, Index);
+
+  char FilePath[WIN32_MAX_PATH];
+  Win32GetReplayInputFilePath(State, Index, FilePath, sizeof(FilePath));
+  Buffer->InputHandle = CreateFileA(
+    FilePath,
     GENERIC_WRITE,
     0,
     0,
@@ -152,29 +179,37 @@ Win32BeginInputRecording(win32_state *State, int Index) {
     0
   );
 
-  DWORD BytesWritten;
-  Assert(State->MemorySize <= 0xFFFFFFFF);
-  // write 4GB maximum one time
-  WriteFile(State->RecordingHandle, State->GameMemory, uint32(State->MemorySize), &BytesWritten, 0);
+  CopyMemory(
+    Buffer->Memory,
+    State->GameMemory,
+    State->MemorySize
+  );
 }
 
 internal void
 Win32EndInputRecording(win32_state *State) {
-  CloseHandle(State->RecordingHandle);
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, State->InputRecordingIndex);
+  CloseHandle(Buffer->InputHandle);
   State->InputRecordingIndex = 0;
 }
 
 internal void
 Win32RecordInput(win32_state *State, game_input *Input) {
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, State->InputRecordingIndex);
   DWORD BytesWritten;
-  WriteFile(State->RecordingHandle, Input, sizeof(*Input), &BytesWritten, 0);
+  WriteFile(Buffer->InputHandle, Input, sizeof(*Input), &BytesWritten, 0);
 }
 
 internal void
 Win32BeginInputPlayingBack(win32_state *State, int Index) {
   State->InputPlayingBackIndex = Index;
-  State->PlayingBackHandle = CreateFileA(
-    "w:\\build\\handmade.hmi",
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, Index);
+
+  char FilePath[WIN32_MAX_PATH];
+  Win32GetReplayInputFilePath(State, Index, FilePath, sizeof(FilePath));
+
+  Buffer->InputHandle = CreateFileA(
+    FilePath,
     GENERIC_READ,
     0,
     0,
@@ -183,27 +218,27 @@ Win32BeginInputPlayingBack(win32_state *State, int Index) {
     0
   );
 
-  DWORD BytesRead;
-  ReadFile(State->PlayingBackHandle, State->GameMemory, (uint32)State->MemorySize, &BytesRead, 0);
-  Assert(BytesRead == State->MemorySize);
+  CopyMemory(State->GameMemory, Buffer->Memory, State->MemorySize);
 }
 
 internal void
 Win32EndInputPlayingBack(win32_state *State) {
-  CloseHandle(State->PlayingBackHandle);
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, State->InputPlayingBackIndex);
+  CloseHandle(Buffer->InputHandle);
   State->InputPlayingBackIndex = 0;
 }
 
 internal void
 Win32PlayBackInput(win32_state *State, game_input *Input) {
+  win32_replay_buffer *Buffer = Win32GetReplayBuffer(State, State->InputPlayingBackIndex);
   DWORD BytesRead;
-  if(ReadFile(State->PlayingBackHandle, Input, sizeof(*Input), &BytesRead, 0)) {
+  if(ReadFile(Buffer->InputHandle, Input, sizeof(*Input), &BytesRead, 0)) {
     // hit the end of the stream
     if(BytesRead == 0) {
       int Index = State->InputPlayingBackIndex;
       Win32EndInputPlayingBack(State);
       Win32BeginInputPlayingBack(State, Index);
-      ReadFile(State->PlayingBackHandle, Input, sizeof(*Input), &BytesRead, 0);
+      ReadFile(Buffer->InputHandle, Input, sizeof(*Input), &BytesRead, 0);
     }
 
     Assert(BytesRead == sizeof(*Input));
@@ -378,9 +413,10 @@ Win32ProcessKeyboardButtonState(
   game_button_state *NewButtonState,
   bool32 IsDown
 ) {
-  Assert(NewButtonState->IsEndedDown != IsDown)
-  NewButtonState->IsEndedDown = IsDown;
-  NewButtonState->HalfTransitionCount++;
+  if(NewButtonState->IsEndedDown != IsDown) {
+    NewButtonState->IsEndedDown = IsDown;
+    NewButtonState->HalfTransitionCount++;
+  }
 }
 
 internal void
@@ -473,7 +509,15 @@ Win32ProcessMessages(win32_state *Win32State, game_controller_input *KeyboardCon
             case 'L': {
               if(IsDown) {
                 if(Win32State->InputRecordingIndex == 0) {
-                  Win32BeginInputRecording(Win32State, 1);
+                  if(Win32State->InputPlayingBackIndex == 0) {
+                    Win32BeginInputRecording(Win32State, 1);
+                  } else {
+                    Win32EndInputPlayingBack(Win32State);
+                    // Reset all buttons
+                    for(int i = 0; i < ArrayCount(KeyboardController->Buttons); i++) {
+                      KeyboardController->Buttons[i] = {};
+                    }
+                  }
                 } else {
                   Win32EndInputRecording(Win32State);
                   Win32BeginInputPlayingBack(Win32State, 1);
@@ -760,10 +804,7 @@ WinMain(
   LPSTR     CmdLine,
   int       ShowCmd
 ) {
-  int MonitorRefreshHz = 60;
-  int GameUpdateHz = MonitorRefreshHz / 2;
   bool32 SleepIsGranular = timeBeginPeriod(1) == TIMERR_NOERROR ;
-  real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
 
   LARGE_INTEGER CounterPerSecond;
   QueryPerformanceFrequency(&CounterPerSecond);
@@ -779,6 +820,7 @@ WinMain(
   WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
   if(RegisterClass(&WindowClass)) {
+    thread_context Thread = {};
     HWND Window = CreateWindowEx(
       0,
       "HandmadeHeroWindowClass",
@@ -796,6 +838,9 @@ WinMain(
 
     if(Window) {
       HDC DeviceContext = GetDC(Window);
+      int MonitorRefreshHz = GetDeviceCaps(DeviceContext, VREFRESH);
+      int GameUpdateHz = MonitorRefreshHz / 2;
+      real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
 
       win32_sound_output SoundOutput = {};
       SoundOutput.SamplesPerSecond = 48000;
@@ -811,7 +856,7 @@ WinMain(
       Memory.DebugPlatformWriteFile = DebugPlatformWriteFile;
       Memory.DebugPlatformFreeFileMemory = DebugPlatformFreeFileMemory;
       Memory.PermanentStorageSize = Megabytes(64);
-      Memory.TransientStorageSize = Megabytes(1);
+      Memory.TransientStorageSize = Gigabytes(1);
 #ifdef HANDMADE_INTERNAL
       LPVOID BaseAddress = (LPVOID)Terabytes(2);
 #else
@@ -824,6 +869,19 @@ WinMain(
         PAGE_READWRITE
       );
       Memory.TransientStorage = (uint8 *)Memory.PermanentStorage + Memory.PermanentStorageSize;
+
+      win32_state Win32State = {};
+      Win32State.MemorySize = Memory.PermanentStorageSize + Memory.TransientStorageSize;
+
+      for(int i = 0; i < ArrayCount(Win32State.ReplayBuffers); i++) {
+        Win32State.ReplayBuffers[i].Memory = VirtualAlloc(
+          0,
+          Win32State.MemorySize,
+          MEM_COMMIT|MEM_RESERVE,
+          PAGE_READWRITE
+        );
+        Assert(Win32State.ReplayBuffers[i].Memory != 0);
+      }
 
       if(Memory.PermanentStorage && SoundMemory) {
         Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.BufferSize);
@@ -840,7 +898,6 @@ WinMain(
           OutputDebugStringA(Buffer);
         }
 #endif
-        win32_state Win32State = {};
         Win32State.GameMemory = Memory.PermanentStorage;
         Win32State.MemorySize = Memory.PermanentStorageSize;
 
@@ -1018,11 +1075,28 @@ WinMain(
             if(Win32State.InputRecordingIndex != 0) {
               Win32RecordInput(&Win32State, NewInput);
             }
+
             if(Win32State.InputPlayingBackIndex != 0) {
               Win32PlayBackInput(&Win32State, NewInput);
             }
 
-            Game.GameUpdateVideo(&Memory, NewInput, &Buffer);
+            // Collect mouse info
+            {
+              POINT Point;
+              GetCursorPos(&Point);
+              ScreenToClient(Window, &Point);
+              NewInput->MouseX = int32(Point.x);
+              NewInput->MouseY = int32(Point.y);
+
+
+              NewInput->MouseButtons[0].IsEndedDown = GetKeyState(VK_LBUTTON) & (1 << 15);
+              NewInput->MouseButtons[1].IsEndedDown = GetKeyState(VK_RBUTTON) & (1 << 15);
+              NewInput->MouseButtons[2].IsEndedDown = GetKeyState(VK_MBUTTON) & (1 << 15);
+              NewInput->MouseButtons[3].IsEndedDown = GetKeyState(VK_XBUTTON1) & (1 << 15);
+              NewInput->MouseButtons[4].IsEndedDown = GetKeyState(VK_XBUTTON2) & (1 << 15);
+            }
+
+            Game.GameUpdateVideo(&Thread, &Memory, NewInput, &Buffer);
           }
 
           // Update Audio
@@ -1069,7 +1143,7 @@ WinMain(
               SoundBuffer.SampleCount = BytesToLock / SoundOutput.BytesPerSample;
               SoundBuffer.ToneVolume = SoundOutput.ToneVolume;
               SoundBuffer.Memory = SoundMemory;
-              Game.GameUpdateAudio(&Memory, &SoundBuffer);
+              Game.GameUpdateAudio(&Thread, &Memory, &SoundBuffer);
 
 #if HANDMADE_INTERNAL
               win32_debug_sound_marker *Marker = &DebugSoundMarkers[DebugSoundMarkerIndex];

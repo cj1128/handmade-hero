@@ -251,3 +251,12 @@ Note: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 - Change compiler flag `MT` to `MTd`
 - Store EXE directory in Win32State and put record input file to build dir
 - Use `GetFileAttributeEx` instead of `FindFirstFile` to get last write time of a file
+
+### Day 25: Finishing the Win32 Prototyping Layer
+
+- Use `GetDeviceCaps` to get monitor refresh rate
+- Pass `thread_context` from platform to game and from game to platform
+- Add mouse info to game_input, using `GetCursorPos`, `ScreenToClient`
+- Record mouse buttons using `GetKeyState`
+- Define win32_replay_buffer and store game state memory in memory using `` (Storing in disk actually is very fast in my computer, but I am gonna do it anyway)
+- I am not gonna do memory mapping, because I think it's unnecessary
