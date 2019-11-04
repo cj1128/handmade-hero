@@ -258,5 +258,11 @@ Note: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 - Pass `thread_context` from platform to game and from game to platform
 - Add mouse info to game_input, using `GetCursorPos`, `ScreenToClient`
 - Record mouse buttons using `GetKeyState`
-- Define win32_replay_buffer and store game state memory in memory using `` (Storing in disk actually is very fast in my computer, but I am gonna do it anyway)
+- Define win32_replay_buffer and store game state memory in memory using `CopyMemory` (Storing in disk actually is very fast in my computer, but I am gonna do it anyway)
 - I am not gonna do memory mapping, because I think it's unnecessary
+
+### Day 26: Introduction to Game Architecture
+
+Today there isn't any code to write. I am just listening to Casey talking about what a good game architecture looks like.
+
+In Casey's view, game architect is like a **Urban Planner**. Their job are organizing things roughly instead of planning things carefully. I can't agree more.
