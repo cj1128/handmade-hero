@@ -901,11 +901,12 @@ WinMain(
         Win32State.GameMemory = Memory.PermanentStorage;
         Win32State.MemorySize = Memory.PermanentStorageSize;
 
-        Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
+        Win32ResizeDIBSection(&GlobalBackBuffer, 960, 540);
 
         game_input Input[2] = {};
         game_input *OldInput = &Input[0];
         game_input *NewInput = &Input[1];
+        NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
 
         uint64 LastCounter = Win32GetPerfCounter();
         uint64 FlipCounter = Win32GetPerfCounter();
@@ -1191,7 +1192,7 @@ WinMain(
 
           uint64 EndCounter = Win32GetPerfCounter();
 
-#if HANDMADE_INTERNAL
+#if 0
           Win32DebugDrawSoundMarkers(
             &GlobalBackBuffer,
             DebugSoundMarkers,
@@ -1202,8 +1203,9 @@ WinMain(
 #endif
           if(GlobalDebugUpdateWindow) {
             win32_window_dimension Dimension = Win32GetWindowDimension(Window);
+            HDC DC = GetDC(Window);
             Win32UpdateWindow(
-              DeviceContext,
+              DC,
               Dimension.Width,
               Dimension.Height,
               &GlobalBackBuffer

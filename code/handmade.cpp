@@ -1,31 +1,46 @@
 #include "handmade.h"
 
+internal int32
+RoundReal32ToInt32(real32 Input) {
+  int32 Result = (int32)(Input + 0.5f);
+  return Result;
+}
+
+// exclusive
 internal void
-RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY) {
-  uint8 *Start = (uint8 *)Buffer->Memory;
-  uint8 *EndOfBuffer = Start + Buffer->Pitch * Buffer->Height;
+RenderRectangle(game_offscreen_buffer *Buffer, real32 RealMinX, real32 RealMinY, real32 RealMaxX, real32 RealMaxY, uint32 Color) {
+  int MinX = RoundReal32ToInt32(RealMinX);
+  int MinY = RoundReal32ToInt32(RealMinY);
+  int MaxX = RoundReal32ToInt32(RealMaxX);
+  int MaxY = RoundReal32ToInt32(RealMaxY);
 
-  // 10 x 10 square
-  if(PlayerX >= 0 && PlayerX < Buffer->Width - 10 && PlayerY >= 0 && PlayerY < Buffer->Height - 10) {
+  if(MinX < 0) {
+    MinX = 0;
+  }
+  if(MinY < 0) {
+    MinY = 0;
+  }
+  if(MaxX > Buffer->Width) {
+    MaxX = Buffer->Width;
+  }
+  if(MaxY > Buffer->Height) {
+    MaxY = Buffer->Height;
+  }
 
-    uint8 *Row = Start + PlayerY * Buffer->Pitch + PlayerX * Buffer->BytesPerPixel;
+  uint8 *Row =  (uint8 *)Buffer->Memory + MinY * Buffer->Pitch + MinX * Buffer->BytesPerPixel;
 
-    for(int Y = 0; Y < 10; Y++) {
-      uint8 *Pixel = Row;
-
-      for(int X = 0; X < 10; X++) {
-        Assert(Pixel >= Buffer->Memory && Pixel < EndOfBuffer);
-        *((uint32*)Pixel) = 0xFFFFFFFF;
-        Pixel += Buffer->BytesPerPixel;
-      }
-
-      Row += Buffer->Pitch;
+  for(int Y = MinY; Y < MaxY; Y++) {
+    uint32 *Pixel = (uint32 *)Row;
+    for(int X = MinX; X < MaxX; X++) {
+      *Pixel++ = Color;
     }
+
+    Row += Buffer->Pitch;
   }
 }
 
 internal void
-RenderWeirdGradeint(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
+RenderWeirdGradient(game_offscreen_buffer *Buffer, int XOffset, int YOffset) {
   uint8 *Row = (uint8 *)Buffer->Memory;
 
   for(int Y = 0; Y < Buffer->Height; Y++) {
@@ -47,6 +62,7 @@ RenderSineWave(
   game_state *State,
   game_sound_buffer *Buffer
 ) {
+#if 0
   int ToneHz = State->ToneHz;
   int WavePeriod = Buffer->SamplesPerSecond / ToneHz;
 
@@ -60,76 +76,21 @@ RenderSineWave(
       State->tSine -= (real32)(2.0f * Pi32);
     }
   }
+#endif
 }
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
 
-  game_state *State = (game_state *)Memory->PermanentStorage;
-
   Assert(sizeof(game_state) <= Memory->PermanentStorageSize)
+
   if(!Memory->IsInitialized) {
-    char *Filename = __FILE__;
-
-    debug_read_file_result File = Memory->DebugPlatformReadFile(Thread, Filename);
-    if(File.Memory)
-    {
-        Memory->DebugPlatformWriteFile(Thread, "w:\\build\\test.out", File.Memory, File.Size);
-        Memory->DebugPlatformFreeFileMemory(Thread, File.Memory);
-    }
-
-    State->ToneHz = 256;
-    State->tSine = 0;
-    State->PlayerX = 10;
-    State->PlayerY = 10;
     Memory->IsInitialized = true;
   }
 
-  int delta = 5;
-  game_controller_input *Controller = &Input->Controllers[0];
-  if(Controller->MoveUp.IsEndedDown) {
-    State->PlayerY -= delta;
-    // State->YOffset += delta;
-  }
-  if(Controller->MoveDown.IsEndedDown) {
-    State->PlayerY += delta;
-    // State->YOffset -= delta;
-  }
-  if(Controller->MoveLeft.IsEndedDown) {
-    State->PlayerX -= delta;
-    // State->XOffset -= delta;
-  }
-  if(Controller->MoveRight.IsEndedDown) {
-    State->PlayerX += delta;
-    // State->XOffset += delta;
-  }
-
-  if(Controller->ActionUp.IsEndedDown) {
-    State->tJump = (real32)(2.0f * Pi32);
-  }
-  if(State->tJump > 0) {
-    State->PlayerX += 5;
-    State->PlayerY += (int)(sinf(State->tJump) * 20);
-    State->tJump -= 0.2f;
-  }
-
-  if(State->YOffset <= 1000 && State->YOffset >= -1000) {
-    int Tmp = (int)(((real32)State->YOffset / 1000) * 256) + 512;
-    State->ToneHz = Tmp;
-  }
-
-  RenderWeirdGradeint(Buffer, State->XOffset, State->YOffset);
-  RenderPlayer(Buffer, State->PlayerX, State->PlayerY);
-  RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
-
-  for(int i = 0; i < ArrayCount(Input->MouseButtons); i++) {
-    if(Input->MouseButtons[i].IsEndedDown) {
-      RenderPlayer(Buffer, 10, 50 + 10 * i);
-    }
-  }
+  RenderRectangle(Buffer, -10, -10, 20000, 20000, 0xffffff00);
+  RenderRectangle(Buffer, 20, 20, 50, 50, 0xff00ff00);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {
-  game_state *State = (game_state *)Memory->PermanentStorage;
-  RenderSineWave(State, SoundBuffer);
 }

@@ -266,3 +266,11 @@ Note: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 Today there isn't any code to write. I am just listening to Casey talking about what a good game architecture looks like.
 
 In Casey's view, game architect is like a **Urban Planner**. Their job are organizing things roughly instead of planning things carefully. I can't agree more.
+
+### Day 27: Exploration-based Architecture
+
+- Add `SecondsToAdvanceOverUpdate` to game_input
+- Remove debug code
+- Turn off warning C4505, it's annoying. We are gonna have unreferenced local functions.
+- Target resolution: 960 x 540 x 30hz
+- Define `DrawRectangle`

@@ -107,6 +107,7 @@ struct game_controller_input {
 };
 
 struct game_input {
+  real32 SecondsToAdvanceOverUpdate;
   int32 MouseX, MouseY;
   game_button_state MouseButtons[5];
 
@@ -154,15 +155,6 @@ typedef GAME_UPDATE_AUDIO(game_update_audio);
 //
 
 struct game_state {
-  int XOffset;
-  int YOffset;
-  int ToneHz;
-
-  int PlayerX;
-  int PlayerY;
-
-  real32 tSine;
-  real32 tJump;
 };
 
 #define HANDMADE_H

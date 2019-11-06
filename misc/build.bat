@@ -2,7 +2,7 @@
 if not exist w:\build mkdir w:\build
 pushd w:\build
 
-set CommonCompilerFlags=-nologo -FC -WX -W4 -wd4201 -wd4100 -MTd -Oi -Od -GR- -Gm- -EHa- -Zi -DHANDMADE_SLOW=1 -DHANDMADE_INTERNAL=1 -DHANDMADE_WIN32=1
+set CommonCompilerFlags=-nologo -FC -WX -W4 -wd4201 -wd4100 -wd4505 -MTd -Oi -Od -GR- -Gm- -EHa- -Zi -DHANDMADE_SLOW=1 -DHANDMADE_INTERNAL=1 -DHANDMADE_WIN32=1
 set CommonLinkerFlags=-incremental:no -opt:ref user32.lib gdi32.lib winmm.lib
 
 rem 32-bit build
