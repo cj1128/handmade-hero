@@ -274,3 +274,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Turn off warning C4505, it's annoying. We are gonna have unreferenced local functions.
 - Target resolution: 960 x 540 x 30hz
 - Define `DrawRectangle`
+
+### Day 28: Drawing a Tile Map
+
+- Use floating point to store colors, because it will make it a lot more eaiser when we have to do some math about colors
+- Draw a simple tile map
+- Draw a simple player, keep in mind that player's moving should consider the time delta. Otherwise it will move fast if we run at a higher FPS.

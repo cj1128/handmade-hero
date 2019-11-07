@@ -906,14 +906,15 @@ WinMain(
         game_input Input[2] = {};
         game_input *OldInput = &Input[0];
         game_input *NewInput = &Input[1];
-        NewInput->SecondsToAdvanceOverUpdate = TargetSecondsPerFrame;
 
         uint64 LastCounter = Win32GetPerfCounter();
         uint64 FlipCounter = Win32GetPerfCounter();
         uint64 LastCycleCounter = __rdtsc();
 
         bool32 SoundIsValid = false;
+#if 0
         int DebugSoundMarkerIndex = 0;
+#endif
         win32_debug_sound_marker DebugSoundMarkers[15] = {};
 
         Win32GetEXEPath(&Win32State);
@@ -946,6 +947,8 @@ WinMain(
             Win32UnloadGameCode(&Game);
             Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath);
           }
+
+          NewInput->dt = TargetSecondsPerFrame;
 
           Assert(Game.IsValid);
 
@@ -1146,7 +1149,7 @@ WinMain(
               SoundBuffer.Memory = SoundMemory;
               Game.GameUpdateAudio(&Thread, &Memory, &SoundBuffer);
 
-#if HANDMADE_INTERNAL
+#if 0
               win32_debug_sound_marker *Marker = &DebugSoundMarkers[DebugSoundMarkerIndex];
               Marker->OutputPlayCursor = PlayCursor;
               Marker->OutputWriteCursor = WriteCursor;
@@ -1201,6 +1204,7 @@ WinMain(
             &SoundOutput
           );
 #endif
+
           if(GlobalDebugUpdateWindow) {
             win32_window_dimension Dimension = Win32GetWindowDimension(Window);
             HDC DC = GetDC(Window);
@@ -1213,7 +1217,7 @@ WinMain(
           }
           FlipCounter = Win32GetPerfCounter();
 
-#if HANDMADE_INTERNAL
+#if 0
           {
             DWORD PlayCursor, WriteCursor;
             if(SUCCEEDED(GlobalSoundBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor))) {
@@ -1232,6 +1236,7 @@ WinMain(
           OldInput = NewInput;
           NewInput = Tmp;
 
+#if 1
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
 
@@ -1244,7 +1249,8 @@ WinMain(
 
           char OutputBuffer[256];
           sprintf_s(OutputBuffer, sizeof(OutputBuffer), "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
-          // OutputDebugStringA(OutputBuffer);
+          OutputDebugStringA(OutputBuffer);
+#endif
 
           LastCounter = EndCounter;
           LastCycleCounter = CurrentCycleCounter;
