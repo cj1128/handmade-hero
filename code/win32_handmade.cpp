@@ -4,7 +4,7 @@
 #include <dsound.h>
 #include <stdio.h>
 
-#include "handmade.h"
+#include "handmade_platform.h"
 #include "win32_handmade.h"
 
 // Function Types
@@ -714,9 +714,18 @@ Win32UpdateWindow(
   int WindowHeight,
   win32_offscreen_buffer *Buffer
 ) {
+  int Top = 10;
+  int Left = 10;
+
+  // four gutters
+  PatBlt(DeviceContext, 0, 0, WindowWidth, Top, BLACKNESS);
+  PatBlt(DeviceContext, 0, Top, Left, Buffer->Height, BLACKNESS);
+  PatBlt(DeviceContext, 0, Top + Buffer->Height, WindowWidth, WindowHeight - Buffer->Height - Top, BLACKNESS);
+  PatBlt(DeviceContext, Left + Buffer->Width, Top, WindowWidth - Left - Buffer->Width, Buffer->Height, BLACKNESS);
+
   StretchDIBits(
     DeviceContext,
-    0, 0, Buffer->Width, Buffer->Height, // dest
+    Top, Left, Buffer->Width, Buffer->Height, // dest
     0, 0, Buffer->Width, Buffer->Height, // src
     Buffer->Memory,
     &Buffer->Info,
@@ -1236,9 +1245,9 @@ WinMain(
           OldInput = NewInput;
           NewInput = Tmp;
 
-#if 1
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
+#if 0
 
           int64 CounterElapsed = EndCounter - LastCounter;
           uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;

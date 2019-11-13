@@ -6,6 +6,16 @@ RoundReal32ToUint32(real32 Input) {
   return Result;
 }
 
+inline int32
+TruncateReal32ToInt32(real32 Value) {
+  // truncate towards -infinity, not 0
+  if(Value < 0) {
+    Value -= 1;
+  }
+  int32 Result =(int32)(Value);
+  return Result;
+}
+
 // exclusive
 internal void
 DrawRectangle(game_offscreen_buffer *Buffer, real32 RealMinX, real32 RealMinY, real32 RealMaxX, real32 RealMaxY, real32 R, real32 G, real32 B) {
@@ -83,6 +93,22 @@ RenderSineWave(
 #endif
 }
 
+internal bool32
+IsTileMapEmpty(tile_map *TileMap, real32 PlayerX, real32 PlayerY) {
+  bool32 IsEmtpy = false;
+  int TileX = TruncateReal32ToInt32((PlayerX - TileMap->Left)/ TileMap->TileSize);
+  int TileY = TruncateReal32ToInt32((PlayerY - TileMap->Top)/ TileMap->TileSize);
+
+  if(TileX >= 0 && TileX < TileMap->CountX && TileY >= 0 && TileY < TileMap->CountY) {
+    uint32 TileValue = TileMap->Tiles[TileY * TileMap->CountX + TileX];
+    if(TileValue == 0) {
+      IsEmtpy = true;
+    }
+  }
+
+  return IsEmtpy;
+}
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
 
@@ -91,7 +117,34 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
   if(!Memory->IsInitialized) {
     Memory->IsInitialized = true;
+    State->PlayerX = 150.0f;
+    State->PlayerY = 150.0f;
   }
+
+
+#define TILE_MAP_COUNT_X 16
+#define TILE_MAP_COUNT_Y 9
+  uint32 Tiles[TILE_MAP_COUNT_Y][TILE_MAP_COUNT_X] = {
+    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+    {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+    {1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1},
+    {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
+    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+  };
+
+  tile_map TileMap;
+  TileMap.CountX = TILE_MAP_COUNT_X;
+  TileMap.CountY = TILE_MAP_COUNT_Y;
+  TileMap.TileSize = 60;
+  TileMap.Tiles = (uint32 *)Tiles;
+  TileMap.Left = 0.0f;
+  TileMap.Top = 0.0f;
+
+  real32 PlayerSize = 0.75f * TileMap.TileSize;
 
   for(int i = 0; i < ArrayCount(Input->Controllers); i++) {
     game_controller_input *Controller = &Input->Controllers[i];
@@ -114,44 +167,33 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       }
       dx *= 100;
       dy *= 100;
-      State->PlayerX += dx * Input->dt;
-      State->PlayerY += dy * Input->dt;
+
+      real32 NewPlayerX = State->PlayerX + dx * Input->dt;
+      real32 NewPlayerY = State->PlayerY + dy * Input->dt;
+
+      if(IsTileMapEmpty(&TileMap, NewPlayerX, NewPlayerY) &&
+        IsTileMapEmpty(&TileMap, NewPlayerX - PlayerSize * 0.5f, NewPlayerY) &&
+        IsTileMapEmpty(&TileMap, NewPlayerX + PlayerSize * 0.5f, NewPlayerY)) {
+        State->PlayerX = NewPlayerX;
+        State->PlayerY = NewPlayerY;
+      }
     }
   }
 
-  DrawRectangle(Buffer, -10, -10, 20000, 20000, 1.0f, 1.0f, 0.0f);
-
-  int32 TileMap[9][16] = {
-    {1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-    {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-    {1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1},
-    {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-  };
-
-  real32 TileSize = 55;
-  real32 Left = 0.0f;
-  real32 Top = 0.0f;
-
   for(int Y = 0; Y < 9; Y++) {
     for(int X = 0; X < 16; X++) {
-      real32 TileMinX = Left + (real32)X * TileSize;
-      real32 TileMinY = Top + (real32)Y * TileSize;
-      real32 TileMaxX = TileMinX + TileSize;
-      real32 TileMaxY = TileMinY + TileSize;
+      real32 TileMinX = TileMap.Left + (real32)X * TileMap.TileSize;
+      real32 TileMinY = TileMap.Top + (real32)Y * TileMap.TileSize;
+      real32 TileMaxX = TileMinX + TileMap.TileSize;
+      real32 TileMaxY = TileMinY + TileMap.TileSize;
       real32 Gray = 1.0f;
-      if(TileMap[Y][X] == 0) {
+      if(Tiles[Y][X] == 0) {
         Gray = 0.5f;
       }
       DrawRectangle(Buffer, TileMinX, TileMinY, TileMaxX, TileMaxY, Gray, Gray, Gray);
     }
   }
 
-  real32 PlayerSize = 0.75f * TileSize;
   real32 PlayerMinX = State->PlayerX - 0.5f * PlayerSize;
   real32 PlayerMaxX = State->PlayerX + 0.5f * PlayerSize;
   real32 PlayerMinY = State->PlayerY - PlayerSize;

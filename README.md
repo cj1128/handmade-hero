@@ -280,3 +280,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Use floating point to store colors, because it will make it a lot more eaiser when we have to do some math about colors
 - Draw a simple tile map
 - Draw a simple player, keep in mind that player's moving should consider the time delta. Otherwise it will move fast if we run at a higher FPS.
+
+### Day 29: Basic Tile Map Collision Checking
+
+- Using `PatBlt` to clear screen when display our buffer
+- We should only clear the four gutters otherwise there will be some flashing
+- Implement a simple collision check
+- Seperate the header file into handmade.h and handmade_platform.h
