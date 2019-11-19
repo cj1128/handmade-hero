@@ -287,3 +287,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - We should only clear the four gutters otherwise there will be some flashing
 - Implement a simple collision check
 - Seperate the header file into handmade.h and handmade_platform.h
+
+### Day 30: Moving Between Tile Maps
+
+- Define four tile maps, and notice that in C the two dimension array is Y first and X last
+- Define `canonicol_position` and `raw_postion`
+- Implement moving between tile maps
