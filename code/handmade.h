@@ -1,5 +1,6 @@
 #ifndef HANDMADE_H
 #include "handmade_platform.h"
+#include "handmade_intrinsic.h"
 
 /*
   HANDMADE_INTERNAL:
@@ -53,7 +54,8 @@ struct world {
   real32 UpperLeftX;
   real32 UpperLeftY;
 
-  real32 TileSize;
+  real32 TileSizeInPixels;
+  real32 TileSizeInMeters;
   tile_map *TileMaps;
 };
 

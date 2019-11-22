@@ -293,3 +293,13 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define four tile maps, and notice that in C the two dimension array is Y first and X last
 - Define `canonicol_position` and `raw_postion`
 - Implement moving between tile maps
+
+### Day 31: Tilemap Coordinate Systems
+
+- NOTE: basically any CPU we are gonna target at has SSE2
+- Define `handmade_intrinsic.h`
+- Define `TileSizeInMeters` and `TileSizeInPixels`
+- Optimization switches: `/O2 /Oi /fp:fast`
+- PLAN: pack tile map index and tile index into a single 32-bit integer
+- PLAN: convert TileRelX and TileRelY to resolution independent world units
+- Resource: Intel Intrinsics Guide
