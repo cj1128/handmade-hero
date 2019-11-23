@@ -14,13 +14,6 @@
 
 #define Pi32 3.14159265359
 
-struct game_state {
-  real32 PlayerX;
-  real32 PlayerY;
-  int32 TileMapX;
-  int32 TileMapY;
-};
-
 struct tile_map {
   uint32 *Tiles;
 };
@@ -32,16 +25,13 @@ struct canonical_postion {
   int32 TileX;
   int32 TileY;
 
+  // TODO: Y should go up
   real32 TileRelX;
   real32 TileRelY;
 };
 
-struct raw_position {
-  int32 TileMapX;
-  int32 TileMapY;
-
-  real32 X;
-  real32 Y;
+struct game_state {
+  canonical_postion PlayerPos;
 };
 
 struct world {
@@ -56,6 +46,8 @@ struct world {
 
   real32 TileSizeInPixels;
   real32 TileSizeInMeters;
+  real32 MetersToPixels;
+
   tile_map *TileMaps;
 };
 

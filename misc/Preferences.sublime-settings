@@ -17,11 +17,12 @@
     "_build",
     "dist"
   ],
-  "font_size": 14.0,
+  "font_size": 12.0,
   "highlight_line": true,
   "highlight_modified_tabs": true,
   "ignored_packages":
   [
+    "sublime-text-2-buildview"
   ],
   "line_padding_bottom": 3,
   "line_padding_top": 3,
@@ -30,7 +31,7 @@
   "show_encoding": true,
   "show_errors_inline": false,
   "show_git_status": false,
-  "show_panel_on_build": false,
+  "show_panel_on_build": true,
   "tab_size": 2,
   "translate_tabs_to_spaces": true,
   "trim_trailing_white_space_on_save": true,

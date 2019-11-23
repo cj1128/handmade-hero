@@ -303,3 +303,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - PLAN: pack tile map index and tile index into a single 32-bit integer
 - PLAN: convert TileRelX and TileRelY to resolution independent world units
 - Resource: Intel Intrinsics Guide
+
+### Day 32: Unified Position Representation
+
+- Remove `raw_position`
+- Add `canonical_postion PlayerPos` to game state
+- Define `RecononicalizePosition`
+- Use meters instead of pixels as units

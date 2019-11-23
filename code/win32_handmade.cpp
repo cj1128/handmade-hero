@@ -865,7 +865,7 @@ WinMain(
       Memory.DebugPlatformWriteFile = DebugPlatformWriteFile;
       Memory.DebugPlatformFreeFileMemory = DebugPlatformFreeFileMemory;
       Memory.PermanentStorageSize = Megabytes(64);
-      Memory.TransientStorageSize = Gigabytes(1);
+      Memory.TransientStorageSize = Megabytes(100);
 #ifdef HANDMADE_INTERNAL
       LPVOID BaseAddress = (LPVOID)Terabytes(2);
 #else

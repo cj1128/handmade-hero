@@ -1,16 +1,20 @@
 {
-	"build_systems":
-	[
-		{
-			"name": "HandmadeHero",
-			"shell_cmd": "w:/handmade/misc/build.bat",
-			"working_dir": "w:/build"
-		}
-	],
-	"folders":
-	[
-		{
-			"path": "."
-		}
-	]
+  "build_systems":
+  [
+    {
+      "name": "HandmadeHero",
+      "shell_cmd": "w:/handmade/misc/build.bat",
+      "working_dir": "w:/build",
+      "file_regex": "^([A-z]:.*)\\(([0-9]+)\\): ((error|warning) .*)"
+    }
+  ],
+  "folders":
+  [
+    {
+      "path": "."
+    }
+  ],
+  "ignored_packages": [
+    "sublime-text-2-buildview"
+  ]
 }

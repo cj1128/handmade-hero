@@ -52,8 +52,8 @@ struct win32_replay_buffer {
 };
 
 struct win32_state {
-  int InputRecordingIndex; // 1-based
-  int InputPlayingBackIndex; // 1-based
+  int InputRecordingIndex; // 1-based, 0 means no recording
+  int InputPlayingBackIndex; // 1-based, 0 means no playing back
 
   win32_replay_buffer ReplayBuffers[4];
 

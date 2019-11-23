@@ -1,0 +1,304 @@
+[
+  /*----------  Utils  ----------*/
+  {
+    "keys": ["ctrl+d"],
+    "command": "find_under_expand"
+  },
+
+  {
+    "keys": ["ctrl+r"],
+    "command": "show_overlay",
+    "args": {"overlay": "goto", "text": "@"}
+  },
+
+  {
+    "keys": ["ctrl+j"],
+    "command": "scroll_other_pane",
+    "args": {"cmd": "scroll_lines", "amount": -40},
+  },
+
+  {
+    "keys": ["ctrl+k"],
+    "command": "scroll_other_pane",
+    "args": {"cmd": "scroll_lines", "amount": 40},
+  },
+
+  {
+    "keys": ["ctrl+shift+r"],
+    "command": "goto_symbol_in_project"
+  },
+
+  /*----------  File & Buffer  ----------*/
+
+  {
+    "keys": ["ctrl+o"],
+    "command": "i_opener"
+  },
+
+  {
+    "keys": ["super+\\"],
+    "command": "toggle_side_bar"
+  },
+
+  {
+    "keys": ["ctrl+super+w"],
+    "command": "close_all",
+  },
+
+  {
+    "keys": ["shift+super+w"],
+    "command": "close_window",
+  },
+
+  {
+    "keys": ["f1"],
+    "command": "revert"
+  },
+
+  {
+    "keys": ["f2"],
+    "command": "side_bar_open"
+  },
+
+  {
+    "keys": ["f3"],
+    "command": "side_bar_open_with_finder"
+  },
+
+  {
+    "keys": ["f4"],
+    "command": "side_bar_move"
+  },
+
+  {
+    "keys": ["f5"],
+    "command": "side_bar_delete"
+  },
+
+  /*----------  Window Management  ----------*/
+
+  { "keys": ["ctrl+h"],
+    "command": "focus_neighboring_group",
+    "args": {"forward": false}
+  },
+
+  {
+    "keys": ["ctrl+l"],
+    "command": "focus_neighboring_group"
+  },
+
+  {
+    "keys": ["ctrl+9"],
+    "command": "prev_view"
+  },
+
+  {
+    "keys": ["ctrl+0"],
+    "command": "next_view"
+  },
+
+  {
+    "keys": ["ctrl+["],
+    "command": "move_to_neighboring_group",
+    "args": {
+      "forward": false
+    }
+  },
+
+  {
+    "keys": ["ctrl+]"],
+    "command": "move_to_neighboring_group",
+    "args": {
+      "forward": true
+    }
+  },
+
+  /*----------  Find && Replace Palette  ----------*/
+
+  {
+    "keys": ["alt+c"],
+    "command": "toggle_case_sensitive",
+    "context": [
+      {
+        "key": "setting.is_widget",
+        "operator": "equal",
+        "operand": true
+      }
+    ]
+  },
+
+  {
+    "keys": ["alt+r"],
+    "command": "toggle_regex",
+    "context": [
+      {
+        "key": "setting.is_widget",
+        "operator": "equal",
+        "operand": true
+      }
+    ]
+  },
+
+  {
+    "keys": ["alt+w"],
+    "command": "toggle_whole_word",
+    "context": [
+      {
+        "key": "setting.is_widget",
+        "operator": "equal",
+        "operand": true
+      }
+    ]
+  },
+
+  {
+    "keys": ["alt+enter"],
+    "command": "replace_all",
+    "args": {"close_panel": true},
+    "context": [
+      {"key": "panel", "operand": "replace"},
+      {"key": "panel_has_focus"}
+    ]
+  },
+
+  {
+    "keys": ["enter"],
+    "command": "replace_next",
+    "context": [
+      {"key": "panel", "operand": "replace"},
+      {"key": "panel_has_focus"}
+    ]
+  },
+
+  {
+    "keys": ["shift+enter"],
+    "command": "find_next",
+    "context": [
+      {"key": "panel", "operand": "replace"},
+      {"key": "panel_has_focus"}
+    ]
+  },
+
+  {
+    "keys": ["ctrl+shift+enter"],
+    "command": "find_prev",
+    "context": [
+      {"key": "panel", "operand": "replace"},
+      {"key": "panel_has_focus"}
+    ]
+  },
+
+  /*----------  Vim Shourtcuts  ----------*/
+
+  {
+    "keys": ["e"],
+    "command": "next_result",
+    "context": [{"key": "setting.command_mode"}]
+  },
+  {
+    "keys": ["E"],
+    "command": "prev_result",
+    "context": [{"key": "setting.command_mode"}]
+  },
+
+  {
+    "keys": ["J"],
+    "command": "line_jumper",
+    "args": { "number_of_lines": 10, "cmd": "down" },
+    "context": [{"key": "setting.command_mode"}]
+  },
+  {
+    "keys": ["J"],
+    "command": "line_jumper",
+    "args": { "number_of_lines": 10, "cmd": "down_select" },
+    "context":
+    [
+        {"key": "setting.command_mode"},
+        {"key": "selection_empty", "operator": "equal", "operand": false, "match_all": false}
+    ]
+  },
+
+  {
+    "keys": ["K"],
+    "command": "line_jumper",
+    "args": { "number_of_lines": 10, "cmd": "up" },
+    "context": [{"key": "setting.command_mode"}]
+  },
+  {
+    "keys": ["K"],
+    "command": "line_jumper",
+    "args": { "number_of_lines": 10, "cmd": "up_select" },
+    "context":
+    [
+      {"key": "setting.command_mode"},
+      {"key": "selection_empty", "operator": "equal", "operand": false, "match_all": false}
+    ]
+  },
+
+  {
+    "keys": ["ctrl+shift+f"],
+    "command": "show_panel",
+    "args": {"panel": "replace", "reverse": false} ,
+    "context": [{"key": "setting.command_mode"}]
+  },
+  { "keys": ["super+alt+e"], "command": "replace_next" },
+
+  // Go to definition
+  {
+    "keys": ["g", "d"],
+    "command": "goto_definition",
+    "context": [
+      {"key": "setting.command_mode"}
+    ]
+  },
+
+  {
+    "keys": ["g", "d"],
+    "command": "gs_doc",
+    "args": {"mode": "goto"},
+    "context": [
+      {"key": "setting.command_mode"},
+      { "key": "selector", "operator": "equal", "operand": "source.go" }
+    ]
+  },
+
+  {
+    "keys": ["-"],
+    "command": "jump_back",
+    "context": [{"key": "setting.command_mode"}]
+  },
+
+  {
+    "keys": [":"],
+    "command": "show_overlay",
+    "args": { "overlay": "command_palette", "text": ""},
+    "context": [{"key": "setting.command_mode"}]
+  },
+
+  {
+    "keys": ["g", "o"],
+    "command": "open_url_under_cursor",
+    "context": [{"key": "setting.command_mode"}]
+  },
+
+  /*---------- Golang ----------*/
+
+  {
+    "keys": ["ctrl+.", "ctrl+h"],
+    "command": "gs_doc",
+    "args": {"mode": "hint"},
+    "context": [{"key": "selector", "operator": "equal", "operand": "source.go"}]
+  },
+
+  /*---------- React ----------*/
+  {
+    "keys": ["/"],
+    "command": "close_tag",
+    "args": { "insert_slash": true },
+    "context": [
+      { "key": "selector", "operator": "equal", "operand": "(text.html, text.xml, meta.jsx.js) - string - comment", "match_all": true },
+      { "key": "preceding_text", "operator": "regex_match", "operand": ".*<$", "match_all": true },
+      { "key": "setting.auto_close_tags" }
+    ]
+  }
+]
