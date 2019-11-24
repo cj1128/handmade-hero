@@ -302,7 +302,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Optimization switches: `/O2 /Oi /fp:fast`
 - PLAN: pack tile map index and tile index into a single 32-bit integer
 - PLAN: convert TileRelX and TileRelY to resolution independent world units
-- Resource: Intel Intrinsics Guide
+- RESOURCE: Intel Intrinsics Guide, https://software.intel.com/sites/landingpage/IntrinsicsGuide/
 
 ### Day 32: Unified Position Representation
 
@@ -310,3 +310,13 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Add `canonical_postion PlayerPos` to game state
 - Define `RecononicalizePosition`
 - Use meters instead of pixels as units
+
+### Day 33: Virtualized Tile Maps
+
+- Rename `canonical_position` to `world_position`
+- Make Y axis go upward
+- RESOURCE: a great book about typology, Galois' Dream: Group Theory and Differential Equations
+- Remove TileMapX and TileMapY
+- Define `tile_map_position`
+- 24-bit for tile map and 8-bit for tiles
+- Implement a simple scroll so the guy can move

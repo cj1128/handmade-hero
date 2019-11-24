@@ -18,31 +18,36 @@ struct tile_map {
   uint32 *Tiles;
 };
 
-struct canonical_postion {
-  int32 TileMapX;
-  int32 TileMapY;
+struct tile_map_position {
+  uint32 TileMapX;
+  uint32 TileMapY;
+  uint32 RelTileX;
+  uint32 RelTileY;
+};
 
-  int32 TileX;
-  int32 TileY;
+struct world_position {
+  uint32 AbsTileX;
+  uint32 AbsTileY;
 
-  // TODO: Y should go up
+  // NOTE: relative to lower left corner
   real32 TileRelX;
   real32 TileRelY;
 };
 
 struct game_state {
-  canonical_postion PlayerPos;
+  world_position PlayerPos;
 };
 
 struct world {
+  uint32 TileMapShift;
+  uint32 TileMapMask;
+  uint32 TileMapDim;
+
   int32 TileCountX;
   int32 TileCountY;
 
-  int32 TileMapCountX;
-  int32 TileMapCountY;
-
-  real32 UpperLeftX;
-  real32 UpperLeftY;
+  uint32 TileMapCountX;
+  uint32 TileMapCountY;
 
   real32 TileSizeInPixels;
   real32 TileSizeInMeters;
