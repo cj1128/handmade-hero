@@ -1,6 +1,8 @@
 #ifndef HANDMADE_H
 #include "handmade_platform.h"
 #include "handmade_intrinsic.h"
+#include "handmade_tile.h"
+#include "handmade_tile.cpp"
 
 /*
   HANDMADE_INTERNAL:
@@ -14,46 +16,20 @@
 
 #define Pi32 3.14159265359
 
-struct tile_map {
-  uint32 *Tiles;
-};
-
-struct tile_map_position {
-  uint32 TileMapX;
-  uint32 TileMapY;
-  uint32 RelTileX;
-  uint32 RelTileY;
-};
-
-struct world_position {
-  uint32 AbsTileX;
-  uint32 AbsTileY;
-
-  // NOTE: relative to lower left corner
-  real32 TileRelX;
-  real32 TileRelY;
-};
-
-struct game_state {
-  world_position PlayerPos;
+struct memory_arena {
+  size_t Size;
+  uint8 *Base;
+  size_t Used;
 };
 
 struct world {
-  uint32 TileMapShift;
-  uint32 TileMapMask;
-  uint32 TileMapDim;
+  tile_map TileMap;
+};
 
-  int32 TileCountX;
-  int32 TileCountY;
-
-  uint32 TileMapCountX;
-  uint32 TileMapCountY;
-
-  real32 TileSizeInPixels;
-  real32 TileSizeInMeters;
-  real32 MetersToPixels;
-
-  tile_map *TileMaps;
+struct game_state {
+  memory_arena MemoryArena;
+  world World;
+  tile_map_position PlayerPos;
 };
 
 #define HANDMADE_H

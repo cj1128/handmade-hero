@@ -120,10 +120,10 @@ typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 struct game_memory {
   bool32 IsInitialized;
 
-  uint64 PermanentStorageSize;
+  size_t PermanentStorageSize;
   void *PermanentStorage; // required to be cleared to zero
 
-  uint64 TransientStorageSize;
+  size_t TransientStorageSize;
   void *TransientStorage;
 
   debug_platform_read_file *DebugPlatformReadFile;

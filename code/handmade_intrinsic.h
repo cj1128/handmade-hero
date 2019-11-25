@@ -4,7 +4,13 @@
 
 inline int32
 RoundReal32ToUint32(real32 Input) {
-  uint32 Result = (uint32)(Input + 0.5f);
+  uint32 Result = (uint32)roundf(Input);
+  return Result;
+}
+
+inline int32
+RoundReal32ToInt32(real32 Input) {
+  int32 Result = (int32)roundf(Input);
   return Result;
 }
 

@@ -320,3 +320,12 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `tile_map_position`
 - 24-bit for tile map and 8-bit for tiles
 - Implement a simple scroll so the guy can move
+
+### Day 34: Tile Map Memory
+
+- Implement smooth scrolling
+- Implement a way to speed the guy up
+- Make `TileRelX` and `TileRelY` relative to center of tile
+- Create `handmade_tile.h` and `handmade_tile.cpp`
+- Rename `tile_map` to `tile_chunk` and extract everything from `world` to `tile_map`, now tile map means the whole map
+- Define `memory_arena` and `PushSize`, `PushArray` and create tile chunks programmatically
