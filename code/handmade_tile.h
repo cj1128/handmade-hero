@@ -7,6 +7,7 @@ struct tile_chunk {
 struct tile_chunk_position {
   uint32 TileChunkX;
   uint32 TileChunkY;
+  uint32 TileChunkZ;
   uint32 RelTileX;
   uint32 RelTileY;
 };
@@ -18,10 +19,9 @@ struct tile_map {
 
   uint32 TileChunkCountX;
   uint32 TileChunkCountY;
+  uint32 TileChunkCountZ;
 
-  real32 TileSizeInPixels;
   real32 TileSizeInMeters;
-  real32 MetersToPixels;
 
   tile_chunk *TileChunks;
 };
@@ -29,6 +29,7 @@ struct tile_map {
 struct tile_map_position {
   uint32 AbsTileX;
   uint32 AbsTileY;
+  uint32 AbsTileZ;
 
   // relative to central of tile
   real32 TileRelX;

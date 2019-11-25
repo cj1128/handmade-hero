@@ -275,24 +275,24 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Target resolution: 960 x 540 x 30hz
 - Define `DrawRectangle`
 
-### Day 28: Drawing a Tile Map
+### Day 28: Drawing a Tilemap
 
 - Use floating point to store colors, because it will make it a lot more eaiser when we have to do some math about colors
-- Draw a simple tile map
+- Draw a simple tilemap
 - Draw a simple player, keep in mind that player's moving should consider the time delta. Otherwise it will move fast if we run at a higher FPS.
 
-### Day 29: Basic Tile Map Collision Checking
+### Day 29: Basic Tilemap Collision Checking
 
 - Using `PatBlt` to clear screen when display our buffer
 - We should only clear the four gutters otherwise there will be some flashing
 - Implement a simple collision check
 - Seperate the header file into handmade.h and handmade_platform.h
 
-### Day 30: Moving Between Tile Maps
+### Day 30: Moving Between Tilemaps
 
-- Define four tile maps, and notice that in C the two dimension array is Y first and X last
+- Define four tilemaps, and notice that in C the two dimension array is Y first and X last
 - Define `canonicol_position` and `raw_postion`
-- Implement moving between tile maps
+- Implement moving between tilemaps
 
 ### Day 31: Tilemap Coordinate Systems
 
@@ -300,7 +300,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `handmade_intrinsic.h`
 - Define `TileSizeInMeters` and `TileSizeInPixels`
 - Optimization switches: `/O2 /Oi /fp:fast`
-- PLAN: pack tile map index and tile index into a single 32-bit integer
+- PLAN: pack tilemap index and tile index into a single 32-bit integer
 - PLAN: convert TileRelX and TileRelY to resolution independent world units
 - RESOURCE: Intel Intrinsics Guide, https://software.intel.com/sites/landingpage/IntrinsicsGuide/
 
@@ -311,21 +311,30 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `RecononicalizePosition`
 - Use meters instead of pixels as units
 
-### Day 33: Virtualized Tile Maps
+### Day 33: Virtualized Tilemaps
 
 - Rename `canonical_position` to `world_position`
 - Make Y axis go upward
 - RESOURCE: a great book about typology, Galois' Dream: Group Theory and Differential Equations
 - Remove TileMapX and TileMapY
 - Define `tile_map_position`
-- 24-bit for tile map and 8-bit for tiles
+- 24-bit for tilemap and 8-bit for tiles
 - Implement a simple scroll so the guy can move
 
-### Day 34: Tile Map Memory
+### Day 34: Tilemap Memory
 
 - Implement smooth scrolling
 - Implement a way to speed the guy up
 - Make `TileRelX` and `TileRelY` relative to center of tile
 - Create `handmade_tile.h` and `handmade_tile.cpp`
-- Rename `tile_map` to `tile_chunk` and extract everything from `world` to `tile_map`, now tile map means the whole map
+- Rename `tile_map` to `tile_chunk` and extract everything from `world` to `tile_map`, now tilemap means the whole map
 - Define `memory_arena` and `PushSize`, `PushArray` and create tile chunks programmatically
+
+### Day 35: Basic Sparse Tilemap Storage
+
+- Make tile size small so we can see more chunks
+- Remove `TileSizeInPixels` and `MetersToPixels` from `tile_map`
+- Use random.org to generate some random numbers and use them to generate screen randomly
+- Generate doors based on our choice
+- Allocate space for tiles only when we access
+- Add Z index to tilemap
