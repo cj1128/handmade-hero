@@ -53,8 +53,8 @@ GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTile
 internal inline tile_map_position
 RecononicalizePosition(tile_map *TileMap, tile_map_position Pos) {
   tile_map_position Result = Pos;
-  RecononicalizeCoord(TileMap, &Result.AbsTileX, &Result.TileRelX);
-  RecononicalizeCoord(TileMap, &Result.AbsTileY, &Result.TileRelY);
+  RecononicalizeCoord(TileMap, &Result.AbsTileX, &Result.OffsetX);
+  RecononicalizeCoord(TileMap, &Result.AbsTileY, &Result.OffsetY);
   return Result;
 }
 
@@ -86,4 +86,11 @@ SetTileValue(memory_arena *Arena, tile_map *TileMap,
   }
 
   TileChunk->Tiles[P.RelTileY * TileMap->TileChunkDim + P.RelTileX] = TileValue;
+}
+
+inline bool32
+AreSameTiles(tile_map_position P1, tile_map_position P2) {
+  return P1.AbsTileX == P2.AbsTileX &&
+    P1.AbsTileY == P2.AbsTileY &&
+    P1.AbsTileZ == P2.AbsTileZ;
 }

@@ -803,6 +803,36 @@ global_variable uint32 RandomNumberTable[] = {
 64  ,29  ,35  ,70  ,24,
 };
 
+#pragma pack(push, 1)
+struct bitmap_header {
+  char Signature[2];
+  uint32 FileSize;
+  uint32 Reserved;
+  uint32 DataOffset;
+
+  uint32 Size;
+  uint32 Width;
+  uint32 Height;
+  uint16 Planes;
+  uint16 BitsPerPixel;
+  uint32 Compression;
+  uint32 ImageSize;
+};
+#pragma pack(pop)
+
+internal uint32 *
+LoadBMP(thread_context *Thread, debug_platform_read_file ReadFile, char *FileName) {
+  uint32 *Result = NULL;
+
+  debug_read_file_result ReadResult = ReadFile(Thread, FileName);
+  if(ReadResult.Memory) {
+    bitmap_header *Header = (bitmap_header *)ReadResult.Memory;
+    Result = (uint32 *)((uint8 *)ReadResult.Memory + Header->DataOffset);
+  }
+
+  return Result;
+}
+
 internal void
 InitializeArena(memory_arena *Arena, size_t Size, uint8 *Base) {
   Arena->Size = Size;
@@ -908,14 +938,16 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   if(!Memory->IsInitialized) {
     Memory->IsInitialized = true;
 
+    Memory->BMPData = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test_scene_layer_02.bmp");
+
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
 
     State->PlayerPos = {};
     State->PlayerPos.AbsTileX = 1;
     State->PlayerPos.AbsTileY = 3;
     State->PlayerPos.AbsTileZ = 0;
-    State->PlayerPos.TileRelX = 0.0f;
-    State->PlayerPos.TileRelY = 0.0f;
+    State->PlayerPos.OffsetX = 0.0f;
+    State->PlayerPos.OffsetY = 0.0f;
 
     TileMap->TileChunkShift = 4;
     TileMap->TileChunkDim = 1 << TileMap->TileChunkShift;
@@ -1073,35 +1105,33 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
       tile_map_position NewPos = State->PlayerPos;
 
-      NewPos.TileRelX += dx * Input->dt;
-      NewPos.TileRelY += dy * Input->dt;
+      NewPos.OffsetX += dx * Input->dt;
+      NewPos.OffsetY += dy * Input->dt;
       NewPos = RecononicalizePosition(TileMap, NewPos);
 
       tile_map_position NewPosLeft = NewPos;
-      NewPosLeft.TileRelX -= PlayerWidth * 0.5f;
+      NewPosLeft.OffsetX -= PlayerWidth * 0.5f;
       NewPosLeft = RecononicalizePosition(TileMap, NewPosLeft);
 
       tile_map_position NewPosRight = NewPos;
-      NewPosRight.TileRelX += PlayerWidth * 0.5f;
+      NewPosRight.OffsetX += PlayerWidth * 0.5f;
       NewPosRight = RecononicalizePosition(TileMap, NewPosRight);
 
       if(IsTileMapEmtpy(TileMap, NewPos) &&
         IsTileMapEmtpy(TileMap, NewPosLeft) &&
         IsTileMapEmtpy(TileMap, NewPosRight)) {
-        State->PlayerPos = NewPos;
-
-        // switch z
-        if(Controller->ActionDown.IsEndedDown) {
-          Controller->ActionDown.IsEndedDown = false;
-          uint32 TileValue = GetTileValue(TileMap, State->PlayerPos.AbsTileX, State->PlayerPos.AbsTileY, State->PlayerPos.AbsTileZ);
+        if(!AreSameTiles(State->PlayerPos, NewPos)) {
+          uint32 TileValue = GetTileValue(TileMap, NewPos.AbsTileX, NewPos.AbsTileY, NewPos.AbsTileZ);
           if(TileValue == 3) {
-            if(State->PlayerPos.AbsTileZ == 0) {
-              State->PlayerPos.AbsTileZ = 1;
+            if(NewPos.AbsTileZ == 0) {
+              NewPos.AbsTileZ = 1;
             } else {
-              State->PlayerPos.AbsTileZ = 0;
+              NewPos.AbsTileZ = 0;
             }
           }
-      }
+        }
+
+        State->PlayerPos = NewPos;
       }
     }
   }
@@ -1115,11 +1145,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     for(int RelX = -100; RelX < 100; RelX++) {
       real32 Gray = 1.0f; // block
 
-      real32 TileCenterX = CenterX - State->PlayerPos.TileRelX*MetersToPixels + (real32)RelX*TileSizeInPixels;
+      real32 TileCenterX = CenterX - State->PlayerPos.OffsetX*MetersToPixels + (real32)RelX*TileSizeInPixels;
       real32 TileMinX = TileCenterX - 0.5f*TileSizeInPixels;
       real32 TileMaxX = TileMinX + TileSizeInPixels;
 
-      real32 TileCenterY = CenterY - State->PlayerPos.TileRelY*MetersToPixels + (real32)RelY*TileSizeInPixels;
+      real32 TileCenterY = CenterY - State->PlayerPos.OffsetY*MetersToPixels + (real32)RelY*TileSizeInPixels;
       real32 TileMinY = TileCenterY - 0.5f*TileSizeInPixels;
       real32 TileMaxY = TileMinY + TileSizeInPixels;
 
@@ -1152,6 +1182,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   real32 PlayerMaxY = PlayerMinY + PlayerHeight * MetersToPixels;
 
   DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 0.0f, 1.0f);
+
+  uint32 *Source = Memory->BMPData;
+  uint32 *Dest = (uint32 *)Buffer->Memory;
+  for(int Y = 0; Y < Buffer->Height; Y++) {
+    for(int X = 0; X < Buffer->Width; X++) {
+      *Dest++ = *Source++;
+    }
+  }
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {

@@ -126,6 +126,8 @@ struct game_memory {
   size_t TransientStorageSize;
   void *TransientStorage;
 
+  uint32 *BMPData;
+
   debug_platform_read_file *DebugPlatformReadFile;
   debug_platform_write_file *DebugPlatformWriteFile;
   debug_platform_free_file_memory *DebugPlatformFreeFileMemory;

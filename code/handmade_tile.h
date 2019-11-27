@@ -31,9 +31,9 @@ struct tile_map_position {
   uint32 AbsTileY;
   uint32 AbsTileZ;
 
-  // relative to central of tile
-  real32 TileRelX;
-  real32 TileRelY;
+  // relative to tile center
+  real32 OffsetX;
+  real32 OffsetY;
 };
 
 #define HANDMADE_TILE_H
