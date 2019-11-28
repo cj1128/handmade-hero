@@ -6,6 +6,11 @@
   },
 
   {
+    "keys": ["ctrl+n"],
+    "command": "advanced_new_file_new"
+  },
+
+  {
     "keys": ["ctrl+r"],
     "command": "show_overlay",
     "args": {"overlay": "goto", "text": "@"}
@@ -189,6 +194,11 @@
   },
 
   /*----------  Vim Shourtcuts  ----------*/
+  {
+    "keys": ["Q"],
+    "command": "run_macro",
+    "context": [{"key": "setting.command_mode"}]
+  },
 
   {
     "keys": ["e"],

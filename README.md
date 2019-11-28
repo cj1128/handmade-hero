@@ -345,3 +345,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Make player go up and down. I already implemented this function in the previous day, but I need to implement it in a new way: when the player moves to the stair, it goes automatically, no need to push any button.
 - Rename `TileRelX` and `TileRelY` to `OffsetX` and `OffsetY`
 - Define `bitmap_header` and parse bitmap. We have to use `#pragma pack(push, 1) and #pragma pack(pop)` to make vs pack our struct correctly
+
+### Day 37: Basic Bitmap Rendering
+
+- Design a very specific BMP to help debug our rendering. This is a very clever method.

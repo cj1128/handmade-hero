@@ -938,7 +938,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   if(!Memory->IsInitialized) {
     Memory->IsInitialized = true;
 
-    Memory->BMPData = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test_scene_layer_02.bmp");
+    Memory->BMPData = LoadBMP(Thread, Memory->DebugPlatformReadFile, "a.bmp");
 
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
 
