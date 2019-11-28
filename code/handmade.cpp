@@ -811,23 +811,61 @@ struct bitmap_header {
   uint32 DataOffset;
 
   uint32 Size;
-  uint32 Width;
-  uint32 Height;
+  int32 Width;
+  int32 Height;
   uint16 Planes;
   uint16 BitsPerPixel;
   uint32 Compression;
-  uint32 ImageSize;
+  uint32 SizeOfBitmap;
+  uint32  HorzResolution;
+  uint32  VertResolution;
+  uint32 ColorsUsed;
+  uint32 ColorsImportant;
+  uint32 RedMask;
+  uint32 GreenMask;
+  uint32 BlueMask;
+  uint32 AlphaMask;
 };
 #pragma pack(pop)
 
-internal uint32 *
+inline uint8
+ProcessPixelWithMask(uint32 Pixel, uint32 Mask) {
+  uint32 Tmp = Pixel & Mask;
+  while(Tmp > 0xff) {
+    Tmp = Tmp >> 8;
+  }
+  return (uint8)Tmp;
+}
+
+// this is not a compelete BMP loading procedure
+// we just need to load sutff from ourself's
+// pixels from bottom to top
+internal loaded_bitmap
 LoadBMP(thread_context *Thread, debug_platform_read_file ReadFile, char *FileName) {
-  uint32 *Result = NULL;
+  loaded_bitmap Result = {};
 
   debug_read_file_result ReadResult = ReadFile(Thread, FileName);
   if(ReadResult.Memory) {
     bitmap_header *Header = (bitmap_header *)ReadResult.Memory;
-    Result = (uint32 *)((uint8 *)ReadResult.Memory + Header->DataOffset);
+    Result.Width = Header->Width;
+    Result.Height = Header->Height;
+
+    Result.Pixel = (uint32 *)((uint8 *)ReadResult.Memory + Header->DataOffset);
+
+    // we have to restructure pixels
+    // expected byte order: BB GG RR AA, 0xAARRGGBB
+    uint32 *Pixel = Result.Pixel;
+    for(int Y = 0; Y < Header->Height; Y++) {
+      for(int X = 0; X < Header->Width; X++) {
+        uint8 A = ProcessPixelWithMask(*Pixel, Header->AlphaMask);
+        uint8 R = ProcessPixelWithMask(*Pixel, Header->RedMask);
+        uint8 G = ProcessPixelWithMask(*Pixel, Header->GreenMask);
+        uint8 B = ProcessPixelWithMask(*Pixel, Header->BlueMask);
+
+        *Pixel = (A << 24 | R << 16 | G << 8 | B);
+        *Pixel++;
+      }
+    }
   }
 
   return Result;
@@ -838,6 +876,42 @@ InitializeArena(memory_arena *Arena, size_t Size, uint8 *Base) {
   Arena->Size = Size;
   Arena->Base = Base;
   Arena->Used = 0;
+}
+
+internal void
+DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap Bitmap, real32 RealX, real32 RealY) {
+  int32 MinX = RoundReal32ToInt32(RealX);
+  int32 MinY = RoundReal32ToInt32(RealY);
+  int32 MaxX = MinX + Bitmap.Width;
+  int32 MaxY = MinY + Bitmap.Height;
+
+  if(MinX < 0) {
+    MinX = 0;
+  }
+  if(MinY < 0) {
+    MinY = 0;
+  }
+  if(MaxX > Buffer->Width) {
+    MaxX = Buffer->Width;
+  }
+  if(MaxY > Buffer->Height) {
+    MaxY = Buffer->Height;
+  }
+
+  uint32 *SourceRow = Bitmap.Pixel + Bitmap.Width*(Bitmap.Height - 1);
+  uint32 *DestRow = (uint32*)Buffer->Memory + MinY*Buffer->Width + MinX;
+
+  for(int Y = MinY; Y < MaxY; Y++) {
+    uint32 *Source = SourceRow;
+    uint32 *Dest = DestRow;
+
+    for(int X = MinX; X < MaxX; X++) {
+      *Dest++ = *Source++;
+    }
+
+    SourceRow -= Bitmap.Width;
+    DestRow += Buffer->Width;
+  }
 }
 
 // exclusive
@@ -938,7 +1012,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   if(!Memory->IsInitialized) {
     Memory->IsInitialized = true;
 
-    Memory->BMPData = LoadBMP(Thread, Memory->DebugPlatformReadFile, "a.bmp");
+    State->Background = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_background.bmp");
+    State->HeroHead = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_head.bmp");
+    State->HeroCape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_cape.bmp");
+    State->HeroTorso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_torso.bmp");
 
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
 
@@ -1136,8 +1213,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
   }
 
-  // background
-  DrawRectangle(Buffer, 0.0f, 0.0f, (real32)Buffer->Width, (real32)Buffer->Height, 0.4f, 0.0f, 0.0f);
+  DrawBitmap(Buffer, State->Background, 0, 0);
 
   real32 H = (real32)(Buffer->Height);
 
@@ -1157,7 +1233,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       uint32 AbsY = RelY + State->PlayerPos.AbsTileY;
 
       uint32 TileValue = GetTileValue(TileMap, AbsX, AbsY, State->PlayerPos.AbsTileZ);
-      if(TileValue) {
+      if(TileValue > 1) {
         // empty
         if(TileValue == 1) {
           Gray = 0.5f;
@@ -1181,15 +1257,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   real32 PlayerMinY = CenterY;
   real32 PlayerMaxY = PlayerMinY + PlayerHeight * MetersToPixels;
 
-  DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 0.0f, 1.0f);
-
-  uint32 *Source = Memory->BMPData;
-  uint32 *Dest = (uint32 *)Buffer->Memory;
-  for(int Y = 0; Y < Buffer->Height; Y++) {
-    for(int X = 0; X < Buffer->Width; X++) {
-      *Dest++ = *Source++;
-    }
-  }
+  // DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 0.0f, 1.0f);
+  DrawBitmap(Buffer, State->HeroHead, CenterX, CenterY);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {

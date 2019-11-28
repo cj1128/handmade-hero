@@ -349,3 +349,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 ### Day 37: Basic Bitmap Rendering
 
 - Design a very specific BMP to help debug our rendering. This is a very clever method.
+- I find that my structured_art.bmp has different byte order from casey's. It turns out that BMP has something called RedMask, GreenMask, BlueMask and AlphaMask.
+- BMP byte order: should determined by masks
+- Render background bmp
+- Define `loaded_bitmap` to pack all things up
+- Define `DrawBitmap`
