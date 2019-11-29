@@ -354,3 +354,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Render background bmp
 - Define `loaded_bitmap` to pack all things up
 - Define `DrawBitmap`
+
+### Day 38: Basic Linear Bitmap Blending
+
+- Define `FindLeastSignificantSetBit` and `bit_scan_result` in intrinsics
+- Define `COMPILER_MSVC` and `COMPILER_LLVM` macro variables
+- Use `_BitScanForward` MSVC compiler intrinsic when under windows
