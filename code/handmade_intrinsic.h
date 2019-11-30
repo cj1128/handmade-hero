@@ -1,4 +1,4 @@
-#ifndef HANDMADE_INTRINSIC
+#ifndef HANDMADE_INTRINSIC_H
 
 #include "math.h"
 
@@ -32,5 +32,29 @@ Cos(real32 Value) {
   return Result;
 }
 
-#define HANDMADE_INTRINSIC
+struct bit_scan_result {
+  bool32 Found;
+  uint32 Index;
+};
+
+inline bit_scan_result
+FindLeastSignificantSetBit(uint32 Value) {
+  bit_scan_result Result = {};
+
+#if COMPILER_MSVC
+  Result.Found = _BitScanForward((unsigned long*)&Result.Index, Value);
+#else
+  uint32 Test = 0;
+  for(uint32 Test = 0; Test < 32; Test++) {
+    if((Value & (1 << Test)) == 1) {
+      Result.Found = true;
+      Result.Index = Test;
+    }
+  }
+#endif
+
+  return Result;
+}
+
+#define HANDMADE_INTRINSIC_H
 #endif

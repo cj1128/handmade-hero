@@ -360,3 +360,5 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `FindLeastSignificantSetBit` and `bit_scan_result` in intrinsics
 - Define `COMPILER_MSVC` and `COMPILER_LLVM` macro variables
 - Use `_BitScanForward` MSVC compiler intrinsic when under windows
+- Implement a simple linear alpha blending
+- Assert compression mode when loading BMP

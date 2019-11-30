@@ -13,6 +13,19 @@ typedef int32 bool32;
 typedef float real32;
 typedef double real64;
 
+// Compilers
+#if !defined(COMPILER_MSVC)
+#if _MSC_VER
+#define COMPILER_MSVC 1
+#else
+#define COMPILER_MSVC 0
+#endif
+#endif
+
+#if COMPILER_MSVC
+#include <intrin.h>
+#endif
+
 #define global_variable static
 #define local_persist static
 #define internal static
@@ -41,6 +54,7 @@ struct thread_context {
 };
 
 struct game_offscreen_buffer {
+  // Byte order: BB GG RR AA, 0xAARRGGBB
   void *Memory;
   int BytesPerPixel;
   int Width;

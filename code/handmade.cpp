@@ -830,11 +830,9 @@ struct bitmap_header {
 
 inline uint8
 ProcessPixelWithMask(uint32 Pixel, uint32 Mask) {
-  uint32 Tmp = Pixel & Mask;
-  while(Tmp > 0xff) {
-    Tmp = Tmp >> 8;
-  }
-  return (uint8)Tmp;
+  bit_scan_result Result = FindLeastSignificantSetBit(Mask);
+  Assert(Result.Found);
+  return (uint8)(Pixel >> Result.Index);
 }
 
 // this is not a compelete BMP loading procedure
@@ -849,6 +847,7 @@ LoadBMP(thread_context *Thread, debug_platform_read_file ReadFile, char *FileNam
     bitmap_header *Header = (bitmap_header *)ReadResult.Memory;
     Result.Width = Header->Width;
     Result.Height = Header->Height;
+    Assert(Header->Compression == 3);
 
     Result.Pixel = (uint32 *)((uint8 *)ReadResult.Memory + Header->DataOffset);
 
@@ -906,7 +905,25 @@ DrawBitmap(game_offscreen_buffer *Buffer, loaded_bitmap Bitmap, real32 RealX, re
     uint32 *Dest = DestRow;
 
     for(int X = MinX; X < MaxX; X++) {
-      *Dest++ = *Source++;
+      real32 SA = (real32)((*Source >> 24) & 0xff);
+      real32 SR = (real32)((*Source >> 16) & 0xff);
+      real32 SG = (real32)((*Source >> 8) & 0xff);
+      real32 SB = (real32)((*Source >> 0) & 0xff);
+
+      real32 DR = (real32)((*Dest >> 16) & 0xff);
+      real32 DG = (real32)((*Dest >> 8) & 0xff);
+      real32 DB = (real32)((*Dest >> 0) &0xff);
+
+      if(SA > 128) {
+        real32 Ratio = SA / 255.0f;
+        real32 R = (1 - Ratio)*DR + Ratio*SR;
+        real32 G = (1 - Ratio)*DG + Ratio*SG;
+        real32 B = (1 - Ratio)*DB + Ratio*SB;
+        *Dest = ((uint32)(R + 0.5f) << 16) | ((uint32)(G + 0.5f) << 8) | ((uint32)(B + 0.5f));
+      }
+
+      Dest++;
+      Source++;
     }
 
     SourceRow -= Bitmap.Width;
@@ -1257,7 +1274,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   real32 PlayerMinY = CenterY;
   real32 PlayerMaxY = PlayerMinY + PlayerHeight * MetersToPixels;
 
-  // DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 0.0f, 1.0f);
+  DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 0.0f, 1.0f);
   DrawBitmap(Buffer, State->HeroHead, CenterX, CenterY);
 }
 
