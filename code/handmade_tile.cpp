@@ -94,3 +94,11 @@ AreSameTiles(tile_map_position P1, tile_map_position P2) {
     P1.AbsTileY == P2.AbsTileY &&
     P1.AbsTileZ == P2.AbsTileZ;
 }
+
+tile_map_diff
+SubtractPosition(tile_map *TileMap, tile_map_position P1, tile_map_position P2) {
+  tile_map_diff Result = {};
+  Result.dX = TileMap->TileSizeInMeters * ((real32)P1.AbsTileX - (real32)P2.AbsTileX) + P1.OffsetX - P2.OffsetX;
+  Result.dY = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.OffsetY - P2.OffsetY;
+  return Result;
+}

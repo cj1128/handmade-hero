@@ -1,5 +1,10 @@
 #ifndef HANDMADE_TILE_H
 
+struct tile_map_diff {
+  real32 dX;
+  real32 dY;
+};
+
 struct tile_chunk {
   uint32 *Tiles;
 };

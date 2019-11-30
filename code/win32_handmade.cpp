@@ -258,23 +258,26 @@ Win32GetFileLastWriteTime(char *FileName) {
 }
 
 win32_game_code
-Win32LoadGameCode(char *DLLPath, char *DLLTempPath) {
+Win32LoadGameCode(char *DLLPath, char *DLLTempPath, char *LockPah) {
   win32_game_code Result = {};
-  Result.GameDLLLastWriteTime = Win32GetFileLastWriteTime(DLLPath);
 
-  // CopyFile may fail the first few times
-  while(1) {
-    if(CopyFile(DLLPath, DLLTempPath, FALSE)) break;
-    if(GetLastError() == ERROR_FILE_NOT_FOUND) break;
-  }
+  WIN32_FILE_ATTRIBUTE_DATA Ignored;
+  if(!GetFileAttributesExA(LockPah, GetFileExInfoStandard, &Ignored)) {
+    Result.GameDLLLastWriteTime = Win32GetFileLastWriteTime(DLLPath);
+    // CopyFile may fail the first few times
+    while(1) {
+      if(CopyFile(DLLPath, DLLTempPath, FALSE)) break;
+      if(GetLastError() == ERROR_FILE_NOT_FOUND) break;
+    }
 
-  HMODULE Library = LoadLibraryA(DLLTempPath);
+    HMODULE Library = LoadLibraryA(DLLTempPath);
 
-  if(Library) {
-    Result.GameDLL = Library;
-    Result.GameUpdateVideo = (game_update_video *)(GetProcAddress(Library, "GameUpdateVideo"));
-    Result.GameUpdateAudio = (game_update_audio *)(GetProcAddress(Library, "GameUpdateAudio"));
-    Result.IsValid = Result.GameUpdateVideo && Result.GameUpdateVideo;
+    if(Library) {
+      Result.GameDLL = Library;
+      Result.GameUpdateVideo = (game_update_video *)(GetProcAddress(Library, "GameUpdateVideo"));
+      Result.GameUpdateAudio = (game_update_audio *)(GetProcAddress(Library, "GameUpdateAudio"));
+      Result.IsValid = Result.GameUpdateVideo && Result.GameUpdateVideo;
+    }
   }
 
   return Result;
@@ -948,18 +951,26 @@ WinMain(
           sizeof(GameTempDLLPath)
         );
 
-        win32_game_code Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath);
+        char GameLockFileName[] = "lock.tmp";
+        char GameLockFilePath[WIN32_MAX_PATH];
+        Win32BuildPathInEXEDir(
+          &Win32State,
+          GameLockFileName,
+          sizeof(GameLockFileName) - 1,
+          GameLockFilePath,
+          sizeof(GameLockFilePath)
+        );
+
+        win32_game_code Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath, GameLockFilePath);
 
         while(GlobalRunning) {
           FILETIME NewDLLWriteTime = Win32GetFileLastWriteTime(GameDLLPath);
           if(CompareFileTime(&NewDLLWriteTime, &Game.GameDLLLastWriteTime) != 0) {
             Win32UnloadGameCode(&Game);
-            Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath);
+            Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath, GameLockFilePath);
           }
 
           NewInput->dt = TargetSecondsPerFrame;
-
-          Assert(Game.IsValid);
 
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
@@ -1109,7 +1120,9 @@ WinMain(
               NewInput->MouseButtons[4].IsEndedDown = GetKeyState(VK_XBUTTON2) & (1 << 15);
             }
 
-            Game.GameUpdateVideo(&Thread, &Memory, NewInput, &Buffer);
+            if(Game.GameUpdateVideo) {
+              Game.GameUpdateVideo(&Thread, &Memory, NewInput, &Buffer);
+            }
           }
 
           // Update Audio
@@ -1156,7 +1169,9 @@ WinMain(
               SoundBuffer.SampleCount = BytesToLock / SoundOutput.BytesPerSample;
               SoundBuffer.ToneVolume = SoundOutput.ToneVolume;
               SoundBuffer.Memory = SoundMemory;
-              Game.GameUpdateAudio(&Thread, &Memory, &SoundBuffer);
+              if(Game.GameUpdateAudio) {
+                Game.GameUpdateAudio(&Thread, &Memory, &SoundBuffer);
+              }
 
 #if 0
               win32_debug_sound_marker *Marker = &DebugSoundMarkers[DebugSoundMarkerIndex];
@@ -1247,7 +1262,7 @@ WinMain(
 
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
-#if 0
+#if 1
 
           int64 CounterElapsed = EndCounter - LastCounter;
           uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;

@@ -362,3 +362,14 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Use `_BitScanForward` MSVC compiler intrinsic when under windows
 - Implement a simple linear alpha blending
 - Assert compression mode when loading BMP
+
+### Day 39: Basic Bitmap Rendering Cleanup
+
+- Load hero bitmaps for four directions
+- Change hero direction when moves
+- Align hero bitmaps with real position
+- Replace camera scrolling with fixed camera
+- Move camera when player moves
+- Fix clipping problem in our bitmap drawing
+- Check frame rate
+- Fix msvc pdb problem when hot reloading by create a lock file
