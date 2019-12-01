@@ -13,8 +13,5 @@
     {
       "path": "."
     }
-  ],
-  "ignored_packages": [
-    "sublime-text-2-buildview"
   ]
 }

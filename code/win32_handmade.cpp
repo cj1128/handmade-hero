@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <malloc.h>
 #include <xinput.h>
 #include <dsound.h>
 #include <stdio.h>
@@ -18,13 +17,11 @@ typedef XINPUT_SET_STATE(x_input_set_state);
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
 
-// XInputGetState
 XINPUT_GET_STATE(XInputGetStateStub) {
   return ERROR_DEVICE_NOT_CONNECTED;
 }
 global_variable x_input_get_state *XInputGetState_ = XInputGetStateStub;
 
-// XInputSetState
 XINPUT_SET_STATE(XInputSetStateStub) {
   return ERROR_DEVICE_NOT_CONNECTED;
 }
@@ -700,7 +697,7 @@ Win32ResizeDIBSection(
 
   Buffer->Info.bmiHeader.biSize = sizeof(Buffer->Info.bmiHeader);
   Buffer->Info.bmiHeader.biWidth = Buffer->Width;
-  Buffer->Info.bmiHeader.biHeight = -Buffer->Height;
+  Buffer->Info.bmiHeader.biHeight = Buffer->Height;
   Buffer->Info.bmiHeader.biPlanes = 1;
   Buffer->Info.bmiHeader.biBitCount = (WORD)(Buffer->BytesPerPixel * 8);
   Buffer->Info.bmiHeader.biCompression = BI_RGB;

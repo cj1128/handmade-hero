@@ -908,7 +908,7 @@ DrawBitmap(
     MaxY = Buffer->Height;
   }
 
-  uint32 *SourceRow = Bitmap.Pixel + Bitmap.Width*(Bitmap.Height - 1) - ClipY*Bitmap.Width + ClipX;
+  uint32 *SourceRow = Bitmap.Pixel + ClipY*Bitmap.Width + ClipX;
   uint32 *DestRow = (uint32*)Buffer->Memory + MinY*Buffer->Width + MinX;
 
   for(int Y = MinY; Y < MaxY; Y++) {
@@ -935,7 +935,7 @@ DrawBitmap(
       Source++;
     }
 
-    SourceRow -= Bitmap.Width;
+    SourceRow += Bitmap.Width;
     DestRow += Buffer->Width;
   }
 }
@@ -1046,28 +1046,28 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     hero_bitmaps *HeroBitmaps = &State->HeroBitmaps[0];
     HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 182;
+    HeroBitmaps->OffsetY = 35;
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_torso.bmp");
     HeroBitmaps++;
 
     HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 182;
+    HeroBitmaps->OffsetY = 35;
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_torso.bmp");
     HeroBitmaps++;
 
     HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 182;
+    HeroBitmaps->OffsetY = 35;
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_torso.bmp");
     HeroBitmaps++;
 
     HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 182;
+    HeroBitmaps->OffsetY = 35;
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_torso.bmp");
@@ -1292,8 +1292,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
   DrawBitmap(Buffer, State->Background, 0, 0);
 
-  real32 H = (real32)(Buffer->Height);
-
   for(int RelY = -4; RelY <= 4; RelY++) {
     for(int RelX = -8; RelX <= 8; RelX++) {
       real32 Gray = 1.0f; // block
@@ -1325,7 +1323,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           Gray = 0.0f;
         }
 
-        DrawRectangle(Buffer, TileMinX, H - TileMaxY, TileMaxX, H - TileMinY, Gray, Gray, Gray);
+        DrawRectangle(Buffer, TileMinX, TileMinY, TileMaxX,  TileMaxY, Gray, Gray, Gray);
       }
     }
   }
@@ -1340,12 +1338,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   real32 PlayerMinY = PlayerGroundY;
   real32 PlayerMaxY = PlayerMinY + PlayerHeight * MetersToPixels;
 
-  DrawRectangle(Buffer, PlayerMinX, H - PlayerMaxY, PlayerMaxX, H - PlayerMinY, 1.0f, 1.0f, 0.0f);
+  DrawRectangle(Buffer, PlayerMinX, PlayerMinY, PlayerMaxX, PlayerMaxY, 1.0f, 1.0f, 0.0f);
 
   hero_bitmaps HeroBitmaps = State->HeroBitmaps[State->HeroFacingDirection];
-  DrawBitmap(Buffer, HeroBitmaps.Torso, PlayerGroundX, H - PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-  DrawBitmap(Buffer, HeroBitmaps.Cape, PlayerGroundX, H - PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-  DrawBitmap(Buffer, HeroBitmaps.Head, PlayerGroundX, H - PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+  DrawBitmap(Buffer, HeroBitmaps.Torso, PlayerGroundX, PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+  DrawBitmap(Buffer, HeroBitmaps.Cape, PlayerGroundX, PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+  DrawBitmap(Buffer, HeroBitmaps.Head, PlayerGroundX, PlayerGroundY, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {

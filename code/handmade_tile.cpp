@@ -58,6 +58,10 @@ RecononicalizePosition(tile_map *TileMap, tile_map_position Pos) {
   return Result;
 }
 
+// 0: nothing
+// 1: empty
+// 2: block
+// 3: stair
 bool32
 IsTileMapEmtpy(tile_map *TileMap, tile_map_position Pos) {
   bool32 Empty = false;
