@@ -2,16 +2,6 @@
 #include "handmade_platform.h"
 #include "handmade_intrinsic.h"
 
-/*
-  HANDMADE_INTERNAL:
-    0: public build
-    1: internal build
-
-  HANDMADE_SLOW:
-    1: slow code allowed
-    0: no slow code
-*/
-
 #define Pi32 3.14159265359
 
 struct memory_arena {

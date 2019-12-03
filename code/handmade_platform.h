@@ -13,6 +13,16 @@ typedef int32 bool32;
 typedef float real32;
 typedef double real64;
 
+/*
+  HANDMADE_INTERNAL:
+    0: public build
+    1: internal build
+
+  HANDMADE_SLOW:
+    1: slow code allowed
+    0: no slow code
+*/
+
 // Compilers
 #if !defined(COMPILER_MSVC)
 #if _MSC_VER

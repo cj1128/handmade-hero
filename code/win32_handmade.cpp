@@ -35,6 +35,7 @@ global_variable bool GlobalDebugUpdateWindow = true;
 global_variable win32_offscreen_buffer GlobalBackBuffer;
 global_variable LPDIRECTSOUNDBUFFER GlobalSoundBuffer;
 global_variable uint64 GlobalPerfCounterFrequency;
+global_variable bool32 GlobalShowCursor;
 
 DEBUG_PLATFORM_READ_FILE(DebugPlatformReadFile) {
   debug_read_file_result Result = {};
@@ -181,6 +182,33 @@ Win32BeginInputRecording(win32_state *State, int Index) {
     State->GameMemory,
     State->MemorySize
   );
+}
+
+global_variable WINDOWPLACEMENT GlobalWindowPlacement = { sizeof(GlobalWindowPlacement) };
+internal void
+ToggleFullscreen(HWND Window) {
+  DWORD WindowStyle = GetWindowLong(Window, GWL_STYLE);
+
+  if (WindowStyle & WS_OVERLAPPEDWINDOW) {
+    MONITORINFO MonitorInfo = { sizeof(MonitorInfo) };
+
+    if (GetWindowPlacement(Window, &GlobalWindowPlacement) &&
+        GetMonitorInfo(MonitorFromWindow(Window, MONITOR_DEFAULTTOPRIMARY), &MonitorInfo)) {
+      SetWindowLong(Window, GWL_STYLE, WindowStyle & ~WS_OVERLAPPEDWINDOW);
+      SetWindowPos(Window, HWND_TOP,
+                   MonitorInfo.rcMonitor.left, MonitorInfo.rcMonitor.top,
+                   MonitorInfo.rcMonitor.right - MonitorInfo.rcMonitor.left,
+                   MonitorInfo.rcMonitor.bottom - MonitorInfo.rcMonitor.top,
+                   SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+    }
+  } else {
+    SetWindowLong(Window, GWL_STYLE,
+                  WindowStyle | WS_OVERLAPPEDWINDOW);
+    SetWindowPlacement(Window, &GlobalWindowPlacement);
+    SetWindowPos(Window, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+  }
 }
 
 internal void
@@ -444,15 +472,20 @@ Win32ProcessMessages(win32_state *Win32State, game_controller_input *KeyboardCon
         bool WasDown = (Message.lParam & (1 << 30)) != 0;
         bool IsDown = (Message.lParam & (1 << 31)) == 0;
 
+        if(IsDown) {
+          bool32 IsAltDown = Message.lParam & (1 << 29);
+
+          if(VKCode == VK_F4 && IsAltDown) {
+            GlobalRunning = false;
+          }
+
+          if(VKCode == VK_RETURN && IsAltDown) {
+            ToggleFullscreen(Message.hwnd);
+          }
+        }
+
         if(WasDown != IsDown) {
           switch(VKCode) {
-            case VK_F4: {
-              bool32 IsAltDown = Message.lParam & (1 << 29);
-              if(IsAltDown) {
-                GlobalRunning = false;
-              }
-            } break;
-
             case 'W': {
               Win32ProcessKeyboardButtonState(&KeyboardController->MoveUp, IsDown);
             } break;
@@ -714,24 +747,36 @@ Win32UpdateWindow(
   int WindowHeight,
   win32_offscreen_buffer *Buffer
 ) {
-  int Top = 10;
-  int Left = 10;
+  if(WindowWidth >= 2*Buffer->Width && WindowHeight >= 2*Buffer->Height) {
+    StretchDIBits(
+      DeviceContext,
+      0, 0, 2*Buffer->Width, 2*Buffer->Height, // dest
+      0, 0, Buffer->Width, Buffer->Height, // src
+      Buffer->Memory,
+      &Buffer->Info,
+      DIB_RGB_COLORS,
+      SRCCOPY
+    );
+  } else {
+    int Top = 10;
+    int Left = 10;
 
-  // four gutters
-  PatBlt(DeviceContext, 0, 0, WindowWidth, Top, BLACKNESS);
-  PatBlt(DeviceContext, 0, Top, Left, Buffer->Height, BLACKNESS);
-  PatBlt(DeviceContext, 0, Top + Buffer->Height, WindowWidth, WindowHeight - Buffer->Height - Top, BLACKNESS);
-  PatBlt(DeviceContext, Left + Buffer->Width, Top, WindowWidth - Left - Buffer->Width, Buffer->Height, BLACKNESS);
+    // four gutters
+    PatBlt(DeviceContext, 0, 0, WindowWidth, Top, BLACKNESS);
+    PatBlt(DeviceContext, 0, Top, Left, Buffer->Height, BLACKNESS);
+    PatBlt(DeviceContext, 0, Top + Buffer->Height, WindowWidth, WindowHeight - Buffer->Height - Top, BLACKNESS);
+    PatBlt(DeviceContext, Left + Buffer->Width, Top, WindowWidth - Left - Buffer->Width, Buffer->Height, BLACKNESS);
 
-  StretchDIBits(
-    DeviceContext,
-    Top, Left, Buffer->Width, Buffer->Height, // dest
-    0, 0, Buffer->Width, Buffer->Height, // src
-    Buffer->Memory,
-    &Buffer->Info,
-    DIB_RGB_COLORS,
-    SRCCOPY
-  );
+    StretchDIBits(
+      DeviceContext,
+      Top, Left, Buffer->Width, Buffer->Height, // dest
+      0, 0, Buffer->Width, Buffer->Height, // src
+      Buffer->Memory,
+      &Buffer->Info,
+      DIB_RGB_COLORS,
+      SRCCOPY
+    );
+  }
 }
 
 internal LRESULT CALLBACK
@@ -743,6 +788,14 @@ Win32MainWindowCallback(
 ) {
   LRESULT Result = 0;
   switch(Message) {
+    case WM_SETCURSOR: {
+      if(GlobalShowCursor) {
+        Result = DefWindowProcA(Window, Message, WParam, LParam);
+      } else {
+        SetCursor(0);
+      }
+    } break;
+
     case WM_ACTIVATEAPP: {
       OutputDebugStringA("WM_ACTIVATEAPP\n");
     } break;
@@ -813,6 +866,10 @@ WinMain(
   LPSTR     CmdLine,
   int       ShowCmd
 ) {
+#if HANDMADE_INTERNAL
+  GlobalShowCursor = true;
+#endif
+
   bool32 SleepIsGranular = timeBeginPeriod(1) == TIMERR_NOERROR ;
 
   LARGE_INTEGER CounterPerSecond;
@@ -826,6 +883,7 @@ WinMain(
   WindowClass.style = CS_HREDRAW | CS_VREDRAW;
   WindowClass.lpfnWndProc = Win32MainWindowCallback;
   WindowClass.hInstance = Instance;
+  WindowClass.hCursor = LoadCursor(0, IDC_ARROW);
   WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
   if(RegisterClass(&WindowClass)) {
@@ -1259,7 +1317,7 @@ WinMain(
 
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
-#if 1
+#if 0
 
           int64 CounterElapsed = EndCounter - LastCounter;
           uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;

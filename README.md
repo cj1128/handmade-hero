@@ -22,12 +22,17 @@ Windows 10 with Visual Studio 2019 and Sublime Text 3.
 
 ### Bash
 
-- `dir /s [keyword]`: search something
+- `dir /s [keyword]`: search files
+- `findstr -s -n -i -l [keyword]`: find strings
 
 ### Win32
 
 - `WS_EX_TOPMOST`: make window in front of others
 - `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
+
+### Visual Studio
+
+- `Spy++`: inspect windows and messages
 
 ## Roadmap
 
@@ -373,3 +378,12 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Fix clipping problem in our bitmap drawing
 - Check frame rate
 - Fix msvc pdb problem when hot reloading by create a lock file
+
+### Day 40: Cursor Hiding and Fullscreen
+
+- Write a `static_check` bat file to make sure we never type `static`
+- Set a default cursor style using `LoadCursor`
+- Hide cursor by responding `WM_SETCURSOR` message with `SetCursor(0)` in production build
+- RESOURCE: How do I switch a window between normal and fullscreen? https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
+- Implement full screen toggling
+- Do fullscreen rendering in fullscreen mode
