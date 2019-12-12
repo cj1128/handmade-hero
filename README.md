@@ -387,3 +387,26 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - RESOURCE: How do I switch a window between normal and fullscreen? https://devblogs.microsoft.com/oldnewthing/20100412-00/?p=14353
 - Implement full screen toggling
 - Do fullscreen rendering in fullscreen mode
+
+### Day 41: Overview of the Types of Math Used in Games
+
+- Math we are gonna need:
+  - Arithmetic
+  - Algebra
+  - Euclidean Geometry
+  - Trigonometry
+  - Arithmetic
+  - Calculus
+  - Linear Algebra
+  - Partial Differential Equation
+  - Ordinary Differential Equation
+  - Complex Numbers
+  - Non-Euclidean Geometry
+  - Topology
+  - Minkowski Algebra
+  - Control Theory
+  - Interval Arithmetic
+  - Graph Theory
+  - Operations Research
+  - Probability and Statistics
+  - Cryptography / Pseudo Number Generator
