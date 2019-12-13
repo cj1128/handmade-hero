@@ -410,3 +410,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
   - Operations Research
   - Probability and Statistics
   - Cryptography / Pseudo Number Generator
+
+### Day 42: Basic 2D Vectors
+
+- Fix diagonal movement problem
+- Define `v2` and plus operator, minus operator and unary minus operator in `handmade_math.h`
+- Use v2 instead of x and y

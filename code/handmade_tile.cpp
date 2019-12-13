@@ -53,8 +53,8 @@ GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTile
 internal inline tile_map_position
 RecononicalizePosition(tile_map *TileMap, tile_map_position Pos) {
   tile_map_position Result = Pos;
-  RecononicalizeCoord(TileMap, &Result.AbsTileX, &Result.OffsetX);
-  RecononicalizeCoord(TileMap, &Result.AbsTileY, &Result.OffsetY);
+  RecononicalizeCoord(TileMap, &Result.AbsTileX, &Result.Offset.X);
+  RecononicalizeCoord(TileMap, &Result.AbsTileY, &Result.Offset.Y);
   return Result;
 }
 
@@ -102,7 +102,7 @@ AreSameTiles(tile_map_position P1, tile_map_position P2) {
 tile_map_diff
 SubtractPosition(tile_map *TileMap, tile_map_position P1, tile_map_position P2) {
   tile_map_diff Result = {};
-  Result.dX = TileMap->TileSizeInMeters * ((real32)P1.AbsTileX - (real32)P2.AbsTileX) + P1.OffsetX - P2.OffsetX;
-  Result.dY = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.OffsetY - P2.OffsetY;
+  Result.dXY.X = TileMap->TileSizeInMeters * ((real32)P1.AbsTileX - (real32)P2.AbsTileX) + P1.Offset.X - P2.Offset.X;
+  Result.dXY.Y = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.Offset.Y - P2.Offset.Y;
   return Result;
 }

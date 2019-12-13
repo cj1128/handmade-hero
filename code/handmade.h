@@ -25,6 +25,7 @@ PushArray_(memory_arena *Arena, uint32 Count, size_t Size) {
   return PushSize_(Arena, Count*Size);
 }
 
+#include "handmade_math.h"
 #include "handmade_tile.h"
 #include "handmade_tile.cpp"
 
