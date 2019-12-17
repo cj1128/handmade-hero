@@ -51,8 +51,9 @@ struct hero_bitmaps {
 struct game_state {
   memory_arena MemoryArena;
   world World;
-  tile_map_position PlayerPos;
-  tile_map_position CameraPos;
+  tile_map_position PlayerP;
+  tile_map_position CameraP;
+  v2 dPlayerP;
 
   uint32 HeroFacingDirection;
 

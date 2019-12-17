@@ -416,3 +416,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Fix diagonal movement problem
 - Define `v2` and plus operator, minus operator and unary minus operator in `handmade_math.h`
 - Use v2 instead of x and y
+
+### Day 43: The Equations of Motion
+
+- Add `dPlayerP` to game state. This is the speed of the guy.
+- Add a back force based on player's speed

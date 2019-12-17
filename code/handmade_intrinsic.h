@@ -56,5 +56,12 @@ FindLeastSignificantSetBit(uint32 Value) {
   return Result;
 }
 
+inline real32
+Square(real32 Value) {
+  real32 Result;
+  Result = Value * Value;
+  return Result;
+}
+
 #define HANDMADE_INTRINSIC_H
 #endif

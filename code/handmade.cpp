@@ -1074,16 +1074,16 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
 
-    State->PlayerPos = {};
-    State->PlayerPos.AbsTileX = 1;
-    State->PlayerPos.AbsTileY = 3;
-    State->PlayerPos.AbsTileZ = 0;
-    State->PlayerPos.Offset = {};
+    State->PlayerP = {};
+    State->PlayerP.AbsTileX = 1;
+    State->PlayerP.AbsTileY = 3;
+    State->PlayerP.AbsTileZ = 0;
+    State->PlayerP.Offset = {};
 
-    State->CameraPos = {};
-    State->CameraPos.AbsTileX = 8;
-    State->CameraPos.AbsTileY = 4;
-    State->CameraPos.AbsTileZ = 0;
+    State->CameraP = {};
+    State->CameraP.AbsTileX = 8;
+    State->CameraP.AbsTileY = 4;
+    State->CameraP.AbsTileZ = 0;
 
     TileMap->TileChunkShift = 4;
     TileMap->TileChunkDim = 1 << TileMap->TileChunkShift;
@@ -1214,38 +1214,40 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     if(Controller->IsAnalog) {
 
     } else {
-      v2 dPlayer = {};
-      real32 PlayerSpeed = 4.0f;
+      v2 ddPlayerP = {};
       if(Controller->MoveUp.IsEndedDown) {
         State->HeroFacingDirection = 1;
-        dPlayer.Y = 1.0f;
+        ddPlayerP.Y = 1.0f;
       }
       if(Controller->MoveDown.IsEndedDown) {
         State->HeroFacingDirection = 3;
-        dPlayer.Y = -1.0f;
+        ddPlayerP.Y = -1.0f;
       }
       if(Controller->MoveLeft.IsEndedDown) {
         State->HeroFacingDirection = 2;
-        dPlayer.X = -1.0f;
+        ddPlayerP.X = -1.0f;
       }
       if(Controller->MoveRight.IsEndedDown) {
         State->HeroFacingDirection = 0;
-        dPlayer.X = 1.0f;
+        ddPlayerP.X = 1.0f;
       }
+      if(ddPlayerP.X != 0 && ddPlayerP.Y != 0) {
+        ddPlayerP *= 0.7071067811865475f;
+      }
+
+      real32 PlayerSpeed = 10.0f; // m/s^2
       if(Controller->ActionUp.IsEndedDown) {
-        PlayerSpeed = 30.0f;
+        PlayerSpeed = 50.0f;
       }
 
-      dPlayer *= PlayerSpeed;
+      ddPlayerP *= PlayerSpeed;
+      ddPlayerP += -1.5*State->dPlayerP;
 
-      if(dPlayer.X != 0 && dPlayer.Y != 0) {
-        dPlayer *= 0.7071067811865475f;
-      }
+      tile_map_position NewPos = State->PlayerP;
 
-      tile_map_position NewPos = State->PlayerPos;
-
-      NewPos.Offset += dPlayer * Input->dt;
+      NewPos.Offset += 0.5f*ddPlayerP*Square(Input->dt) + State->dPlayerP*Input->dt;
       NewPos = RecononicalizePosition(TileMap, NewPos);
+      State->dPlayerP += ddPlayerP*Input->dt;
 
       tile_map_position NewPosLeft = NewPos;
       NewPosLeft.Offset.X -= PlayerWidth * 0.5f;
@@ -1258,7 +1260,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       if(IsTileMapEmtpy(TileMap, NewPos) &&
         IsTileMapEmtpy(TileMap, NewPosLeft) &&
         IsTileMapEmtpy(TileMap, NewPosRight)) {
-        if(!AreSameTiles(State->PlayerPos, NewPos)) {
+        if(!AreSameTiles(State->PlayerP, NewPos)) {
           uint32 TileValue = GetTileValue(TileMap, NewPos.AbsTileX, NewPos.AbsTileY, NewPos.AbsTileZ);
           if(TileValue == 3) {
             if(NewPos.AbsTileZ == 0) {
@@ -1269,21 +1271,21 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           }
         }
 
-        State->PlayerPos = NewPos;
-        State->CameraPos.AbsTileZ = NewPos.AbsTileZ;
-        tile_map_diff Diff = SubtractPosition(TileMap, NewPos, State->CameraPos);
+        State->PlayerP = NewPos;
+        State->CameraP.AbsTileZ = NewPos.AbsTileZ;
+        tile_map_diff Diff = SubtractPosition(TileMap, NewPos, State->CameraP);
 
         if(Diff.dXY.X > ((real32)TilesPerWidth / 2)*TileMap->TileSizeInMeters) {
-          State->CameraPos.AbsTileX += TilesPerWidth;
+          State->CameraP.AbsTileX += TilesPerWidth;
         }
         if(Diff.dXY.X < -((real32)TilesPerWidth / 2)*TileMap->TileSizeInMeters) {
-          State->CameraPos.AbsTileX -= TilesPerWidth;
+          State->CameraP.AbsTileX -= TilesPerWidth;
         }
         if(Diff.dXY.Y > ((real32)TilesPerHeight / 2)*TileMap->TileSizeInMeters) {
-          State->CameraPos.AbsTileY += TilesPerHeight;
+          State->CameraP.AbsTileY += TilesPerHeight;
         }
         if(Diff.dXY.Y < -((real32)TilesPerHeight / 2)*TileMap->TileSizeInMeters) {
-          State->CameraPos.AbsTileY -= TilesPerHeight;
+          State->CameraP.AbsTileY -= TilesPerHeight;
         }
       }
     }
@@ -1296,15 +1298,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       real32 Gray = 1.0f; // block
 
       v2 Rel = {(real32)RelX * TileSizeInPixels, (real32)RelY * TileSizeInPixels};
-      v2 TileCenter = ScreenCenter - State->CameraPos.Offset*MetersToPixels + Rel;
+      v2 TileCenter = ScreenCenter - State->CameraP.Offset*MetersToPixels + Rel;
       v2 HalfTileSize = {0.5f*TileSizeInPixels, 0.5f*TileSizeInPixels};
       v2 TileBottomLeft = TileCenter - HalfTileSize;
       v2 TileTopRight = TileCenter + HalfTileSize;
 
-      uint32 AbsX = RelX + State->CameraPos.AbsTileX;
-      uint32 AbsY = RelY + State->CameraPos.AbsTileY;
+      uint32 AbsX = RelX + State->CameraP.AbsTileX;
+      uint32 AbsY = RelY + State->CameraP.AbsTileY;
 
-      uint32 TileValue = GetTileValue(TileMap, AbsX, AbsY, State->CameraPos.AbsTileZ);
+      uint32 TileValue = GetTileValue(TileMap, AbsX, AbsY, State->CameraP.AbsTileZ);
 
       if(TileValue > 1) {
         if(TileValue == 1) {
@@ -1315,8 +1317,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           Gray = 0.25f;
         }
 
-        if(AbsX == State->PlayerPos.AbsTileX &&
-          AbsY == State->PlayerPos.AbsTileY) {
+        if(AbsX == State->PlayerP.AbsTileX &&
+          AbsY == State->PlayerP.AbsTileY) {
           Gray = 0.0f;
         }
 
@@ -1325,7 +1327,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
   }
 
-  tile_map_diff Diff = SubtractPosition(TileMap, State->PlayerPos, State->CameraPos);
+  tile_map_diff Diff = SubtractPosition(TileMap, State->PlayerP, State->CameraP);
 
   v2 PlayerGround = ScreenCenter + Diff.dXY*MetersToPixels;
 
