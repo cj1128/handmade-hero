@@ -16,16 +16,16 @@ Deepest thanks to *Casey Muratori* for this excellent project. It's really helpf
 
 ## Env
 
-Windows 10 with Visual Studio 2019 and Sublime Text 3.
+Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 
 ## Windows Programming
 
-### Bash
+### Command Prompt
 
 - `dir /s [keyword]`: search files
 - `findstr -s -n -i -l [keyword]`: find strings
 
-### Win32
+### Win32 API
 
 - `WS_EX_TOPMOST`: make window in front of others
 - `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
@@ -229,7 +229,7 @@ I didn't take many notes because I was really confused and I didn't understand m
 
 ### Day 22: Instantaneous Live Code Editing
 
-Note: `CopyFile` may fail the first time, We use a while loop to do it. This is debug code so We don't care the performance;
+NOTE: `CopyFile` may fail the first time, We use a while loop to do it. This is debug code so We don't care the performance;
 
 - Use /PDB:name linker options to specify pdb file name
 - Add timestamp to output pdb file name
@@ -346,7 +346,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 ### Day 36: Loading BMPs
 
-- Fun fact: Windows can't render BMPs correct. This is very amusing, because they are the guys who invented BMP.
+- FUN: Windows can't render BMPs correct. This is very amusing, because they are the guys who invented BMP.
 - Make player go up and down. I already implemented this function in the previous day, but I need to implement it in a new way: when the player moves to the stair, it goes automatically, no need to push any button.
 - Rename `TileRelX` and `TileRelY` to `OffsetX` and `OffsetY`
 - Define `bitmap_header` and parse bitmap. We have to use `#pragma pack(push, 1) and #pragma pack(pop)` to make vs pack our struct correctly
@@ -421,3 +421,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 - Add `dPlayerP` to game state. This is the speed of the guy.
 - Add a back force based on player's speed
+
+### Day 44: Reflecting Vectors
+
+- Implement inner product for vectors
+- Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math (v' = v - 2 * Inner(v, r) * r). r means the vector of the reflecting direction. For bottom wall, r is '(0, 1)'.

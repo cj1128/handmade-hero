@@ -1243,37 +1243,67 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       ddPlayerP *= PlayerSpeed;
       ddPlayerP += -1.5*State->dPlayerP;
 
-      tile_map_position NewPos = State->PlayerP;
+      tile_map_position NewP = State->PlayerP;
 
-      NewPos.Offset += 0.5f*ddPlayerP*Square(Input->dt) + State->dPlayerP*Input->dt;
-      NewPos = RecononicalizePosition(TileMap, NewPos);
+      NewP.Offset += 0.5f*ddPlayerP*Square(Input->dt) + State->dPlayerP*Input->dt;
+      NewP = RecononicalizePosition(TileMap, NewP);
       State->dPlayerP += ddPlayerP*Input->dt;
 
-      tile_map_position NewPosLeft = NewPos;
-      NewPosLeft.Offset.X -= PlayerWidth * 0.5f;
-      NewPosLeft = RecononicalizePosition(TileMap, NewPosLeft);
+      tile_map_position NewPLeft = NewP;
+      NewPLeft.Offset.X -= PlayerWidth * 0.5f;
+      NewPLeft = RecononicalizePosition(TileMap, NewPLeft);
 
-      tile_map_position NewPosRight = NewPos;
-      NewPosRight.Offset.X += PlayerWidth * 0.5f;
-      NewPosRight = RecononicalizePosition(TileMap, NewPosRight);
+      tile_map_position NewPRight = NewP;
+      NewPRight.Offset.X += PlayerWidth * 0.5f;
+      NewPRight = RecononicalizePosition(TileMap, NewPRight);
 
-      if(IsTileMapEmtpy(TileMap, NewPos) &&
-        IsTileMapEmtpy(TileMap, NewPosLeft) &&
-        IsTileMapEmtpy(TileMap, NewPosRight)) {
-        if(!AreSameTiles(State->PlayerP, NewPos)) {
-          uint32 TileValue = GetTileValue(TileMap, NewPos.AbsTileX, NewPos.AbsTileY, NewPos.AbsTileZ);
+      bool32 Collided = false;
+      tile_map_position ColP = {};
+
+      if(!IsTileMapEmtpy(TileMap, NewP)) {
+        Collided = true;
+        ColP = NewP;
+      }
+      if(!IsTileMapEmtpy(TileMap, NewPLeft)) {
+        Collided = true;
+        ColP = NewPLeft;
+      }
+      if(!IsTileMapEmtpy(TileMap, NewPRight)) {
+        Collided = true;
+        ColP = NewPRight;
+      }
+
+      if(Collided) {
+        v2 r = {0, 0};
+        if(ColP.AbsTileX > State->PlayerP.AbsTileX) {
+          r = {-1, 0};
+        }
+        if(ColP.AbsTileX < State->PlayerP.AbsTileX) {
+          r = {1, 0};
+        }
+        if(ColP.AbsTileY < State->PlayerP.AbsTileY) {
+          r = {0, 1};
+        }
+        if(ColP.AbsTileY > State->PlayerP.AbsTileY) {
+          r = {0, -1};
+        }
+
+        State->dPlayerP = State->dPlayerP - 1*Inner(State->dPlayerP, r)*r;
+      } else {
+        if(!AreSameTiles(State->PlayerP, NewP)) {
+          uint32 TileValue = GetTileValue(TileMap, NewP.AbsTileX, NewP.AbsTileY, NewP.AbsTileZ);
           if(TileValue == 3) {
-            if(NewPos.AbsTileZ == 0) {
-              NewPos.AbsTileZ = 1;
+            if(NewP.AbsTileZ == 0) {
+              NewP.AbsTileZ = 1;
             } else {
-              NewPos.AbsTileZ = 0;
+              NewP.AbsTileZ = 0;
             }
           }
         }
 
-        State->PlayerP = NewPos;
-        State->CameraP.AbsTileZ = NewPos.AbsTileZ;
-        tile_map_diff Diff = SubtractPosition(TileMap, NewPos, State->CameraP);
+        State->PlayerP = NewP;
+        State->CameraP.AbsTileZ = NewP.AbsTileZ;
+        tile_map_diff Diff = SubtractPosition(TileMap, NewP, State->CameraP);
 
         if(Diff.dXY.X > ((real32)TilesPerWidth / 2)*TileMap->TileSizeInMeters) {
           State->CameraP.AbsTileX += TilesPerWidth;
