@@ -426,3 +426,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 - Implement inner product for vectors
 - Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math (v' = v - 2 * Inner(v, r) * r). r means the vector of the reflecting direction. For bottom wall, r is '(0, 1)'.
+
+### Day 45: Geometric vs. Temporal Movement Search
+
+- OPINION: Search in p(position) is way better than searing in t(time)
+- Part of new collision detection algorithm
+- There is no code today. I will write the new collision detection algorithm when it's complete.
