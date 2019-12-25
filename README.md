@@ -432,3 +432,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - OPINION: Search in p(position) is way better than searing in t(time)
 - Part of new collision detection algorithm
 - There is no code today. I will write the new collision detection algorithm when it's complete.
+
+### Day 46: Basic Multiplayer Support
+
+- We have a severe bug! Player has been moved multiple times!
+- Define `entity` struct. Add `Entities`, `EntityCount`, `PlayerIndexForController` and `CameraFollowingEntityIndex` to game state
+- Support as many players as our controllers in game state
+- Implement `RotateLeft` and `RotateRight` intrincsics using `_rotl` and `_rotr`

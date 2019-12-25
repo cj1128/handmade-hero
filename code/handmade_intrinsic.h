@@ -63,5 +63,23 @@ Square(real32 Value) {
   return Result;
 }
 
+inline real32
+AbsoluteValue(real32 Value) {
+  real32 Result = fabsf(Value);
+  return Result;
+}
+
+inline uint32
+RotateLeft(uint32 Value, int32 Shift) {
+  uint32 Result = _rotl(Value, Shift);
+  return Result;
+}
+
+inline uint32
+RotateRight(uint32 Value, int32 Shift) {
+  uint32 Result = _rotr(Value, Shift);
+  return Result;
+}
+
 #define HANDMADE_INTRINSIC_H
 #endif

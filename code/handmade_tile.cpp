@@ -1,3 +1,5 @@
+#include "handmade_tile.h"
+
 internal inline tile_chunk_position
 GetTileChunkPosition(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
   tile_chunk_position Result = {};

@@ -1027,6 +1027,7 @@ WinMain(
 
           NewInput->dt = TargetSecondsPerFrame;
 
+          // keyboard is always the first controller
           game_controller_input *NewKeyboardController = &NewInput->Controllers[0];
           game_controller_input *OldKeyboardController = &OldInput->Controllers[0];
           *NewKeyboardController = {};

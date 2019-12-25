@@ -26,7 +26,6 @@ PushArray_(memory_arena *Arena, uint32 Count, size_t Size) {
 }
 
 #include "handmade_math.h"
-#include "handmade_tile.h"
 #include "handmade_tile.cpp"
 
 struct world {
@@ -48,14 +47,26 @@ struct hero_bitmaps {
   loaded_bitmap Torso;
 };
 
+struct entity {
+  bool32 Exists;
+  tile_map_position P;
+  v2 dP;
+  // 0: right, 1: up, 2: left, 3: down
+  uint32 FacingDirection;
+  real32 Width;
+  real32 Height;
+};
+
 struct game_state {
   memory_arena MemoryArena;
   world World;
-  tile_map_position PlayerP;
   tile_map_position CameraP;
-  v2 dPlayerP;
 
-  uint32 HeroFacingDirection;
+  uint32 EntityCount;
+  entity Entities[256];
+  uint32 PlayerIndexForController[ArrayCount(((game_input *)0)->Controllers)];
+
+  uint32 CameraFollowingEntityIndex;
 
   loaded_bitmap Background;
   hero_bitmaps HeroBitmaps[4];
