@@ -274,8 +274,9 @@ RenderSineWave(
 
 internal void
 MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
-  if(ddP.X != 0 && ddP.Y != 0) {
-    ddP *= 0.7071067811865475f;
+  real32 ddPLength = Length(ddP);
+  if(ddPLength > 1) {
+    ddP *= (1.0f / ddPLength);
   }
 
   real32 PlayerSpeed = 80.0f; // m/s^2

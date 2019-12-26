@@ -439,3 +439,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `entity` struct. Add `Entities`, `EntityCount`, `PlayerIndexForController` and `CameraFollowingEntityIndex` to game state
 - Support as many players as our controllers in game state
 - Implement `RotateLeft` and `RotateRight` intrincsics using `_rotl` and `_rotr`
+
+### Day 47: Vector Lengths
+
+- Define `LengthSq`, `SquareRoot` to fix diagonal movement problem
+- We will *USE* search in t instead of search in p, because the later will have to build the search space and this is a complicated thing to do
+- Part of new collision detection algorithm

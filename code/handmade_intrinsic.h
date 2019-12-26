@@ -2,6 +2,12 @@
 
 #include "math.h"
 
+inline real32
+SquareRoot(real32 Value) {
+  real32 Result = sqrtf(Value);
+  return Result;
+}
+
 inline int32
 RoundReal32ToUint32(real32 Input) {
   uint32 Result = (uint32)roundf(Input);
