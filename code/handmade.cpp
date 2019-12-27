@@ -273,6 +273,19 @@ RenderSineWave(
 }
 
 internal void
+TestWall(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, real32 RelY, real32 Radius, real32 *tMin) {
+  if(PlayerDeltaX != 0.0f) {
+    real32 tResult = (WallX - RelX) / PlayerDeltaX;
+    real32 Y = RelY + tResult*PlayerDeltaY;
+    if(Y >= -Radius && Y <= Radius) {
+      if(tResult >= 0.0f && tResult < *tMin) {
+        *tMin = tResult;
+      }
+    }
+  }
+}
+
+internal void
 MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
   real32 ddPLength = Length(ddP);
   if(ddPLength > 1) {
@@ -282,27 +295,28 @@ MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
   real32 PlayerSpeed = 80.0f; // m/s^2
   ddP *= PlayerSpeed;
   ddP += -8*Entity->dP;
-
-  tile_map_position NewP = Entity->P;
-
-  NewP.Offset += 0.5f*ddP*Square(dt) + Entity->dP*dt;
-  NewP = RecononicalizePosition(TileMap, NewP);
+  v2 PlayerDelta = 0.5f*ddP*Square(dt) + Entity->dP*dt;
+  tile_map_position OldPlayerP = Entity->P;
+  tile_map_position NewPlayerP = OldPlayerP;
+  NewPlayerP.Offset += PlayerDelta;
+  NewPlayerP = RecononicalizePosition(TileMap, NewPlayerP);
   Entity->dP += ddP*dt;
 
-  tile_map_position NewPLeft = NewP;
+#if 0
+  tile_map_position NewPLeft = NewPlayerP;
   NewPLeft.Offset.X -= Entity->Width * 0.5f;
   NewPLeft = RecononicalizePosition(TileMap, NewPLeft);
 
-  tile_map_position NewPRight = NewP;
+  tile_map_position NewPRight = NewPlayerP;
   NewPRight.Offset.X += Entity->Width * 0.5f;
   NewPRight = RecononicalizePosition(TileMap, NewPRight);
 
   bool32 Collided = false;
   tile_map_position ColP = {};
 
-  if(!IsTileMapEmtpy(TileMap, NewP)) {
+  if(!IsTileMapEmtpy(TileMap, NewPlayerP)) {
     Collided = true;
-    ColP = NewP;
+    ColP = NewPlayerP;
   }
   if(!IsTileMapEmtpy(TileMap, NewPLeft)) {
     Collided = true;
@@ -333,20 +347,50 @@ MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
     }
 
     Entity->dP = Entity->dP - 1*Inner(Entity->dP, r)*r;
-  } else {
-    if(!AreSameTiles(Entity->P, NewP)) {
-      uint32 TileValue = GetTileValue(TileMap, NewP.AbsTileX, NewP.AbsTileY, NewP.AbsTileZ);
-      if(TileValue == 3) {
-        if(NewP.AbsTileZ == 0) {
-          NewP.AbsTileZ = 1;
-        } else {
-          NewP.AbsTileZ = 0;
-        }
+    NewPlayerP = OldPlayerP;
+  }
+#else
+  // NOTE: ignore warping here
+  uint32 MinTileX = Minimum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX);
+  uint32 MaxTileX = Maximum(OldPlayerP.AbsTileX, NewPlayerP.AbsTileX);
+  uint32 MinTileY = Minimum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY);
+  uint32 MaxTileY = Maximum(OldPlayerP.AbsTileY, NewPlayerP.AbsTileY);
+  real32 tMin = 1.0f;
+
+  for(uint32 TileY = MinTileY; TileY <= MaxTileY; TileY++) {
+    for(uint32 TileX = MinTileX; TileX <= MaxTileX; TileX++) {
+      uint32 TileValue = GetTileValue(TileMap, TileX, TileY, Entity->P.AbsTileZ);
+      if(!IsTileValueEmpty(TileValue)) {
+        tile_map_position TestPoint = CenteredTilePoint(TileX, TileY, Entity->P.AbsTileZ);
+        tile_map_diff Diff = SubtractPosition(TileMap, OldPlayerP, TestPoint);
+        v2 Rel = Diff.dXY;
+        real32 Radius = 0.5f * TileMap->TileSizeInMeters;
+
+        TestWall(-Radius, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, Radius, &tMin);
+        TestWall(Radius, PlayerDelta.X, PlayerDelta.Y, Rel.X, Rel.Y, Radius, &tMin);
+        TestWall(-Radius, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, Radius, &tMin);
+        TestWall(Radius, PlayerDelta.Y, PlayerDelta.X, Rel.Y, Rel.X, Radius, &tMin);
       }
     }
-
-    Entity->P = NewP;
   }
+
+  NewPlayerP = OldPlayerP;
+  NewPlayerP.Offset += Maximum(0.0f, tMin - 0.0001f) * PlayerDelta;
+  NewPlayerP = RecononicalizePosition(TileMap, NewPlayerP);
+#endif
+
+  if(!AreSameTiles(OldPlayerP, NewPlayerP)) {
+    uint32 TileValue = GetTileValue(TileMap, NewPlayerP.AbsTileX, NewPlayerP.AbsTileY, NewPlayerP.AbsTileZ);
+    if(TileValue == 3) {
+      if(NewPlayerP.AbsTileZ == 0) {
+        NewPlayerP.AbsTileZ = 1;
+      } else {
+        NewPlayerP.AbsTileZ = 0;
+      }
+    }
+  }
+
+  Entity->P = NewPlayerP;
 }
 
 
@@ -629,37 +673,37 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         if(AbsX == State->CameraP.AbsTileX &&
           AbsY == State->CameraP.AbsTileY) {
           Gray = 0.0f;
-        }
-
-        DrawRectangle(Buffer, TileBottomLeft, TileTopRight, Gray, Gray, Gray);
       }
+
+      DrawRectangle(Buffer, TileBottomLeft, TileTopRight, Gray, Gray, Gray);
     }
   }
+}
 
-  entity *Entity = State->Entities;
-  for(
-    uint32 EntityIndex = 0;
-    EntityIndex < State->EntityCount;
-    EntityIndex++, Entity++
-    ) {
-    if(!Entity->Exists) {
-      continue;
-    }
-
-    tile_map_diff Diff = SubtractPosition(TileMap, Entity->P, State->CameraP);
-
-    v2 PlayerGround = ScreenCenter + Diff.dXY*MetersToPixels;
-
-    v2 PlayerMin = PlayerGround + v2{-0.5f*Entity->Width*MetersToPixels, 0};
-    v2 PlayerMax = PlayerGround + v2{0.5f*Entity->Width*MetersToPixels, Entity->Height*MetersToPixels};
-
-    DrawRectangle(Buffer, PlayerMin, PlayerMax, 1.0f, 1.0f, 0.0f);
-
-    hero_bitmaps HeroBitmaps = State->HeroBitmaps[Entity->FacingDirection];
-    DrawBitmap(Buffer, HeroBitmaps.Torso, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-    DrawBitmap(Buffer, HeroBitmaps.Cape, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-    DrawBitmap(Buffer, HeroBitmaps.Head, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+entity *Entity = State->Entities;
+for(
+  uint32 EntityIndex = 0;
+  EntityIndex < State->EntityCount;
+  EntityIndex++, Entity++
+  ) {
+  if(!Entity->Exists) {
+    continue;
   }
+
+  tile_map_diff Diff = SubtractPosition(TileMap, Entity->P, State->CameraP);
+
+  v2 PlayerGround = ScreenCenter + Diff.dXY*MetersToPixels;
+
+  v2 PlayerMin = PlayerGround + v2{-0.5f*Entity->Width*MetersToPixels, 0};
+  v2 PlayerMax = PlayerGround + v2{0.5f*Entity->Width*MetersToPixels, Entity->Height*MetersToPixels};
+
+  DrawRectangle(Buffer, PlayerMin, PlayerMax, 1.0f, 1.0f, 0.0f);
+
+  hero_bitmaps HeroBitmaps = State->HeroBitmaps[Entity->FacingDirection];
+  DrawBitmap(Buffer, HeroBitmaps.Torso, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+  DrawBitmap(Buffer, HeroBitmaps.Cape, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+  DrawBitmap(Buffer, HeroBitmaps.Head, PlayerGround.X, PlayerGround.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
+}
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {

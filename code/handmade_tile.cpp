@@ -34,8 +34,8 @@ RecononicalizeCoord(tile_map *TileMap, uint32 *Tile, real32 *TileRel) {
   *Tile += Offset;
   *TileRel -= Offset * TileMap->TileSizeInMeters;
 
-  Assert(*TileRel >= -0.5f*TileMap->TileSizeInMeters);
-  Assert(*TileRel < 0.5f*TileMap->TileSizeInMeters);
+  Assert(*TileRel >= -0.50001f*TileMap->TileSizeInMeters);
+  Assert(*TileRel < 0.50001f*TileMap->TileSizeInMeters);
 }
 
 inline uint32
@@ -60,6 +60,12 @@ RecononicalizePosition(tile_map *TileMap, tile_map_position Pos) {
   return Result;
 }
 
+bool32
+IsTileValueEmpty(uint32 Value) {
+  bool32 Empty = (Value == 1) || (Value == 3);
+  return Empty;
+}
+
 // 0: nothing
 // 1: empty
 // 2: block
@@ -69,7 +75,8 @@ IsTileMapEmtpy(tile_map *TileMap, tile_map_position Pos) {
   bool32 Empty = false;
 
   uint32 TileValue = GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ);
-  Empty = (TileValue == 1) || (TileValue == 3);
+
+  Empty = IsTileValueEmpty(TileValue);
 
   return Empty;
 }
@@ -108,3 +115,14 @@ SubtractPosition(tile_map *TileMap, tile_map_position P1, tile_map_position P2) 
   Result.dXY.Y = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.Offset.Y - P2.Offset.Y;
   return Result;
 }
+
+tile_map_position
+CenteredTilePoint(uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
+  tile_map_position Result = {};
+  Result.AbsTileX = AbsTileX;
+  Result.AbsTileY = AbsTileY;
+  Result.AbsTileZ = AbsTileZ;
+  return Result;
+}
+
+

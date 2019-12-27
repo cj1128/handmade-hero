@@ -45,6 +45,8 @@ typedef double real64;
 #define Megabytes(number) (Kilobytes(number) * 1024ull)
 #define Gigabytes(number) (Megabytes(number) * 1024ull)
 #define Terabytes(number) (Gigabytes(number) * 1024ull)
+#define Minimum(a, b) ((a) < (b) ? (a) : (b))
+#define Maximum(a, b) ((a) > (b) ? (a) : (b))
 
 #ifdef HANDMADE_SLOW
 #define Assert(expression) if(!(expression)) { *(int*) 0 = 0; }

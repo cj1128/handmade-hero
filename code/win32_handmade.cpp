@@ -16,7 +16,6 @@ typedef XINPUT_SET_STATE(x_input_set_state);
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter);
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
-
 XINPUT_GET_STATE(XInputGetStateStub) {
   return ERROR_DEVICE_NOT_CONNECTED;
 }

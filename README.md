@@ -445,3 +445,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `LengthSq`, `SquareRoot` to fix diagonal movement problem
 - We will *USE* search in t instead of search in p, because the later will have to build the search space and this is a complicated thing to do
 - Part of new collision detection algorithm
+
+### Day 48: Line Segment Intersection Collision
+
+- Implement the new collistion test
+- Add a `tEpsilon` to tolerate floating point problem
