@@ -450,3 +450,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 - Implement the new collistion test
 - Add a `tEpsilon` to tolerate floating point problem
+
+### Day 49: Debugging Canonical Coordinates
+
+- Add an `Offset` method to manipulate tile map position and auto recononicalize
+- Maybe we shouldn't make the world toroidal, since it adds much complexity

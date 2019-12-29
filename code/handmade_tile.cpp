@@ -1,6 +1,6 @@
 #include "handmade_tile.h"
 
-internal inline tile_chunk_position
+inline tile_chunk_position
 GetTileChunkPosition(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
   tile_chunk_position Result = {};
 
@@ -28,7 +28,7 @@ GetTileChunk(tile_map *TileMap, uint32 TileChunkX, uint32 TileChunkY, uint32 Til
 }
 
 internal inline void
-RecononicalizeCoord(tile_map *TileMap, uint32 *Tile, real32 *TileRel) {
+RecanonicalizeCoord(tile_map *TileMap, uint32 *Tile, real32 *TileRel) {
   // NOTE: tile map is assumed to be toroidal
   int32 Offset = RoundReal32ToInt32(*TileRel / TileMap->TileSizeInMeters);
   *Tile += Offset;
@@ -53,10 +53,10 @@ GetTileValue(tile_map *TileMap, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTile
 }
 
 internal inline tile_map_position
-RecononicalizePosition(tile_map *TileMap, tile_map_position Pos) {
+RecanonicalizePosition(tile_map *TileMap, tile_map_position Pos) {
   tile_map_position Result = Pos;
-  RecononicalizeCoord(TileMap, &Result.AbsTileX, &Result.Offset.X);
-  RecononicalizeCoord(TileMap, &Result.AbsTileY, &Result.Offset.Y);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileX, &Result.Offset_.X);
+  RecanonicalizeCoord(TileMap, &Result.AbsTileY, &Result.Offset_.Y);
   return Result;
 }
 
@@ -73,11 +73,8 @@ IsTileValueEmpty(uint32 Value) {
 bool32
 IsTileMapEmtpy(tile_map *TileMap, tile_map_position Pos) {
   bool32 Empty = false;
-
   uint32 TileValue = GetTileValue(TileMap, Pos.AbsTileX, Pos.AbsTileY, Pos.AbsTileZ);
-
   Empty = IsTileValueEmpty(TileValue);
-
   return Empty;
 }
 
@@ -108,15 +105,15 @@ AreSameTiles(tile_map_position P1, tile_map_position P2) {
     P1.AbsTileZ == P2.AbsTileZ;
 }
 
-tile_map_diff
+inline tile_map_diff
 SubtractPosition(tile_map *TileMap, tile_map_position P1, tile_map_position P2) {
   tile_map_diff Result = {};
-  Result.dXY.X = TileMap->TileSizeInMeters * ((real32)P1.AbsTileX - (real32)P2.AbsTileX) + P1.Offset.X - P2.Offset.X;
-  Result.dXY.Y = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.Offset.Y - P2.Offset.Y;
+  Result.dXY.X = TileMap->TileSizeInMeters * ((real32)P1.AbsTileX - (real32)P2.AbsTileX) + P1.Offset_.X - P2.Offset_.X;
+  Result.dXY.Y = TileMap->TileSizeInMeters * ((real32)P1.AbsTileY - (real32)P2.AbsTileY) + P1.Offset_.Y - P2.Offset_.Y;
   return Result;
 }
 
-tile_map_position
+inline tile_map_position
 CenteredTilePoint(uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
   tile_map_position Result = {};
   Result.AbsTileX = AbsTileX;
@@ -125,4 +122,9 @@ CenteredTilePoint(uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
   return Result;
 }
 
-
+inline tile_map_position
+Offset(tile_map *TileMap, tile_map_position Pos, v2 Offset) {
+  Pos.Offset_ += Offset;
+  Pos = RecanonicalizePosition(TileMap, Pos);
+  return Pos;
+}

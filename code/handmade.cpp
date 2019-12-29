@@ -16,7 +16,7 @@ InitializePlayer(entity *Entity) {
   Entity->P.AbsTileX = 1;
   Entity->P.AbsTileY = 3;
   Entity->P.AbsTileZ = 0;
-  Entity->P.Offset = {};
+  Entity->P.Offset_ = {};
   Entity->Height = 1.4f;
   Entity->Width = 0.75f*Entity->Height;
 }
@@ -297,9 +297,7 @@ MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
   ddP += -8*Entity->dP;
   v2 PlayerDelta = 0.5f*ddP*Square(dt) + Entity->dP*dt;
   tile_map_position OldPlayerP = Entity->P;
-  tile_map_position NewPlayerP = OldPlayerP;
-  NewPlayerP.Offset += PlayerDelta;
-  NewPlayerP = RecononicalizePosition(TileMap, NewPlayerP);
+  tile_map_position NewPlayerP = Offset(TileMap, OldPlayerP, PlayerDelta);
   Entity->dP += ddP*dt;
 
 #if 0
@@ -374,9 +372,8 @@ MovePlayer(tile_map *TileMap, entity *Entity, real32 dt, v2 ddP) {
     }
   }
 
-  NewPlayerP = OldPlayerP;
-  NewPlayerP.Offset += Maximum(0.0f, tMin - 0.0001f) * PlayerDelta;
-  NewPlayerP = RecononicalizePosition(TileMap, NewPlayerP);
+  real32 tEpsilon = 0.0001f;
+  NewPlayerP = Offset(TileMap, OldPlayerP, Maximum(0.0f, tMin - tEpsilon)*PlayerDelta);
 #endif
 
   if(!AreSameTiles(OldPlayerP, NewPlayerP)) {
@@ -651,7 +648,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       real32 Gray = 1.0f; // block
 
       v2 Rel = {(real32)RelX * TileSizeInPixels, (real32)RelY * TileSizeInPixels};
-      v2 TileCenter = ScreenCenter - State->CameraP.Offset*MetersToPixels + Rel;
+      v2 TileCenter = ScreenCenter - State->CameraP.Offset_*MetersToPixels + Rel;
       v2 HalfTileSize = {0.5f*TileSizeInPixels, 0.5f*TileSizeInPixels};
       v2 TileBottomLeft = TileCenter - HalfTileSize;
       v2 TileTopRight = TileCenter + HalfTileSize;
