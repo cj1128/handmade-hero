@@ -12,13 +12,13 @@ This is my personal study notes of [Handmade Hero](https://handmadehero.org).
 
 If you think **writing a professional-quality game from scratch on your own (no engine no library)** is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
 
-Deepest thanks to *Casey Muratori* for this excellent project. It's really helpful.
+Deepest thanks to *Casey Muratori* for this excellent project. It's really awesome.
 
 ## Env
 
 Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 
-## Windows Programming
+## Windows
 
 ### Command Prompt
 
@@ -33,6 +33,10 @@ Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 ### Visual Studio
 
 - `Spy++`: inspect windows and messages
+
+### Tools
+
+- [7 taskbar tweaker]: powerful windows taskbar tweaker
 
 ## Roadmap
 
@@ -220,7 +224,7 @@ I didn't take many notes because I was really confused and I didn't understand m
 - Compile win32_handmade and handmade separaely
 - Define win32_game_code and
 - Put platform debug functions to game memroy
-- /LD build dll
+- Enable `/LD` switch to build dll
 - Use /EXPORT linker flags to export dll functions
 - We don't need to define `DllMain` entry point in our dll
 - extern "C" to prevent name mangling
@@ -347,7 +351,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 ### Day 36: Loading BMPs
 
 - FUN: Windows can't render BMPs correct. This is very amusing, because they are the guys who invented BMP.
-- Make player go up and down. I already implemented this function in the previous day, but I need to implement it in a new way: when the player moves to the stair, it goes automatically, no need to push any button.
+- Make player go up and down. I already implemented this function in the previous day, but I need to reimplement it in a new way: when the player moves to the stair, it goes automatically, no need to push any button.
 - Rename `TileRelX` and `TileRelY` to `OffsetX` and `OffsetY`
 - Define `bitmap_header` and parse bitmap. We have to use `#pragma pack(push, 1) and #pragma pack(pop)` to make vs pack our struct correctly
 
@@ -364,7 +368,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 - Define `FindLeastSignificantSetBit` and `bit_scan_result` in intrinsics
 - Define `COMPILER_MSVC` and `COMPILER_LLVM` macro variables
-- Use `_BitScanForward` MSVC compiler intrinsic when under windows
+- Use `_BitScanForward` MSVC compiler intrinsic when we are using windows
 - Implement a simple linear alpha blending
 - Assert compression mode when loading BMP
 
@@ -377,7 +381,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Move camera when player moves
 - Fix clipping problem in our bitmap drawing
 - Check frame rate
-- Fix msvc pdb problem when hot reloading by create a lock file
+- Fix msvc pdb problem when hot reloading by creating a lock file
 
 ### Day 40: Cursor Hiding and Fullscreen
 
@@ -414,7 +418,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 ### Day 42: Basic 2D Vectors
 
 - Fix diagonal movement problem
-- Define `v2` and plus operator, minus operator and unary minus operator in `handmade_math.h`
+- Define `v2` and add operator, minus operator and unary minus operator in `handmade_math.h`
 - Use v2 instead of x and y
 
 ### Day 43: The Equations of Motion
@@ -442,8 +446,8 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 ### Day 47: Vector Lengths
 
-- Define `LengthSq`, `SquareRoot` to fix diagonal movement problem
-- We will *USE* search in t instead of search in p, because the later will have to build the search space and this is a complicated thing to do
+- Define `Length`, `SquareRoot` to fix diagonal movement problem
+- We will *USE* search in t instead of search in p, because the later will have to build the search space and that is a complicated thing to do
 - Part of new collision detection algorithm
 
 ### Day 48: Line Segment Intersection Collision
@@ -455,3 +459,6 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 - Add an `Offset` method to manipulate tile map position and auto recononicalize
 - Maybe we shouldn't make the world toroidal, since it adds much complexity
+
+
+[7 taskbar tweaker]: https://rammichael.com/7-taskbar-tweaker

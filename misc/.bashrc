@@ -1,8 +1,0 @@
-alias gc="git commit"
-alias ga="git add"
-alias gss="git status"
-alias gl="git pull"
-alias gp="git push"
-alias glog="git log --oneline --decorate --color --graph"
-alias gd="git diff"
-alias gdca="git diff --cached"
