@@ -34,10 +34,6 @@ Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 
 - `Spy++`: inspect windows and messages
 
-### Tools
-
-- [7 taskbar tweaker]: powerful windows taskbar tweaker
-
 ## Roadmap
 
 ### Day 1: Setting Up the Windows Build
@@ -460,5 +456,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Add an `Offset` method to manipulate tile map position and auto recononicalize
 - Maybe we shouldn't make the world toroidal, since it adds much complexity
 
+### Day 50: Basic Minkowski-based Collision Detection
 
-[7 taskbar tweaker]: https://rammichael.com/7-taskbar-tweaker
+- INTRODUCTION: Minkowski sum and GJK algorithm
+- Implement area collision detection
+- Take player area into account when calculating MinTileX, MaxTileX, MinTileY and MaxTileY
+- Modify speed when player hits the wall
+- Use a loop to move player

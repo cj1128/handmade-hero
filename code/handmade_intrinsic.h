@@ -26,6 +26,12 @@ FloorReal32ToInt32(real32 Value) {
   return Result;
 }
 
+inline int32
+CeilReal32ToInt32(real32 Value) {
+  int32 Result = (int32)ceil(Value);
+  return Result;
+}
+
 inline real32
 Sin(real32 Value) {
   real32 Result = sinf(Value);

@@ -79,5 +79,11 @@ Length(v2 A) {
   return Result;
 }
 
+inline bool32
+IsZero(v2 A) {
+  bool32 Result = A.X == 0 && A.Y == 0;
+  return Result;
+}
+
 #define HANDMADE_MATH_H
 #endif
