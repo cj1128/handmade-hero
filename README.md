@@ -463,3 +463,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Take player area into account when calculating MinTileX, MaxTileX, MinTileY and MaxTileY
 - Modify speed when player hits the wall
 - Use a loop to move player
+
+### Day 51: Separating Entities by Update Frequency
+
+- Divide entities into high, low and dormant sections
+- Casey did part of the new implementation
+- No code today. I will wait till the new implementation is finished
