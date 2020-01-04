@@ -466,6 +466,13 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 
 ### Day 51: Separating Entities by Update Frequency
 
-- Divide entities into high, low and dormant sections
+- Divide entities into high, low and dormant categories
+- Define `entity_residence` enum
 - Casey did part of the new implementation
 - No code today. I will wait till the new implementation is finished
+
+### Day 52: Entity Movement in Camera Space
+
+- Make player move again
+- Map entity float position to tile map position after moving player
+- Make camera move again
