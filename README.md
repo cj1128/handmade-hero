@@ -482,3 +482,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `SetCamera` and move entities into/out of high set
 - Define `entity_type` and add wall entities
 - Remove `tRemaining` in collision detection
+
+### Day 54: Removing the Dormant Entity Concept
+
+- Remove dormant entity and entity residence concept
+- Define `MakeEntityHighFrequency` and `MakeEntityLowFrequency`
+- Make code work again
+- DIFF: I don't like all the index thing. I will use pointers instead.

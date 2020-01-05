@@ -48,18 +48,11 @@ struct hero_bitmaps {
 };
 
 enum entity_type {
-  EntityType_Null,
-
   EntityType_Hero,
   EntityType_Wall,
 };
 
-enum entity_residence {
-  EntityResidence_Nonexistent,
-  EntityResidence_High,
-  EntityResidence_Low,
-  EntityResidence_Dormant,
-};
+struct low_entity;
 
 struct high_entity {
   v2 P;
@@ -67,25 +60,17 @@ struct high_entity {
   uint32 AbsTileZ;
   // 0: right, 1: up, 2: left, 3: down
   uint32 FacingDirection;
+  low_entity *LowEntity;
 };
 
 struct low_entity {
-};
-
-struct dormant_entity {
   entity_type Type;
   tile_map_position P;
   real32 Width;
   real32 Height;
   bool32 Collides;
   int32 dAbsTileZ;
-};
-
-struct entity {
-  entity_residence Residence;
-  high_entity *High;
-  low_entity *Low;
-  dormant_entity *Dormant;
+  high_entity *HighEntity;
 };
 
 struct game_state {
@@ -93,14 +78,15 @@ struct game_state {
   world World;
   tile_map_position CameraP;
 
-  uint32 EntityCount;
-  entity_residence EntityResidence[256];
+  uint32 HighEntityCount;
   high_entity HighEntities[256];
-  low_entity LowEntities[256];
-  dormant_entity DormantEntities[256];
-  uint32 PlayerIndexForController[ArrayCount(((game_input *)0)->Controllers)];
 
-  uint32 CameraFollowingEntityIndex;
+  uint32 LowEntityCount;
+  low_entity LowEntities[4096];
+
+  low_entity *PlayerEntityForController[ArrayCount(((game_input *)0)->Controllers)];
+
+  low_entity *CameraFollowingEntity;
 
   loaded_bitmap Background;
   hero_bitmaps HeroBitmaps[4];
