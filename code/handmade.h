@@ -47,6 +47,13 @@ struct hero_bitmaps {
   loaded_bitmap Torso;
 };
 
+enum entity_type {
+  EntityType_Null,
+
+  EntityType_Hero,
+  EntityType_Wall,
+};
+
 enum entity_residence {
   EntityResidence_Nonexistent,
   EntityResidence_High,
@@ -66,6 +73,7 @@ struct low_entity {
 };
 
 struct dormant_entity {
+  entity_type Type;
   tile_map_position P;
   real32 Width;
   real32 Height;

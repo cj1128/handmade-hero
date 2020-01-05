@@ -476,3 +476,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Make player move again
 - Map entity float position to tile map position after moving player
 - Make camera move again
+
+### Day 53: Environment Elements as Entities
+
+- Define `SetCamera` and move entities into/out of high set
+- Define `entity_type` and add wall entities
+- Remove `tRemaining` in collision detection
