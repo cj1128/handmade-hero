@@ -489,3 +489,10 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Define `MakeEntityHighFrequency` and `MakeEntityLowFrequency`
 - Make code work again
 - DIFF: I don't like all the index thing. I will use pointers instead.
+
+### Day 55: Hash-based World Storage
+
+- Use int32 as tile index
+- Add `TileChunkHash` to tile map
+- `GetTileChunk` should take a memroy arena
+- DIFF: I will store pointers in TileChunkHash array

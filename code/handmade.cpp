@@ -299,22 +299,18 @@ SetCamera(game_state *State, tile_map_position NewCameraP) {
 
   EntityOffset = -Delta.dXY;
 
-  uint32 TileSpanX = 17*3;
-  uint32 TileSpanY = 9*3;
+  int32 TileSpanX = 17*3;
+  int32 TileSpanY = 9*3;
   rectangle2 CameraBound = RectCenterDim(v2{0, 0}, TileMap->TileSizeInMeters * v2{(real32)TileSpanX, (real32)TileSpanY});
 
   ProcessEntitiesOutsideOfCamera(State, EntityOffset, CameraBound);
 
-  uint32 MaxTileX = NewCameraP.AbsTileX + TileSpanX/2;
-  uint32 MinTileX = 0;
-  if(NewCameraP.AbsTileX >= TileSpanX/2) {
-    MinTileX = NewCameraP.AbsTileX - TileSpanX/2;
-  }
-  uint32 MaxTileY = NewCameraP.AbsTileY + TileSpanY/2;
-  uint32 MinTileY = 0;
-  if(NewCameraP.AbsTileY >= TileSpanY/2) {
-    MinTileY = NewCameraP.AbsTileY - TileSpanY/2;
-  }
+  int32 MinTileX = NewCameraP.AbsTileX - TileSpanX/2;
+  int32 MaxTileX = NewCameraP.AbsTileX + TileSpanX/2;
+
+  int32 MinTileY = NewCameraP.AbsTileY - TileSpanY/2;
+  int32 MaxTileY = NewCameraP.AbsTileY + TileSpanY/2;
+
   for(uint32 EntityIndex = 0;
     EntityIndex < State->LowEntityCount;
     EntityIndex++
@@ -449,7 +445,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   world *World = &State->World;
   tile_map *TileMap = &World->TileMap;
 
-  real32 TileSizeInPixels = 60.0f;
+  real32 TileSizeInPixels = 20.0f;
   TileMap->TileSizeInMeters = 1.4f;
   real32 MetersToPixels = TileSizeInPixels / TileMap->TileSizeInMeters;
 
@@ -499,16 +495,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     TileMap->TileChunkDim = 1 << TileMap->TileChunkShift;
     TileMap->TileChunkMask = TileMap->TileChunkDim - 1;
 
-    TileMap->TileChunkCountX = 128;
-    TileMap->TileChunkCountY = 128;
-    TileMap->TileChunkCountZ = 2;
-
-    uint32 TileChunkCount = TileMap->TileChunkCountZ * TileMap->TileChunkCountX * TileMap->TileChunkCountY;
-
-    TileMap->TileChunks = PushArray(MemoryArena, TileChunkCount, tile_chunk);
-
-    uint32 ScreenX = 0;
-    uint32 ScreenY = 0;
+    uint32 ScreenBaseX = 0;
+    uint32 ScreenBaseY = 0;
+    uint32 ScreenX = ScreenBaseX;
+    uint32 ScreenY = ScreenBaseY;
     uint32 RandomIndex = 0;
     bool32 DoorLeft = false;
     bool32 DoorRight = false;
@@ -518,26 +508,35 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     bool32 DoorDown = false;
     uint32 AbsTileZ = 0;
 
-    for(uint32 ScreenIndex = 0; ScreenIndex < 2; ScreenIndex++) {
+    for(uint32 ScreenIndex = 0; ScreenIndex < 10; ScreenIndex++) {
       Assert(RandomIndex < ArrayCount(RandomNumberTable));
       uint32 RandomValue;
 
-      if(1) { //(DoorUp || DoorDown) {
+      // 0: left
+      // 1: bottom
+      // 2: up/down
+      if(1) { // (DoorUp || DoorDown) {
         RandomValue = RandomNumberTable[RandomIndex++] % 2;
       } else {
         RandomValue = RandomNumberTable[RandomIndex++] % 3;
       }
 
-      if(RandomValue == 0) {
-        DoorRight = true;
-      } else if(RandomValue == 1) {
-        DoorTop = true;
-      } else if(RandomValue == 2) {
-        if(AbsTileZ == 0) {
-          DoorUp = true;
-        } else if(AbsTileZ == 1) {
-          DoorDown = true;
-        }
+      switch(RandomValue) {
+        case 0: {
+          DoorLeft = true;
+        } break;
+
+        case 1: {
+          DoorBottom = true;
+        } break;
+
+        case 2:
+          if(AbsTileZ == 0) {
+            DoorUp = true;
+          } else if(AbsTileZ == 1) {
+            DoorDown = true;
+          }
+          break;
       }
 
       for(uint32 TileY = 0; TileY < TilesPerHeight; TileY++) {
@@ -582,33 +581,28 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         }
       }
 
-      DoorLeft = DoorRight;
-      DoorBottom = DoorTop;
-      DoorRight = false;
-      DoorTop = false;
+      DoorRight = DoorLeft;
+      DoorTop = DoorBottom;
+      DoorLeft = false;
+      DoorBottom = false;
 
       if(RandomValue == 0) {
-        ScreenX++;
-        DoorUp = false;
-        DoorDown = false;
+        ScreenX--;
       } else if(RandomValue == 1) {
-        ScreenY++;
-        DoorUp = false;
-        DoorDown = false;
+        ScreenY--;
       } else if(RandomValue == 2) {
-        if(DoorUp) {
+        if(AbsTileZ == 0) {
           DoorDown = true;
           DoorUp = false;
-        } else if(DoorDown) {
-          DoorUp = true;
-          DoorDown = false;
-        }
-
-        if(AbsTileZ == 0) {
           AbsTileZ = 1;
         } else {
+          DoorUp = true;
+          DoorDown = false;
           AbsTileZ = 0;
         }
+      } else {
+        DoorDown = false;
+        DoorUp = false;
       }
     }
 

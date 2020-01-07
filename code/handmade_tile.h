@@ -6,14 +6,20 @@ struct tile_map_diff {
 
 struct tile_chunk {
   uint32 *Tiles;
+  int32 TileChunkX;
+  int32 TileChunkY;
+  int32 AbsTileZ;
+
+  tile_chunk *NextInHash;
 };
 
 struct tile_chunk_position {
-  uint32 TileChunkX;
-  uint32 TileChunkY;
-  uint32 TileChunkZ;
-  uint32 RelTileX;
-  uint32 RelTileY;
+  int32 TileChunkX;
+  int32 TileChunkY;
+  int32 AbsTileZ;
+
+  int32 RelTileX;
+  int32 RelTileY;
 };
 
 struct tile_map {
@@ -21,19 +27,16 @@ struct tile_map {
   uint32 TileChunkMask;
   uint32 TileChunkDim;
 
-  uint32 TileChunkCountX;
-  uint32 TileChunkCountY;
-  uint32 TileChunkCountZ;
-
   real32 TileSizeInMeters;
 
-  tile_chunk *TileChunks;
+  // NOTE: Currently this has to be power of 2
+  tile_chunk *TileChunkHash[4096];
 };
 
 struct tile_map_position {
-  uint32 AbsTileX;
-  uint32 AbsTileY;
-  uint32 AbsTileZ;
+  int32 AbsTileX;
+  int32 AbsTileY;
+  int32 AbsTileZ;
 
   // relative to tile center
   v2 Offset_;

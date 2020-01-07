@@ -18,12 +18,8 @@ PushSize_(memory_arena *Arena, size_t Size) {
   return (void *)Result;
 }
 
-#define PushArray(Arena, Count, Type) (Type *)PushArray_((Arena), (Count), sizeof(Type))
-
-internal void *
-PushArray_(memory_arena *Arena, uint32 Count, size_t Size) {
-  return PushSize_(Arena, Count*Size);
-}
+#define PushArray(Arena, Count, Type) (Type *)PushSize_(Arena, (Count)*sizeof(Type))
+#define PushStruct(Arena, Type) (Type *)PushSize_((Arena), sizeof(Type))
 
 #include "handmade_math.h"
 #include "handmade_tile.cpp"
@@ -57,7 +53,7 @@ struct low_entity;
 struct high_entity {
   v2 P;
   v2 dP;
-  uint32 AbsTileZ;
+  int32 AbsTileZ;
   // 0: right, 1: up, 2: left, 3: down
   uint32 FacingDirection;
   low_entity *LowEntity;
@@ -79,7 +75,7 @@ struct game_state {
   tile_map_position CameraP;
 
   uint32 HighEntityCount;
-  high_entity HighEntities[256];
+  high_entity HighEntities[512];
 
   uint32 LowEntityCount;
   low_entity LowEntities[4096];
