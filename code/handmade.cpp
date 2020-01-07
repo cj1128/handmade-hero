@@ -7,13 +7,13 @@ MakeEntityHighFrequency(game_state *State, low_entity *Low) {
     return Low->HighEntity;
   }
 
-  tile_map *TileMap = &State->World.TileMap;
+  world *World = &State->World;
   Assert(State->HighEntityCount < ArrayCount(State->HighEntities));
   high_entity *High = &State->HighEntities[State->HighEntityCount++];
   Low->HighEntity = High;
   High->LowEntity = Low;
 
-  tile_map_diff Diff = SubtractPosition(TileMap, Low->P, State->CameraP);
+  world_diff Diff = SubtractPosition(World, Low->P, State->CameraP);
   High->P = Diff.dXY;
   High->dP = {};
   High->AbsTileZ = Low->P.AbsTileZ;
@@ -36,13 +36,13 @@ MakeEntityLowFrequency(game_state *State, high_entity *High) {
   State->HighEntityCount--;
 }
 internal void
-ProcessEntitiesOutsideOfCamera(game_state *State, v2 EntityOffset, rectangle2 CameraBound) {
+ProcessEntitiesOutsideOfCamera(game_state *State, v2 EntityOffset, rectangle2 HighFrequencyBound) {
   for(uint32 EntityIndex = 0;
     EntityIndex < State->HighEntityCount;
   ) {
     high_entity *High = State->HighEntities + EntityIndex;
     High->P += EntityOffset;
-    if(!IsInRectangle(CameraBound, High->P)) {
+    if(!IsInRectangle(HighFrequencyBound, High->P)) {
       MakeEntityLowFrequency(State, High);
     } else {
       EntityIndex++;
@@ -65,7 +65,8 @@ AddWall(game_state *State, uint32 AbsTileX, uint32 AbsTileY, uint32 AbsTileZ) {
   Entity->P.AbsTileX = AbsTileX;
   Entity->P.AbsTileY = AbsTileY;
   Entity->P.AbsTileZ = AbsTileZ;
-  Entity->Width = State->World.TileMap.TileSizeInMeters;
+  Entity->Width = State->World.TileSizeInMeters;
+  Entity->Width = State->World.TileSizeInMeters;
   Entity->Height = Entity->Width;
   Entity->Collides = true;
 
@@ -291,19 +292,19 @@ DrawRectangle(
 }
 
 internal void
-SetCamera(game_state *State, tile_map_position NewCameraP) {
+SetCamera(game_state *State, world_position NewCameraP) {
   v2 EntityOffset = {};
-  tile_map *TileMap = &State->World.TileMap;
-  tile_map_diff Delta = SubtractPosition(TileMap, NewCameraP, State->CameraP);
+  world *World = &State->World;
+  world_diff Delta = SubtractPosition(World, NewCameraP, State->CameraP);
   State->CameraP = NewCameraP;
 
   EntityOffset = -Delta.dXY;
 
   int32 TileSpanX = 17*3;
   int32 TileSpanY = 9*3;
-  rectangle2 CameraBound = RectCenterDim(v2{0, 0}, TileMap->TileSizeInMeters * v2{(real32)TileSpanX, (real32)TileSpanY});
+  rectangle2 HighFrequencyBound = RectCenterDim(v2{0, 0}, World->TileSizeInMeters * v2{(real32)TileSpanX, (real32)TileSpanY});
 
-  ProcessEntitiesOutsideOfCamera(State, EntityOffset, CameraBound);
+  ProcessEntitiesOutsideOfCamera(State, EntityOffset, HighFrequencyBound);
 
   int32 MinTileX = NewCameraP.AbsTileX - TileSpanX/2;
   int32 MaxTileX = NewCameraP.AbsTileX + TileSpanX/2;
@@ -348,7 +349,7 @@ TestWall(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, re
 
 internal void
 MovePlayer(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
-  tile_map *TileMap = &State->World.TileMap;
+  world *World = &State->World;
   real32 ddPLength = Length(ddP);
   if(ddPLength > 1) {
     ddP *= (1.0f / ddPLength);
@@ -433,7 +434,7 @@ MovePlayer(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
     }
   }
 
-  Entity->LowEntity->P = Offset(TileMap, State->CameraP, Entity->P);
+  Entity->LowEntity->P = Offset(World, State->CameraP, Entity->P);
 }
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
@@ -443,11 +444,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   game_state *State = (game_state *)(Memory->PermanentStorage);
   memory_arena *MemoryArena = &State->MemoryArena;
   world *World = &State->World;
-  tile_map *TileMap = &World->TileMap;
 
-  real32 TileSizeInPixels = 20.0f;
-  TileMap->TileSizeInMeters = 1.4f;
-  real32 MetersToPixels = TileSizeInPixels / TileMap->TileSizeInMeters;
+  real32 TileSizeInPixels = 60.0f;
+  World->TileSizeInMeters = 1.4f;
+  real32 MetersToPixels = TileSizeInPixels / World->TileSizeInMeters;
 
   uint32 TilesPerWidth = 17;
   uint32 TilesPerHeight = 9;
@@ -486,14 +486,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
 
-    tile_map_position NewCameraP = {};
+    world_position NewCameraP = {};
     NewCameraP.AbsTileX = 8;
     NewCameraP.AbsTileY = 4;
     NewCameraP.AbsTileZ = 0;
 
-    TileMap->TileChunkShift = 4;
-    TileMap->TileChunkDim = 1 << TileMap->TileChunkShift;
-    TileMap->TileChunkMask = TileMap->TileChunkDim - 1;
+    World->ChunkShift = 4;
+    World->ChunkDim = 1 << World->ChunkShift;
+    World->ChunkMask = World->ChunkDim - 1;
 
     uint32 ScreenBaseX = 0;
     uint32 ScreenBaseY = 0;
@@ -574,7 +574,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
             TileValue = 3;
           }
 
-          SetTileValue(MemoryArena, TileMap, AbsTileX, AbsTileY, AbsTileZ, TileValue);
           if(TileValue == 2) {
             AddWall(State, AbsTileX, AbsTileY, AbsTileZ);
           }
@@ -658,26 +657,26 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   low_entity *CameraFollowingEntity = State->CameraFollowingEntity;
   if(CameraFollowingEntity) {
     bool32 HasChanged = false;
-    tile_map_position NewCameraP = State->CameraP;
+    world_position NewCameraP = State->CameraP;
     if(CameraFollowingEntity->HighEntity->AbsTileZ != NewCameraP.AbsTileZ) {
       NewCameraP.AbsTileZ = CameraFollowingEntity->HighEntity->AbsTileZ;
       HasChanged = true;
     }
     v2 Diff = CameraFollowingEntity->HighEntity->P;
 
-    if(Diff.X > ((real32)TilesPerWidth / 2)*TileMap->TileSizeInMeters) {
+    if(Diff.X > ((real32)TilesPerWidth / 2)*World->TileSizeInMeters) {
       HasChanged = true;
       NewCameraP.AbsTileX += TilesPerWidth;
     }
-    if(Diff.X < -((real32)TilesPerWidth / 2)*TileMap->TileSizeInMeters) {
+    if(Diff.X < -((real32)TilesPerWidth / 2)*World->TileSizeInMeters) {
       HasChanged = true;
       NewCameraP.AbsTileX -= TilesPerWidth;
     }
-    if(Diff.Y > ((real32)TilesPerHeight / 2)*TileMap->TileSizeInMeters) {
+    if(Diff.Y > ((real32)TilesPerHeight / 2)*World->TileSizeInMeters) {
       HasChanged = true;
       NewCameraP.AbsTileY += TilesPerHeight;
     }
-    if(Diff.Y < -((real32)TilesPerHeight / 2)*TileMap->TileSizeInMeters) {
+    if(Diff.Y < -((real32)TilesPerHeight / 2)*World->TileSizeInMeters) {
       HasChanged = true;
       NewCameraP.AbsTileY -= TilesPerHeight;
     }

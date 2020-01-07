@@ -862,14 +862,13 @@ int CALLBACK
 WinMain(
   HINSTANCE Instance,
   HINSTANCE PrevInstance,
-  LPSTR     CmdLine,
-  int       ShowCmd
+  LPSTR CmdLine,
+  int ShowCmd
 ) {
 #if HANDMADE_INTERNAL
   GlobalShowCursor = true;
 #endif
-
-  bool32 SleepIsGranular = timeBeginPeriod(1) == TIMERR_NOERROR ;
+  bool32 SleepIsGranular = timeBeginPeriod(1) == TIMERR_NOERROR;
 
   LARGE_INTEGER CounterPerSecond;
   QueryPerformanceFrequency(&CounterPerSecond);
@@ -937,6 +936,7 @@ WinMain(
       Memory.TransientStorage = (uint8 *)Memory.PermanentStorage + Memory.PermanentStorageSize;
 
       win32_state Win32State = {};
+      Win32State.GameMemory = Memory.PermanentStorage;
       Win32State.MemorySize = Memory.PermanentStorageSize + Memory.TransientStorageSize;
 
       for(int i = 0; i < ArrayCount(Win32State.ReplayBuffers); i++) {
@@ -954,18 +954,6 @@ WinMain(
         Win32ClearSoundBuffer(&SoundOutput);
         GlobalSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
-// write cursor - last write cursor: 1920 bytes = 480 samples
-#if 0
-        while(GlobalRunning) {
-          DWORD PlayCursor, WriteCursor;
-          GlobalSoundBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor);
-          char Buffer[256];
-          sprintf_s(Buffer, sizeof(Buffer), "PC: %d, WC: %d\n", PlayCursor, WriteCursor);
-          OutputDebugStringA(Buffer);
-        }
-#endif
-        Win32State.GameMemory = Memory.PermanentStorage;
-        Win32State.MemorySize = Memory.PermanentStorageSize;
 
         Win32ResizeDIBSection(&GlobalBackBuffer, 960, 540);
 
@@ -980,9 +968,8 @@ WinMain(
         bool32 SoundIsValid = false;
 #if 0
         int DebugSoundMarkerIndex = 0;
-#endif
         win32_debug_sound_marker DebugSoundMarkers[15] = {};
-
+#endif
         Win32GetEXEPath(&Win32State);
 
         char GameDLLName[] = "handmade.dll";
@@ -1018,6 +1005,14 @@ WinMain(
         win32_game_code Game = Win32LoadGameCode(GameDLLPath, GameTempDLLPath, GameLockFilePath);
 
         while(GlobalRunning) {
+#if 0
+          // write cursor - last write cursor: 1920 bytes = 480 samples
+          DWORD PlayCursor, WriteCursor;
+          GlobalSoundBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor);
+          char Buffer[256];
+          sprintf_s(Buffer, sizeof(Buffer), "PC: %d, WC: %d\n", PlayCursor, WriteCursor);
+          OutputDebugStringA(Buffer);
+#endif
           FILETIME NewDLLWriteTime = Win32GetFileLastWriteTime(GameDLLPath);
           if(CompareFileTime(&NewDLLWriteTime, &Game.GameDLLLastWriteTime) != 0) {
             Win32UnloadGameCode(&Game);
@@ -1166,8 +1161,6 @@ WinMain(
               ScreenToClient(Window, &Point);
               NewInput->MouseX = int32(Point.x);
               NewInput->MouseY = int32(Point.y);
-
-
               NewInput->MouseButtons[0].IsEndedDown = GetKeyState(VK_LBUTTON) & (1 << 15);
               NewInput->MouseButtons[1].IsEndedDown = GetKeyState(VK_RBUTTON) & (1 << 15);
               NewInput->MouseButtons[2].IsEndedDown = GetKeyState(VK_MBUTTON) & (1 << 15);
@@ -1227,7 +1220,6 @@ WinMain(
               if(Game.GameUpdateAudio) {
                 Game.GameUpdateAudio(&Thread, &Memory, &SoundBuffer);
               }
-
 #if 0
               win32_debug_sound_marker *Marker = &DebugSoundMarkers[DebugSoundMarkerIndex];
               Marker->OutputPlayCursor = PlayCursor;
@@ -1247,7 +1239,6 @@ WinMain(
               sprintf_s(AudioTextBuffer, "LockOffset: %d, TargetCursor: %d, BytesToLock: %d, PlayCursor: %d, WriteCursor: %d, AudioLatencyBytes: %d, AudioLatencySeconds: %f\n", LockOffset, TargetCursor, BytesToLock, PlayCursor, WriteCursor, AudioLantencyBytes, AudioLatencySeconds);
               // OutputDebugStringA(AudioTextBuffer);
 #endif
-
               Win32FillSoundBuffer(&SoundOutput, &SoundBuffer, LockOffset, BytesToLock);
             } else {
               SoundIsValid = false;
@@ -1273,7 +1264,6 @@ WinMain(
           }
 
           uint64 EndCounter = Win32GetPerfCounter();
-
 #if 0
           Win32DebugDrawSoundMarkers(
             &GlobalBackBuffer,
@@ -1283,7 +1273,6 @@ WinMain(
             &SoundOutput
           );
 #endif
-
           if(GlobalDebugUpdateWindow) {
             win32_window_dimension Dimension = Win32GetWindowDimension(Window);
             HDC DC = GetDC(Window);
@@ -1294,8 +1283,8 @@ WinMain(
               &GlobalBackBuffer
             );
           }
-          FlipCounter = Win32GetPerfCounter();
 
+          FlipCounter = Win32GetPerfCounter();
 #if 0
           {
             DWORD PlayCursor, WriteCursor;
@@ -1310,7 +1299,6 @@ WinMain(
             DebugSoundMarkerIndex = 0;
           }
 #endif
-
           game_input *Tmp = OldInput;
           OldInput = NewInput;
           NewInput = Tmp;
@@ -1318,7 +1306,6 @@ WinMain(
           // Performance counter
           uint64 CurrentCycleCounter = __rdtsc();
 #if 0
-
           int64 CounterElapsed = EndCounter - LastCounter;
           uint64 CycleElapsed = CurrentCycleCounter - LastCycleCounter;
 
@@ -1330,7 +1317,6 @@ WinMain(
           sprintf_s(OutputBuffer, sizeof(OutputBuffer), "ms/f: %.2f,  fps: %.2f,  mc/f: %.2f\n", MSPerFrame, FPS, MCPF);
           OutputDebugStringA(OutputBuffer);
 #endif
-
           LastCounter = EndCounter;
           LastCycleCounter = CurrentCycleCounter;
         }

@@ -22,11 +22,7 @@ PushSize_(memory_arena *Arena, size_t Size) {
 #define PushStruct(Arena, Type) (Type *)PushSize_((Arena), sizeof(Type))
 
 #include "handmade_math.h"
-#include "handmade_tile.cpp"
-
-struct world {
-  tile_map TileMap;
-};
+#include "handmade_world.cpp"
 
 struct loaded_bitmap {
   uint32 *Pixel;
@@ -61,7 +57,7 @@ struct high_entity {
 
 struct low_entity {
   entity_type Type;
-  tile_map_position P;
+  world_position P;
   real32 Width;
   real32 Height;
   bool32 Collides;
@@ -72,7 +68,7 @@ struct low_entity {
 struct game_state {
   memory_arena MemoryArena;
   world World;
-  tile_map_position CameraP;
+  world_position CameraP;
 
   uint32 HighEntityCount;
   high_entity HighEntities[512];

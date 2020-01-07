@@ -496,3 +496,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Add `TileChunkHash` to tile map
 - `GetTileChunk` should take a memroy arena
 - DIFF: I will store pointers in TileChunkHash array
+
+### Day 56: Switching from Tiles to Entities
+
+- Rename `CameraBound` to `HighFrequencyBound`
+- Rename `handmade_tile.h/cpp` to `handmade_world.h/cpp`
+- Tile chunk is now world chunk
