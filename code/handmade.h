@@ -45,11 +45,10 @@ enum entity_type {
 };
 
 struct low_entity;
-
 struct high_entity {
   v2 P;
   v2 dP;
-  int32 AbsTileZ;
+  int32 ChunkZ;
   // 0: right, 1: up, 2: left, 3: down
   uint32 FacingDirection;
   low_entity *LowEntity;
@@ -64,6 +63,7 @@ struct low_entity {
   int32 dAbsTileZ;
   high_entity *HighEntity;
 };
+
 
 struct game_state {
   memory_arena MemoryArena;

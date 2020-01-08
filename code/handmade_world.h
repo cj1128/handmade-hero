@@ -1,32 +1,41 @@
 #ifndef HANDMADE_WORLD_H
+#define TILES_PER_CHUNK 16
 
 struct world_diff {
   v2 dXY;
 };
 
+struct low_entity;
+struct entity_block {
+  low_entity *LowEntities[16];
+  uint32 EntityCount;
+  entity_block *Next;
+};
+
 struct world_chunk {
   int32 ChunkX;
   int32 ChunkY;
-  int32 AbsTileZ;
+  int32 ChunkZ;
 
-  world_chunk *NextInHash;
+  entity_block EntityBlock;
+
+  world_chunk *Next;
 };
 
 struct world_position {
-  int32 AbsTileX;
-  int32 AbsTileY;
-  int32 AbsTileZ;
+  int32 ChunkX;
+  int32 ChunkY;
+  int32 ChunkZ;
 
   // relative to tile center
   v2 Offset_;
 };
 
 struct world {
-  uint32 ChunkShift;
-  uint32 ChunkMask;
-  uint32 ChunkDim;
-
   real32 TileSizeInMeters;
+  real32 ChunkSizeInMeters;
+
+  entity_block *FirstFree;
 
   // NOTE: Currently this has to be power of 2
   world_chunk *ChunkHash[4096];
