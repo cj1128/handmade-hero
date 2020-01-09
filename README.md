@@ -502,3 +502,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Rename `CameraBound` to `HighFrequencyBound`
 - Rename `handmade_tile.h/cpp` to `handmade_world.h/cpp`
 - Tile chunk is now world chunk
+
+### Day 57: Spatially Partitioning Entities
+
+- There is no tiles any more, just chunks.
+- Define `entity_block` and `ChangeEntityLocation`
+- Implement `WorldPositionFromTilePosition`
