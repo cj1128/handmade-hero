@@ -508,3 +508,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - There is no tiles any more, just chunks.
 - Define `entity_block` and `ChangeEntityLocation`
 - Implement `WorldPositionFromTilePosition`
+
+### Day 58: Using the Spatial Partition
+
+- Reimplement `SetCamera` using spatial partition
+- Call `ChangeEntityLocation` when adding low entity
+- Load tree bitmap
