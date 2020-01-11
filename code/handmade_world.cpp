@@ -32,8 +32,8 @@ GetWorldChunk(world *World, int32 ChunkX, int32 ChunkY, int32 ChunkZ, memory_are
 
 inline bool32
 IsCanonicalCoord(world *World, real32 Value) {
-  bool32 Result = (Value >= -0.5f*World->ChunkSizeInMeters) &&
-    (Value <= 0.5f*World->ChunkSizeInMeters);
+  bool32 Result = (Value >= 0) &&
+    (Value <= World->ChunkSizeInMeters);
   return Result;
 }
 
@@ -46,12 +46,12 @@ IsCanonicalPosition(world *World, world_position P) {
 internal inline void
 RecanonicalizeCoord(world *World, int32 *Chunk, real32 *ChunkRel) {
   // NOTE: world is not allowd to be wrapped
-  int32 Offset = RoundReal32ToInt32(*ChunkRel / World->ChunkSizeInMeters);
+  int32 Offset = FloorReal32ToInt32(*ChunkRel / World->ChunkSizeInMeters);
   *Chunk += Offset;
   *ChunkRel -= Offset * World->ChunkSizeInMeters;
 
-  Assert(*ChunkRel >= -0.5f*World->ChunkSizeInMeters);
-  Assert(*ChunkRel <= 0.5f*World->ChunkSizeInMeters);
+  Assert(*ChunkRel >= 0);
+  Assert(*ChunkRel <= World->ChunkSizeInMeters);
 }
 
 internal inline world_position
@@ -71,7 +71,7 @@ SubtractPosition(world *World, world_position P1, world_position P2) {
 }
 
 inline world_position
-Offset(world *World, world_position Pos, v2 Offset) {
+MapIntoWorldSpace(world *World, world_position Pos, v2 Offset) {
   Pos.Offset_ += Offset;
   Pos = RecanonicalizePosition(World, Pos);
   return Pos;
@@ -80,20 +80,27 @@ Offset(world *World, world_position Pos, v2 Offset) {
 inline world_position
 WorldPositionFromTilePosition(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ) {
   world_position Result = {};
-  Result.ChunkX = AbsTileX / TILES_PER_CHUNK;
-  Result.ChunkY = AbsTileY / TILES_PER_CHUNK;
+  Result.ChunkX = FloorReal32ToInt32((real32)AbsTileX / (real32)TILES_PER_CHUNK);
+  Result.ChunkY = FloorReal32ToInt32((real32)AbsTileY / (real32)TILES_PER_CHUNK);
   Result.ChunkZ = AbsTileZ;
 
-  Result.Offset_.X = World->TileSizeInMeters * (AbsTileX - Result.ChunkX*TILES_PER_CHUNK - TILES_PER_CHUNK/2) + 0.5f*World->TileSizeInMeters;
-  Result.Offset_.Y = World->TileSizeInMeters * (AbsTileY - Result.ChunkY*TILES_PER_CHUNK - TILES_PER_CHUNK/2) + 0.5f*World->TileSizeInMeters;
+  Result.Offset_.X = World->TileSizeInMeters * (AbsTileX - Result.ChunkX*TILES_PER_CHUNK);
+  Result.Offset_.Y = World->TileSizeInMeters * (AbsTileY - Result.ChunkY*TILES_PER_CHUNK);
 
   return Result;
 }
 
+// LowEntity may be NULL
 internal void
-ChangeEntityLocation(memory_arena *Arena, world *World, low_entity *LowEntity, world_position *OldP, world_position *NewP) {
+ChangeEntityLocation(
+  memory_arena *Arena, world *World,
+  low_entity *LowEntity, world_position *OldP,
+  world_position *NewP
+){
   Assert(LowEntity);
-  Assert(IsCanonicalPosition(World, *OldP));
+  if(OldP) {
+    Assert(IsCanonicalPosition(World, *OldP));
+  }
   Assert(IsCanonicalPosition(World, *NewP));
 
   if(OldP) {

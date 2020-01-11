@@ -27,7 +27,7 @@ struct world_position {
   int32 ChunkY;
   int32 ChunkZ;
 
-  // relative to tile center
+  // relative to bottom left
   v2 Offset_;
 };
 

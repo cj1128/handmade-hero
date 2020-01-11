@@ -81,6 +81,7 @@ struct game_state {
   low_entity *CameraFollowingEntity;
 
   loaded_bitmap Background;
+  loaded_bitmap Tree;
   hero_bitmaps HeroBitmaps[4];
 };
 
