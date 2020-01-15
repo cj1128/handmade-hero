@@ -514,3 +514,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Reimplement `SetCamera` using spatial partition
 - Call `ChangeEntityLocation` when adding low entity
 - Load tree bitmap
+
+### Day 59: Adding a Basic Familiar Entity
+
+- Add monster and familiar entity type
+- Define `entity_render_piece` and `entity_render_piece_group`
+- Implement `UpdateFamiliar`

@@ -764,4 +764,3 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {
 }
-
