@@ -78,14 +78,16 @@ MapIntoWorldSpace(world *World, world_position Pos, v2 Offset) {
 }
 
 inline world_position
-WorldPositionFromTilePosition(world *World, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ) {
+WorldPositionFromTilePosition(world *World, int32 TileX, int32 TileY, int32 TileZ) {
   world_position Result = {};
-  Result.ChunkX = FloorReal32ToInt32((real32)AbsTileX / (real32)TILES_PER_CHUNK);
-  Result.ChunkY = FloorReal32ToInt32((real32)AbsTileY / (real32)TILES_PER_CHUNK);
-  Result.ChunkZ = AbsTileZ;
+  Result.ChunkX = FloorReal32ToInt32((real32)TileX / (real32)TILES_PER_CHUNK);
+  Result.ChunkY = FloorReal32ToInt32((real32)TileY / (real32)TILES_PER_CHUNK);
+  Result.ChunkZ = TileZ;
 
-  Result.Offset_.X = World->TileSizeInMeters * (AbsTileX - Result.ChunkX*TILES_PER_CHUNK);
-  Result.Offset_.Y = World->TileSizeInMeters * (AbsTileY - Result.ChunkY*TILES_PER_CHUNK);
+  Result.Offset_.X = World->TileSizeInMeters * (TileX - Result.ChunkX*TILES_PER_CHUNK);
+  Result.Offset_.Y = World->TileSizeInMeters * (TileY - Result.ChunkY*TILES_PER_CHUNK);
+
+  Assert(IsCanonicalPosition(World, Result));
 
   return Result;
 }

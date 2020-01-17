@@ -71,9 +71,14 @@ AddLowEntity(game_state *State, entity_type Type, world_position *EntityP) {
 }
 
 internal low_entity *
-AddWall(game_state *State, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ) {
-  world_position EntityP = WorldPositionFromTilePosition(&State->World, AbsTileX, AbsTileY, AbsTileZ);
-  low_entity *Entity = AddLowEntity(State, EntityType_Wall, &EntityP);
+AddLowEntity(game_state *State, entity_type Type, int32 TileX, int32 TileY, int32 TileZ) {
+  world_position P = WorldPositionFromTilePosition(&State->World, TileX, TileY, TileZ);
+  return AddLowEntity(State, Type, &P);
+}
+
+internal low_entity *
+AddWall(game_state *State, int32 TileX, int32 TileY, int32 TileZ) {
+  low_entity *Entity = AddLowEntity(State, EntityType_Wall, TileX, TileY, TileZ);
   Entity->Width = State->World.TileSizeInMeters;
   Entity->Width = State->World.TileSizeInMeters;
   Entity->Height = Entity->Width;
@@ -83,9 +88,8 @@ AddWall(game_state *State, int32 AbsTileX, int32 AbsTileY, int32 AbsTileZ) {
 }
 
 internal high_entity *
-AddPlayer(game_state *State) {
-  world_position PlayerP = State->CameraP;
-  low_entity *LowEntity = AddLowEntity(State, EntityType_Hero, &PlayerP);
+AddHero(game_state *State) {
+  low_entity *LowEntity = AddLowEntity(State, EntityType_Hero, &State->CameraP);
   LowEntity->Height = 0.5f;
   LowEntity->Width = 1.0f;
   LowEntity->Collides = true;
@@ -94,6 +98,22 @@ AddPlayer(game_state *State) {
   HighEntity->FacingDirection = 0;
 
   return HighEntity;
+}
+
+internal void
+AddMonster(game_state *State, int32 TileX, int32 TileY, int32 TileZ) {
+  low_entity *LowEntity = AddLowEntity(State, EntityType_Monster, TileX, TileY, TileZ);
+  LowEntity->Height = 0.5f;
+  LowEntity->Width = 0.5f;
+  LowEntity->Collides = true;
+}
+
+internal void
+AddFamiliar(game_state *State, int32 TileX, int32 TileY, int32 TileZ) {
+  low_entity *LowEntity = AddLowEntity(State, EntityType_Familiar, TileX, TileY, TileZ);
+  LowEntity->Height = 0.5f;
+  LowEntity->Width = 1.0f;
+  LowEntity->Collides = false;
 }
 
 #pragma pack(push, 1)
@@ -195,16 +215,13 @@ internal void
 DrawBitmap(
   game_offscreen_buffer *Buffer,
   loaded_bitmap Bitmap,
-  real32 RealX,
-  real32 RealY,
-  real32 OffsetX = 0,
-  real32 OffsetY = 0
-  ) {
-  int32 MinX = RoundReal32ToInt32(RealX - OffsetX);
-  int32 MinY = RoundReal32ToInt32(RealY - OffsetY);
+  v2 Position,
+  v2 Offset = v2{}
+) {
+  int32 MinX = RoundReal32ToInt32(Position.X - Offset.X);
+  int32 MinY = RoundReal32ToInt32(Position.Y - Offset.Y);
   int32 MaxX = MinX + Bitmap.Width;
   int32 MaxY = MinY + Bitmap.Height;
-
 
   int32 ClipX = 0;
   if(MinX < 0) {
@@ -357,14 +374,14 @@ TestWall(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, re
 }
 
 internal void
-MovePlayer(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
+MoveEntity(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
   Assert(Entity);
   world *World = &State->World;
+
   real32 ddPLength = Length(ddP);
   if(ddPLength > 1) {
     ddP *= (1.0f / ddPLength);
   }
-
   real32 PlayerSpeed = 80.0f; // m/s^2
   ddP *= PlayerSpeed;
   ddP += -8*Entity->dP;
@@ -447,6 +464,34 @@ MovePlayer(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
   Entity->LowEntity->P = MapIntoWorldSpace(World, State->CameraP, Entity->P);
 }
 
+inline void
+PushPiece(render_piece_group *Group, loaded_bitmap Bitmap, v2 Offset) {
+  Assert(Group->PieceCount < ArrayCount(Group->Pieces));
+  Group->Pieces[Group->PieceCount++] = render_piece{Bitmap, Offset};
+}
+
+internal void
+UpdateFamiliar(game_state *State, high_entity *Entity, real32 dt) {
+  high_entity *ClosestHero = NULL;
+  real32 ClosetDSq = Square(10.0f);
+
+  for(uint32 EntityIndex = 0; EntityIndex < State->HighEntityCount; EntityIndex++) {
+    high_entity *TestEntity = State->HighEntities + EntityIndex;
+    if(TestEntity->LowEntity->Type == EntityType_Hero) {
+      real32 TestDSq = LengthSq(TestEntity->P - Entity->P);
+      if(TestDSq < ClosetDSq) {
+        ClosetDSq = TestDSq;
+        ClosestHero = TestEntity;
+      }
+    }
+  }
+
+  if(ClosestHero) {
+    v2 ddP = ClosestHero->P - Entity->P;
+    MoveEntity(State, Entity, dt, 0.2f * ddP);
+  }
+}
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) == ArrayCount(Input->Controllers[0].Buttons))
 
@@ -455,8 +500,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   memory_arena *MemoryArena = &State->MemoryArena;
   world *World = &State->World;
   real32 TileSizeInPixels = 60.0f;
-  real32 MetersToPixels = TileSizeInPixels / World->TileSizeInMeters;
   World->TileSizeInMeters = 1.4f;
+  real32 MetersToPixels = TileSizeInPixels / World->TileSizeInMeters;
 
   int32 TilesPerWidth = 17;
   int32 TilesPerHeight = 9;
@@ -467,38 +512,30 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     State->Tree = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test2/tree00.bmp");
 
     hero_bitmaps *HeroBitmaps = &State->HeroBitmaps[0];
-    HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 35;
+    HeroBitmaps->Offset = v2{72, 35};
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_right_torso.bmp");
     HeroBitmaps++;
 
-    HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 35;
+    HeroBitmaps->Offset = v2{72, 35};
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_back_torso.bmp");
     HeroBitmaps++;
 
-    HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 35;
+    HeroBitmaps->Offset = v2{72, 35};
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_left_torso.bmp");
     HeroBitmaps++;
 
-    HeroBitmaps->OffsetX = 72;
-    HeroBitmaps->OffsetY = 35;
+    HeroBitmaps->Offset = v2{72, 35};
     HeroBitmaps->Head = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_head.bmp");
     HeroBitmaps->Cape = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_cape.bmp");
     HeroBitmaps->Torso = LoadBMP(Thread, Memory->DebugPlatformReadFile, "test/test_hero_front_torso.bmp");
 
     InitializeArena(MemoryArena, Memory->PermanentStorageSize - sizeof(game_state), (uint8 *)Memory->PermanentStorage + sizeof(game_state));
-
-
-    world_position NewCameraP = {};
-    NewCameraP = WorldPositionFromTilePosition(World, 8, 4, 0);
 
     World->ChunkSizeInMeters = TILES_PER_CHUNK * World->TileSizeInMeters;
 
@@ -513,7 +550,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     bool32 DoorBottom = false;
     bool32 DoorUp = false;
     bool32 DoorDown = false;
-    uint32 AbsTileZ = 0;
+    uint32 TileZ = 0;
 
     for(uint32 ScreenIndex = 0; ScreenIndex < 10; ScreenIndex++) {
       Assert(RandomIndex < ArrayCount(RandomNumberTable));
@@ -538,9 +575,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         } break;
 
         case 2:
-          if(AbsTileZ == 0) {
+          if(TileZ == 0) {
             DoorUp = true;
-          } else if(AbsTileZ == 1) {
+          } else if(TileZ == 1) {
             DoorDown = true;
           }
           break;
@@ -566,13 +603,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           }
           if(TileY == 0) {
             TileValue = 2;
-            if(DoorBottom && TileX == (TilesPerWidth / 2)) {
+            if(DoorBottom && AbsTileX == (TilesPerWidth / 2)) {
               TileValue = 1;
             }
           }
           if(TileY == (TilesPerHeight - 1)) {
             TileValue = 2;
-            if(DoorTop && TileX == (TilesPerWidth / 2)) {
+            if(DoorTop && AbsTileX == (TilesPerWidth / 2)) {
               TileValue = 1;
             }
           }
@@ -582,7 +619,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           }
 
           if(TileValue == 2) {
-            AddWall(State, AbsTileX, AbsTileY, AbsTileZ);
+            AddWall(State, AbsTileX, TileY, TileZ);
           }
         }
       }
@@ -597,14 +634,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } else if(RandomValue == 1) {
         ScreenY--;
       } else if(RandomValue == 2) {
-        if(AbsTileZ == 0) {
+        if(TileZ == 0) {
           DoorDown = true;
           DoorUp = false;
-          AbsTileZ = 1;
+          TileZ = 1;
         } else {
           DoorUp = true;
           DoorDown = false;
-          AbsTileZ = 0;
+          TileZ = 0;
         }
       } else {
         DoorDown = false;
@@ -612,6 +649,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       }
     }
 
+    world_position NewCameraP = {};
+    NewCameraP = WorldPositionFromTilePosition(World, 8, 4, 0);
+    AddMonster(State, 10, 6, 0);
+    AddFamiliar(State, 6, 6, 0);
     SetCamera(State, NewCameraP);
   }
 
@@ -648,10 +689,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         }
       }
 
-      MovePlayer(State, LowEntity->HighEntity, Input->dt, ddP);
+      MoveEntity(State, LowEntity->HighEntity, Input->dt, ddP);
     } else {
       if(Controller->Start.IsEndedDown) {
-        high_entity *PlayerEntity = AddPlayer(State);
+        high_entity *PlayerEntity = AddHero(State);
         State->PlayerEntityForController[ControllerIndex] = PlayerEntity->LowEntity;
 
         if(!State->CameraFollowingEntity) {
@@ -702,62 +743,48 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   DrawRectangle(Buffer, v2{0, 0}, v2{(real32)Buffer->Width, (real32)Buffer->Height}, 0.5f, 0.5f, 0.5f);
   // DrawBitmap(Buffer, State->Background, 0, 0);
 
-#if 0
-  for(int RelY = -4; RelY <= 4; RelY++) {
-    for(int RelX = -8; RelX <= 8; RelX++) {
-      real32 Gray = 1.0f; // block
-
-      v2 Rel = {(real32)RelX * TileSizeInPixels, (real32)RelY * TileSizeInPixels};
-      v2 TileCenter = ScreenCenter - State->CameraP.Offset_*MetersToPixels + Rel;
-      v2 HalfTileSize = {0.5f*TileSizeInPixels, 0.5f*TileSizeInPixels};
-      v2 TileBottomLeft = TileCenter - HalfTileSize;
-      v2 TileTopRight = TileCenter + HalfTileSize;
-
-      uint32 AbsX = RelX + State->CameraP.AbsTileX;
-      uint32 AbsY = RelY + State->CameraP.AbsTileY;
-
-      uint32 TileValue = GetTileValue(TileMap, AbsX, AbsY, State->CameraP.AbsTileZ);
-
-      if(TileValue > 1) {
-        if(TileValue == 1) {
-          Gray = 0.5f;
-        }
-
-        if(TileValue == 3) {
-          Gray = 0.25f;
-        }
-
-        if(AbsX == State->CameraP.AbsTileX &&
-          AbsY == State->CameraP.AbsTileY) {
-          Gray = 0.0f;
-        }
-
-        DrawRectangle(Buffer, TileBottomLeft, TileTopRight, Gray, Gray, Gray);
-      }
-    }
-  }
-#endif
-
   for(
     uint32 EntityIndex = 0;
     EntityIndex < State->HighEntityCount;
     EntityIndex++
   ) {
     high_entity *Entity = State->HighEntities + EntityIndex;
-    v2 EntityCenter = ScreenCenter + Entity->P*MetersToPixels;
+    hero_bitmaps HeroBitmaps = State->HeroBitmaps[Entity->FacingDirection];
+    render_piece_group PieceGroup = {};
 
+    switch(Entity->LowEntity->Type) {
+      case EntityType_Hero: {
+        PushPiece(&PieceGroup, HeroBitmaps.Cape, HeroBitmaps.Offset);
+        PushPiece(&PieceGroup, HeroBitmaps.Head, HeroBitmaps.Offset);
+      } break;
+
+      case EntityType_Wall: {
+        PushPiece(&PieceGroup, State->Tree, v2{40, 40});
+      } break;
+
+      case EntityType_Monster: {
+        PushPiece(&PieceGroup, HeroBitmaps.Torso, HeroBitmaps.Offset);
+      } break;
+
+      case EntityType_Familiar: {
+        UpdateFamiliar(State, Entity, Input->dt);
+        PushPiece(&PieceGroup, HeroBitmaps.Head, HeroBitmaps.Offset);
+      } break;
+
+      default: {
+        InvalidCodePath;
+      }
+    }
+
+    v2 EntityCenter = ScreenCenter + Entity->P*MetersToPixels;
     v2 EntityMin = EntityCenter + v2{-0.5f*Entity->LowEntity->Width*MetersToPixels, -0.5f*Entity->LowEntity->Height*MetersToPixels};
     v2 EntityMax = EntityCenter + v2{0.5f*Entity->LowEntity->Width*MetersToPixels, 0.5f*Entity->LowEntity->Height*MetersToPixels};
 
-    if(Entity->LowEntity->Type == EntityType_Hero) {
-      DrawRectangle(Buffer, EntityMin, EntityMax, 1.0f, 1.0f, 0.0f);
-      hero_bitmaps HeroBitmaps = State->HeroBitmaps[Entity->FacingDirection];
-      DrawBitmap(Buffer, HeroBitmaps.Torso, EntityCenter.X, EntityCenter.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-      DrawBitmap(Buffer, HeroBitmaps.Cape, EntityCenter.X, EntityCenter.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-      DrawBitmap(Buffer, HeroBitmaps.Head, EntityCenter.X, EntityCenter.Y, HeroBitmaps.OffsetX, HeroBitmaps.OffsetY);
-    } else {
-      // DrawRectangle(Buffer, EntityMin, EntityMax, 1.0f, 1.0f, 0.0f);
-      DrawBitmap(Buffer, State->Tree, EntityCenter.X, EntityMin.Y, 40, 10);
+    DrawRectangle(Buffer, EntityMin, EntityMax, 1.0f, 1.0f, 0.0f);
+
+    for(uint32 PieceIndex = 0; PieceIndex < PieceGroup.PieceCount; PieceIndex++) {
+      render_piece *Piece = PieceGroup.Pieces + PieceIndex;
+      DrawBitmap(Buffer, Piece->Bitmap, EntityCenter, Piece->Offset);
     }
   }
 }

@@ -30,10 +30,18 @@ struct loaded_bitmap {
   int32 Height;
 };
 
-struct hero_bitmaps {
-  real32 OffsetX;
-  real32 OffsetY;
+struct render_piece {
+  loaded_bitmap Bitmap;
+  v2 Offset;
+};
 
+struct render_piece_group {
+  uint32 PieceCount;
+  render_piece Pieces[16];
+};
+
+struct hero_bitmaps {
+  v2 Offset;
   loaded_bitmap Head;
   loaded_bitmap Cape;
   loaded_bitmap Torso;
@@ -42,6 +50,8 @@ struct hero_bitmaps {
 enum entity_type {
   EntityType_Hero,
   EntityType_Wall,
+  EntityType_Monster,
+  EntityType_Familiar,
 };
 
 struct low_entity;
