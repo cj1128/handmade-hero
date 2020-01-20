@@ -31,7 +31,9 @@ struct loaded_bitmap {
 };
 
 struct render_piece {
-  loaded_bitmap Bitmap;
+  loaded_bitmap *Bitmap;
+  v2 HalfDim;
+  v3 Color;
   v2 Offset;
 };
 
@@ -64,6 +66,12 @@ struct high_entity {
   low_entity *LowEntity;
 };
 
+#define HIT_POINT_AMOUNT 4
+struct hit_point {
+  uint8 Flags;
+  uint8 Amount;
+};
+
 struct low_entity {
   entity_type Type;
   world_position P;
@@ -72,8 +80,9 @@ struct low_entity {
   bool32 Collides;
   int32 dAbsTileZ;
   high_entity *HighEntity;
+  uint32 HitPointCount;
+  hit_point HitPoints[16];
 };
-
 
 struct game_state {
   memory_arena MemoryArena;

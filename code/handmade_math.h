@@ -7,6 +7,26 @@ union v2 {
   real32 E[2];
 };
 
+union v3 {
+  struct {
+    real32 X, Y, Z;
+  };
+  struct {
+    real32 R, G, B;
+  };
+  real32 E[2];
+};
+
+union v4 {
+  struct {
+    real32 X, Y, Z, W;
+  };
+  struct {
+    real32 R, G, B, A;
+  };
+  real32 E[2];
+};
+
 inline v2
 operator+(v2 A, v2 B) {
   v2 Result;

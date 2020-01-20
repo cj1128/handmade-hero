@@ -183,7 +183,9 @@ Win32BeginInputRecording(win32_state *State, int Index) {
   );
 }
 
-global_variable WINDOWPLACEMENT GlobalWindowPlacement = { sizeof(GlobalWindowPlacement) };
+global_variable WINDOWPLACEMENT GlobalWindowPlacement = {
+  sizeof(GlobalWindowPlacement)
+};
 internal void
 ToggleFullscreen(HWND Window) {
   DWORD WindowStyle = GetWindowLong(Window, GWL_STYLE);

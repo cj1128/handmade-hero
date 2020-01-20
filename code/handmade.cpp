@@ -80,7 +80,6 @@ internal low_entity *
 AddWall(game_state *State, int32 TileX, int32 TileY, int32 TileZ) {
   low_entity *Entity = AddLowEntity(State, EntityType_Wall, TileX, TileY, TileZ);
   Entity->Width = State->World.TileSizeInMeters;
-  Entity->Width = State->World.TileSizeInMeters;
   Entity->Height = Entity->Width;
   Entity->Collides = true;
 
@@ -93,6 +92,9 @@ AddHero(game_state *State) {
   LowEntity->Height = 0.5f;
   LowEntity->Width = 1.0f;
   LowEntity->Collides = true;
+  LowEntity->HitPointCount = 3;
+  LowEntity->HitPoints[0].Amount = HIT_POINT_AMOUNT;
+  LowEntity->HitPoints[1] = LowEntity->HitPoints[2] = LowEntity->HitPoints[0];
 
   high_entity *HighEntity = MakeEntityHighFrequency(State, LowEntity);
   HighEntity->FacingDirection = 0;
@@ -278,8 +280,8 @@ DrawRectangle(
   game_offscreen_buffer *Buffer,
   v2 Min,
   v2 Max,
-  real32 R, real32 G, real32 B
-  ) {
+  v3 Color
+) {
   int32 MinX = RoundReal32ToInt32(Min.X);
   int32 MinY = RoundReal32ToInt32(Min.Y);
   int32 MaxX = RoundReal32ToInt32(Max.X);
@@ -298,16 +300,16 @@ DrawRectangle(
     MaxY = Buffer->Height;
   }
 
-  uint32 Color = (RoundReal32ToUint32(R * 255.0f) << 16) |
-  (RoundReal32ToUint32(G * 255.0f) << 8) |
-  RoundReal32ToUint32(B * 255.0f);
+  uint32 C = (RoundReal32ToUint32(Color.R * 255.0f) << 16) |
+  (RoundReal32ToUint32(Color.G * 255.0f) << 8) |
+  RoundReal32ToUint32(Color.B * 255.0f);
 
   uint8 *Row =  (uint8 *)Buffer->Memory + MinY * Buffer->Pitch + MinX * Buffer->BytesPerPixel;
 
   for(int Y = MinY; Y < MaxY; Y++) {
     uint32 *Pixel = (uint32 *)Row;
     for(int X = MinX; X < MaxX; X++) {
-      *Pixel++ = Color;
+      *Pixel++ = C;
     }
 
     Row += Buffer->Pitch;
@@ -465,9 +467,12 @@ MoveEntity(game_state *State, high_entity *Entity, real32 dt, v2 ddP) {
 }
 
 inline void
-PushPiece(render_piece_group *Group, loaded_bitmap Bitmap, v2 Offset) {
+PushPiece(render_piece_group *Group, loaded_bitmap *Bitmap, v2 Offset) {
   Assert(Group->PieceCount < ArrayCount(Group->Pieces));
-  Group->Pieces[Group->PieceCount++] = render_piece{Bitmap, Offset};
+  render_piece Piece = {};
+  Piece.Bitmap = Bitmap;
+  Piece.Offset = Offset;
+  Group->Pieces[Group->PieceCount++] = Piece;
 }
 
 internal void
@@ -490,6 +495,16 @@ UpdateFamiliar(game_state *State, high_entity *Entity, real32 dt) {
     v2 ddP = ClosestHero->P - Entity->P;
     MoveEntity(State, Entity, dt, 0.2f * ddP);
   }
+}
+
+internal void
+PushRectangle(render_piece_group *Group, v2 Offset, v2 HalfDim, v3 Color) {
+  Assert(Group->PieceCount < ArrayCount(Group->Pieces));
+  render_piece Piece = {};
+  Piece.Offset = Offset;
+  Piece.Color = Color;
+  Piece.HalfDim = HalfDim;
+  Group->Pieces[Group->PieceCount++] = Piece;
 }
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
@@ -740,7 +755,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
   }
 
-  DrawRectangle(Buffer, v2{0, 0}, v2{(real32)Buffer->Width, (real32)Buffer->Height}, 0.5f, 0.5f, 0.5f);
+  DrawRectangle(
+    Buffer,
+    v2{0, 0}, v2{(real32)Buffer->Width, (real32)Buffer->Height},
+    v3{0.5f, 0.5f, 0.5f}
+  );
   // DrawBitmap(Buffer, State->Background, 0, 0);
 
   for(
@@ -749,26 +768,41 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     EntityIndex++
   ) {
     high_entity *Entity = State->HighEntities + EntityIndex;
+    low_entity *LowEntity = Entity->LowEntity;
     hero_bitmaps HeroBitmaps = State->HeroBitmaps[Entity->FacingDirection];
     render_piece_group PieceGroup = {};
 
-    switch(Entity->LowEntity->Type) {
+    switch(LowEntity->Type) {
       case EntityType_Hero: {
-        PushPiece(&PieceGroup, HeroBitmaps.Cape, HeroBitmaps.Offset);
-        PushPiece(&PieceGroup, HeroBitmaps.Head, HeroBitmaps.Offset);
+        PushPiece(&PieceGroup, &HeroBitmaps.Cape, HeroBitmaps.Offset);
+        PushPiece(&PieceGroup, &HeroBitmaps.Head, HeroBitmaps.Offset);
+        if(LowEntity->HitPointCount > 0) {
+          v2 HalfDim = {0.2f, 0.1f};
+          real32 SpanX = 1.5f*2*HalfDim.X;
+          real32 StartX = -0.5f*(LowEntity->HitPointCount - 1)*SpanX;
+          real32 StartY = -0.75f * LowEntity->Height;
+          for(uint32 HitPointIndex = 0; HitPointIndex < LowEntity->HitPointCount; HitPointIndex++) {
+            hit_point *HitPoint = LowEntity->HitPoints + HitPointIndex;
+            v3 Color = v3{0.25f, 0.25f, 0.25f};
+            if(HitPoint->Amount > 0) {
+              Color = v3{1.0f, 0.0f, 0.0f};
+            }
+            PushRectangle(&PieceGroup, v2{StartX + SpanX*HitPointIndex, StartY}, HalfDim, Color);
+          }
+        }
       } break;
 
       case EntityType_Wall: {
-        PushPiece(&PieceGroup, State->Tree, v2{40, 40});
+        PushPiece(&PieceGroup, &State->Tree, v2{40, 40});
       } break;
 
       case EntityType_Monster: {
-        PushPiece(&PieceGroup, HeroBitmaps.Torso, HeroBitmaps.Offset);
+        PushPiece(&PieceGroup, &HeroBitmaps.Torso, HeroBitmaps.Offset);
       } break;
 
       case EntityType_Familiar: {
         UpdateFamiliar(State, Entity, Input->dt);
-        PushPiece(&PieceGroup, HeroBitmaps.Head, HeroBitmaps.Offset);
+        PushPiece(&PieceGroup, &HeroBitmaps.Head, HeroBitmaps.Offset);
       } break;
 
       default: {
@@ -777,14 +811,23 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
 
     v2 EntityCenter = ScreenCenter + Entity->P*MetersToPixels;
-    v2 EntityMin = EntityCenter + v2{-0.5f*Entity->LowEntity->Width*MetersToPixels, -0.5f*Entity->LowEntity->Height*MetersToPixels};
-    v2 EntityMax = EntityCenter + v2{0.5f*Entity->LowEntity->Width*MetersToPixels, 0.5f*Entity->LowEntity->Height*MetersToPixels};
+    v2 EntityMin = EntityCenter + v2{-0.5f*LowEntity->Width*MetersToPixels, -0.5f*LowEntity->Height*MetersToPixels};
+    v2 EntityMax = EntityCenter + v2{0.5f*LowEntity->Width*MetersToPixels, 0.5f*LowEntity->Height*MetersToPixels};
 
-    DrawRectangle(Buffer, EntityMin, EntityMax, 1.0f, 1.0f, 0.0f);
+    DrawRectangle(Buffer, EntityMin, EntityMax, v3{1.0f, 1.0f, 0.0f});
 
     for(uint32 PieceIndex = 0; PieceIndex < PieceGroup.PieceCount; PieceIndex++) {
       render_piece *Piece = PieceGroup.Pieces + PieceIndex;
-      DrawBitmap(Buffer, Piece->Bitmap, EntityCenter, Piece->Offset);
+      if(Piece->Bitmap) {
+        DrawBitmap(Buffer, *Piece->Bitmap, EntityCenter, Piece->Offset);
+      } else {
+        DrawRectangle(
+          Buffer,
+          EntityCenter + MetersToPixels*Piece->Offset - MetersToPixels*Piece->HalfDim,
+          EntityCenter + MetersToPixels*Piece->Offset + MetersToPixels*Piece->HalfDim,
+          Piece->Color
+        );
+      }
     }
   }
 }

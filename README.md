@@ -520,3 +520,9 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 - Add monster and familiar entity type
 - Define `entity_render_piece` and `entity_render_piece_group`
 - Implement `UpdateFamiliar`
+
+### Day 60: Adding Hitpoints
+
+- Define `hit_point` struct
+- Draw hit points
+- Define `v3` and `v4` vectors
