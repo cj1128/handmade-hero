@@ -16,7 +16,7 @@ Deepest thanks to *Casey Muratori* for this excellent project. It's really aweso
 
 ## Env
 
-Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
+Windows 10 with Visual Studio 2019 community version and gVim.
 
 ## Windows
 

@@ -1,0 +1,36 @@
+set nocompatible
+let $MYVIMRC = expand('~/_vimrc')
+
+source ~/_vimrc
+
+setglobal errorformat=%f(%l):\ error\ %m,%-G%.%#
+
+function! s:build_project()
+  wall
+
+  let nr = winnr()
+
+  " open quickfix window in other split
+  if &ft != 'qf'
+    " switch to other window
+    if winnr('$') > 1
+      wincmd w
+    else
+      vsplit
+    endif
+
+    if &ft != 'qf'
+      copen
+      wincmd p
+      close
+    endif
+  endif
+
+  AsyncRun -post=silent\ doautocmd\ QuickFixCmdPost\ make w:\handmade\misc\build
+
+  execute nr . 'wincmd w'
+endfunction
+
+nnoremap <silent> <C-b> :call <SID>build_project()<cr>
+
+autocmd VimEnter * vs
