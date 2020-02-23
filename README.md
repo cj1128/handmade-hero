@@ -10,13 +10,22 @@
 
 This is my personal study notes of [Handmade Hero](https://handmadehero.org).
 
-If you think **writing a professional-quality game from scratch on your own (no engine no library)** is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
+If you think __writing a professional-quality game from scratch on your own (no engine no library)__ is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
 
-Deepest thanks to *Casey Muratori* for this excellent project. It's really awesome.
+Deepest thanks to _Casey Muratori_ for this excellent project. It's really awesome.
 
 ## Env
 
 Windows 10 with Visual Studio 2019 community version and gVim.
+
+## Code Style
+
+My preferred code style for C is different from Casey's.
+
+- snake_case for types, e.g. `game_world`
+- camelCase for variables, e.g. `globalRunning`
+- PascalCase for functions and macro functions, e.g. `GameUpdateVideo`
+- UPPER_SNAKE_CASE for macro constants, e.g. `TILES_PER_CHUNK`
 
 ## Windows
 
@@ -208,7 +217,7 @@ Windows 10 with Visual Studio 2019 community version and gVim.
 
 ### Day 20: Debugging the Audio Sync
 
-**The audio sync logic is indeed very hard and complicated**.
+__The audio sync logic is indeed very hard and complicated__.
 
 I didn't take many notes because I was really confused and I didn't understand much.
 
@@ -270,7 +279,7 @@ NOTE: `CopyFile` may fail the first time, We use a while loop to do it. This is 
 
 Today there isn't any code to write. I am just listening to Casey talking about what a good game architecture looks like.
 
-In Casey's view, game architect is like a **Urban Planner**. Their job are organizing things roughly instead of planning things carefully. I can't agree more.
+In Casey's view, game architect is like a __Urban Planner__. Their job are organizing things roughly instead of planning things carefully. I can't agree more.
 
 ### Day 27: Exploration-based Architecture
 
@@ -443,7 +452,7 @@ In Casey's view, game architect is like a **Urban Planner**. Their job are organ
 ### Day 47: Vector Lengths
 
 - Define `Length`, `SquareRoot` to fix diagonal movement problem
-- We will *USE* search in t instead of search in p, because the later will have to build the search space and that is a complicated thing to do
+- We will _USE_ search in t instead of search in p, because the later will have to build the search space and that is a complicated thing to do
 - Part of new collision detection algorithm
 
 ### Day 48: Line Segment Intersection Collision

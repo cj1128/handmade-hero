@@ -5,7 +5,7 @@ source ~/_vimrc
 
 setglobal errorformat=%f(%l):\ error\ %m,%-G%.%#
 
-function! s:build_project()
+function! s:build_handmade()
   wall
 
   let nr = winnr()
@@ -31,6 +31,16 @@ function! s:build_project()
   execute nr . 'wincmd w'
 endfunction
 
-nnoremap <silent> <C-b> :call <SID>build_project()<cr>
+nnoremap <silent> <C-b> :call <SID>build_handmade()<cr>
 
 autocmd VimEnter * vs
+
+function! s:handmade_syntax()
+  syntax keyword Type DWORD LARGE_INTEGER HANDLE
+  syntax keyword Keyword CALLBACk
+endfunction
+
+augroup handmade_heor
+  autocmd!
+  au FileType cpp call s:handmade_syntax()
+augroup END

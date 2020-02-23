@@ -1,52 +1,54 @@
 #ifndef HANDMADE_H
+#define HANDMADE_H
+
 #include "handmade_platform.h"
 #include "handmade_intrinsic.h"
 
-#define Pi32 3.14159265359
+#define PI32 3.14159265359
 
 struct memory_arena {
-  size_t Size;
-  uint8 *Base;
-  size_t Used;
+  size_t size;
+  uint8 *base;
+  size_t used;
 };
 
 internal void *
-PushSize_(memory_arena *Arena, size_t Size) {
-  Assert((Arena->Used + Size) <= Arena->Size);
-  uint8 *Result = Arena->Base + Arena->Used;
-  Arena->Used += Size;
-  return (void *)Result;
+PushSize_(memory_arena *arena, size_t size) {
+  Assert((arena->used + size) <= arena->size);
+  uint8 *result = arena->base + arena->used;
+  arena->used += size;
+  return (void *)result;
 }
 
-#define PushArray(Arena, Count, Type) (Type *)PushSize_(Arena, (Count)*sizeof(Type))
-#define PushStruct(Arena, Type) (Type *)PushSize_((Arena), sizeof(Type))
+#define PushArray(arena, count, type) (type *)PushSize_(arena, (count)*sizeof(type))
+#define PushStruct(arena, type) (type *)PushSize_((arena), sizeof(type))
 
 #include "handmade_math.h"
 #include "handmade_world.cpp"
 
 struct loaded_bitmap {
-  uint32 *Pixel;
-  int32 Width;
-  int32 Height;
+  uint32 *pixel;
+  int32 width;
+  int32 height;
 };
 
 struct render_piece {
-  loaded_bitmap *Bitmap;
-  v2 HalfDim;
-  v3 Color;
-  v2 Offset;
+  loaded_bitmap *bitmap;
+  v2 halfDim;
+  v3 color;
+  v2 offset;
 };
 
 struct render_piece_group {
-  uint32 PieceCount;
-  render_piece Pieces[16];
+  uint32 pieceCount;
+  render_piece pieces[16];
 };
 
 struct hero_bitmaps {
-  v2 Offset;
-  loaded_bitmap Head;
-  loaded_bitmap Cape;
-  loaded_bitmap Torso;
+  v2 offset;
+  loaded_bitmap head;
+  loaded_bitmap cape;
+  loaded_bitmap torso;
 };
 
 enum entity_type {
@@ -58,51 +60,50 @@ enum entity_type {
 
 struct low_entity;
 struct high_entity {
-  v2 P;
+  v2 p;
   v2 dP;
-  int32 ChunkZ;
+  int32 chunkZ;
   // 0: right, 1: up, 2: left, 3: down
-  uint32 FacingDirection;
-  low_entity *LowEntity;
+  uint32 facingDirection;
+  low_entity *lowEntity;
 };
 
 #define HIT_POINT_AMOUNT 4
 struct hit_point {
-  uint8 Flags;
-  uint8 Amount;
+  uint8 flags;
+  uint8 amount;
 };
 
 struct low_entity {
-  entity_type Type;
-  world_position P;
-  real32 Width;
-  real32 Height;
-  bool32 Collides;
+  entity_type type;
+  world_position p;
+  real32 width;
+  real32 height;
+  bool32 collides;
   int32 dAbsTileZ;
-  high_entity *HighEntity;
-  uint32 HitPointCount;
-  hit_point HitPoints[16];
+  high_entity *highEntity;
+  uint32 hitPointCount;
+  hit_point hitPoints[16];
 };
 
 struct game_state {
-  memory_arena MemoryArena;
-  world World;
-  world_position CameraP;
+  memory_arena memoryArena;
+  game_world world;
+  world_position cameraP;
 
-  uint32 HighEntityCount;
-  high_entity HighEntities[512];
+  uint32 highEntityCount;
+  high_entity highEntities[512];
 
-  uint32 LowEntityCount;
-  low_entity LowEntities[4096];
+  uint32 lowEntityCount;
+  low_entity lowEntities[4096];
 
-  low_entity *PlayerEntityForController[ArrayCount(((game_input *)0)->Controllers)];
+  low_entity *playerEntityForController[ArrayCount(((game_input *)0)->controllers)];
 
-  low_entity *CameraFollowingEntity;
+  low_entity *cameraFollowingEntity;
 
-  loaded_bitmap Background;
-  loaded_bitmap Tree;
-  hero_bitmaps HeroBitmaps[4];
+  loaded_bitmap background;
+  loaded_bitmap tree;
+  hero_bitmaps heroBitmaps[4];
 };
 
-#define HANDMADE_H
 #endif

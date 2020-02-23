@@ -1,4 +1,5 @@
 #ifndef HANDMADE_PLATFORM_H
+#define HANDMADE_PLATFORM_H
 
 #include <stdint.h>
 typedef int8_t int8;
@@ -57,113 +58,112 @@ typedef double real64;
 #define InvalidCodePath Assert(!"InvalidCodePath")
 
 inline uint32
-SafeTruncateUInt64(uint64 Value) {
-  Assert(Value <= 0xFFFFFFFF)
-  uint32 Result = (uint32)Value;
-  return Result;
+SafeTruncateUInt64(uint64 value) {
+  Assert(value <= 0xFFFFFFFF)
+  uint32 result = (uint32)value;
+  return result;
 }
 
 struct thread_context {
-  int Placeholder;
+  int placeholder;
 };
 
 struct game_offscreen_buffer {
   // Byte order: BB GG RR AA, 0xAARRGGBB
-  void *Memory;
-  int BytesPerPixel;
-  int Width;
-  int Pitch;
-  int Height;
+  void *memory;
+  int bytesPerPixel;
+  int width;
+  int pitch;
+  int height;
 };
 
 struct game_sound_buffer {
-  int SamplesPerSecond;
-  int SampleCount;
-  int ToneVolume;
-  int16 *Memory;
+  int samplesPerSecond;
+  int sampleCount;
+  int toneVolume;
+  int16 *memory;
 };
 
 struct game_button_state {
-  int32 HalfTransitionCount;
-  bool32 IsEndedDown;
+  int32 halfTransitionCount;
+  bool32 isEndedDown;
 };
 
 struct game_controller_input {
-  bool32 IsConnected;
-  bool32 IsAnalog;
+  bool32 isConnected;
+  bool32 isAnalog;
 
-  real32 StickAverageX;
-  real32 StickAverageY;
+  real32 stickAverageX;
+  real32 stickAverageY;
 
   union {
-    game_button_state Buttons[12];
+    game_button_state buttons[12];
     struct {
       // D-pad
-      game_button_state MoveUp;
-      game_button_state MoveDown;
-      game_button_state MoveLeft;
-      game_button_state MoveRight;
+      game_button_state moveUp;
+      game_button_state moveDown;
+      game_button_state moveLeft;
+      game_button_state moveRight;
 
-      game_button_state ActionUp; // Y
-      game_button_state ActionDown; // A
-      game_button_state ActionLeft; // X
-      game_button_state ActionRight; // B
+      game_button_state actionUp; // Y
+      game_button_state actionDown; // A
+      game_button_state actionLeft; // x
+      game_button_state actionRight; // B
 
-      game_button_state LeftShoulder;
-      game_button_state RightShoulder;
+      game_button_state leftShoulder;
+      game_button_state rightShoulder;
 
-      game_button_state Start;
-      game_button_state Back;
+      game_button_state start;
+      game_button_state back;
 
       // never goes down
-      game_button_state Terminator;
+      game_button_state terminator;
     };
   };
 };
 
 struct game_input {
   real32 dt;
-  int32 MouseX, MouseY;
-  game_button_state MouseButtons[5];
+  int32 mouseX, mouseY;
+  game_button_state mouseButtons[5];
 
-  game_controller_input Controllers[5];
+  game_controller_input controllers[5];
 };
 
 #ifdef HANDMADE_INTERNAL
 struct debug_read_file_result {
-  uint32 Size;
-  void *Memory;
+  uint32 size;
+  void *memory;
 };
 
-#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *Thread, char *FileName)
+#define DEBUG_PLATFORM_READ_FILE(name) debug_read_file_result name(thread_context *thread, char *fileName)
 typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
 
-#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(thread_context *Thread, char *FileName, void *Memory, uint32 FileSize)
+#define DEBUG_PLATFORM_WRITE_FILE(name) bool32 name(thread_context *thread, char *fileName, void *memory, uint32 fileSize)
 typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *thread, void *memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 #endif
 
 struct game_memory {
-  bool32 IsInitialized;
+  bool32 isInitialized;
 
-  size_t PermanentStorageSize;
-  void *PermanentStorage; // required to be cleared to zero
+  size_t permanentStorageSize;
+  void *permanentStorage; // required to be cleared to zero
 
-  size_t TransientStorageSize;
-  void *TransientStorage;
+  size_t transientStorageSize;
+  void *transientStorage;
 
-  debug_platform_read_file *DebugPlatformReadFile;
-  debug_platform_write_file *DebugPlatformWriteFile;
-  debug_platform_free_file_memory *DebugPlatformFreeFileMemory;
+  debug_platform_read_file *debugPlatformReadFile;
+  debug_platform_write_file *debugPlatformWriteFile;
+  debug_platform_free_file_memory *debugPlatformFreeFileMemory;
 };
 
-#define GAME_UPDATE_VIDEO(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer* Buffer)
+#define GAME_UPDATE_VIDEO(name) void name(thread_context *thread, game_memory *memory, game_input *input, game_offscreen_buffer* buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
-#define GAME_UPDATE_AUDIO(name) void name(thread_context *Thread, game_memory *Memory, game_sound_buffer* SoundBuffer)
+#define GAME_UPDATE_AUDIO(name) void name(thread_context *thread, game_memory *memory, game_sound_buffer* soundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 
-#define HANDMADE_PLATFORM_H
 #endif

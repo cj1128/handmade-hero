@@ -1,152 +1,168 @@
 #include "handmade_world.h"
 
 inline world_chunk *
-GetWorldChunk(world *World, int32 ChunkX, int32 ChunkY, int32 ChunkZ, memory_arena *Arena=NULL) {
-  uint32 HashIndex = (ChunkX*19 + ChunkY*7 + ChunkZ*3) & (ArrayCount(World->ChunkHash) - 1);
-  world_chunk *Chunk = World->ChunkHash[HashIndex];
+GetWorldChunk(
+  game_world *world,
+  int32 chunkX,
+  int32 chunkY,
+  int32 chunkZ,
+  memory_arena *arena=NULL
+) {
+  uint32 hashIndex = (chunkX*19 + chunkY*7 + chunkZ*3) & (ArrayCount(world->chunkHash) - 1);
+  world_chunk *chunk = world->chunkHash[hashIndex];
 
-  while(Chunk) {
-    if(Chunk->ChunkX == ChunkX &&
-      Chunk->ChunkY == ChunkY &&
-      Chunk->ChunkZ == ChunkZ
+  while(chunk) {
+    if(chunk->chunkX == chunkX &&
+      chunk->chunkY == chunkY &&
+      chunk->chunkZ == chunkZ
     ) {
       break;
     }
 
-    Chunk = Chunk->Next;
+    chunk = chunk->next;
   }
 
-  if(Chunk == NULL && Arena) {
-    world_chunk *NewChunk = PushStruct(Arena, world_chunk);
-    NewChunk->ChunkX = ChunkX;
-    NewChunk->ChunkY = ChunkY;
-    NewChunk->ChunkZ = ChunkZ;
-    NewChunk->Next = World->ChunkHash[HashIndex];
-    World->ChunkHash[HashIndex] = NewChunk;
+  if(chunk == NULL && arena) {
+    world_chunk *newChunk = PushStruct(arena, world_chunk);
+    newChunk->chunkX = chunkX;
+    newChunk->chunkY = chunkY;
+    newChunk->chunkZ = chunkZ;
+    newChunk->next = world->chunkHash[hashIndex];
+    world->chunkHash[hashIndex] = newChunk;
 
-    return NewChunk;
+    return newChunk;
   }
 
-  return Chunk;
+  return chunk;
 }
 
 inline bool32
-IsCanonicalCoord(world *World, real32 Value) {
-  bool32 Result = (Value >= 0) &&
-    (Value <= World->ChunkSizeInMeters);
-  return Result;
+IsCanonicalCoord(game_world *world, real32 value) {
+  bool32 result = (value >= 0) &&
+    (value <= world->chunkSizeInMeters);
+  return result;
 }
 
 inline bool32
-IsCanonicalPosition(world *World, world_position P) {
-  bool32 Result = IsCanonicalCoord(World, P.Offset_.X) && IsCanonicalCoord(World, P.Offset_.Y);
-  return Result;
+IsCanonicalPosition(game_world *world, world_position p) {
+  bool32 result = IsCanonicalCoord(world, p.offset_.x) && IsCanonicalCoord(world, p.offset_.y);
+  return result;
 }
 
 internal inline void
-RecanonicalizeCoord(world *World, int32 *Chunk, real32 *ChunkRel) {
-  // NOTE: world is not allowd to be wrapped
-  int32 Offset = FloorReal32ToInt32(*ChunkRel / World->ChunkSizeInMeters);
-  *Chunk += Offset;
-  *ChunkRel -= Offset * World->ChunkSizeInMeters;
+RecanonicalizeCoord(
+  game_world *world,
+  int32 *chunk,
+  real32 *chunkRel
+) {
+  // NOTE: game_world is not allowd to be wrapped
+  int32 offset = FloorReal32ToInt32(*chunkRel / world->chunkSizeInMeters);
+  *chunk += offset;
+  *chunkRel -= offset * world->chunkSizeInMeters;
 
-  Assert(*ChunkRel >= 0);
-  Assert(*ChunkRel <= World->ChunkSizeInMeters);
+  Assert(*chunkRel >= 0);
+  Assert(*chunkRel <= world->chunkSizeInMeters);
 }
 
 internal inline world_position
-RecanonicalizePosition(world *World, world_position Pos) {
-  world_position Result = Pos;
-  RecanonicalizeCoord(World, &Result.ChunkX, &Result.Offset_.X);
-  RecanonicalizeCoord(World, &Result.ChunkY, &Result.Offset_.Y);
-  return Result;
+RecanonicalizePosition(game_world *world, world_position pos) {
+  world_position result = pos;
+  RecanonicalizeCoord(world, &result.chunkX, &result.offset_.x);
+  RecanonicalizeCoord(world, &result.chunkY, &result.offset_.y);
+  return result;
 }
 
 inline world_diff
-SubtractPosition(world *World, world_position P1, world_position P2) {
-  world_diff Result = {};
-  Result.dXY.X = World->ChunkSizeInMeters * ((real32)P1.ChunkX - (real32)P2.ChunkX) + P1.Offset_.X - P2.Offset_.X;
-  Result.dXY.Y = World->ChunkSizeInMeters * ((real32)P1.ChunkY - (real32)P2.ChunkY) + P1.Offset_.Y - P2.Offset_.Y;
-  return Result;
+SubtractPosition(game_world *world, world_position p1, world_position p2) {
+  world_diff result = {};
+  result.dXY.x = world->chunkSizeInMeters * ((real32)p1.chunkX - (real32)p2.chunkX) + p1.offset_.x - p2.offset_.x;
+  result.dXY.y = world->chunkSizeInMeters * ((real32)p1.chunkY - (real32)p2.chunkY) + p1.offset_.y - p2.offset_.y;
+  return result;
 }
 
 inline world_position
-MapIntoWorldSpace(world *World, world_position Pos, v2 Offset) {
-  Pos.Offset_ += Offset;
-  Pos = RecanonicalizePosition(World, Pos);
-  return Pos;
+MapIntoWorldSpace(game_world *world, world_position pos, v2 offset) {
+  pos.offset_ += offset;
+  pos = RecanonicalizePosition(world, pos);
+  return pos;
 }
 
 inline world_position
-WorldPositionFromTilePosition(world *World, int32 TileX, int32 TileY, int32 TileZ) {
-  world_position Result = {};
-  Result.ChunkX = FloorReal32ToInt32((real32)TileX / (real32)TILES_PER_CHUNK);
-  Result.ChunkY = FloorReal32ToInt32((real32)TileY / (real32)TILES_PER_CHUNK);
-  Result.ChunkZ = TileZ;
+WorldPositionFromTilePosition(
+  game_world *world,
+  int32 tileX,
+  int32 tileY,
+  int32 tileZ
+) {
+  world_position result = {};
+  result.chunkX = FloorReal32ToInt32((real32)tileX / (real32)TILES_PER_CHUNK);
+  result.chunkY = FloorReal32ToInt32((real32)tileY / (real32)TILES_PER_CHUNK);
+  result.chunkZ = tileZ;
 
-  Result.Offset_.X = World->TileSizeInMeters * (TileX - Result.ChunkX*TILES_PER_CHUNK);
-  Result.Offset_.Y = World->TileSizeInMeters * (TileY - Result.ChunkY*TILES_PER_CHUNK);
+  result.offset_.x = world->tileSizeInMeters * (tileX - result.chunkX*TILES_PER_CHUNK);
+  result.offset_.y = world->tileSizeInMeters * (tileY - result.chunkY*TILES_PER_CHUNK);
 
-  Assert(IsCanonicalPosition(World, Result));
+  Assert(IsCanonicalPosition(world, result));
 
-  return Result;
+  return result;
 }
 
-// LowEntity may be NULL
+// lowEntity may be NULL
 internal void
 ChangeEntityLocation(
-  memory_arena *Arena, world *World,
-  low_entity *LowEntity, world_position *OldP,
-  world_position *NewP
+  memory_arena *arena, game_world *world,
+  low_entity *lowEntity, world_position *oldP,
+  world_position *newP
 ){
-  Assert(LowEntity);
-  if(OldP) {
-    Assert(IsCanonicalPosition(World, *OldP));
+  Assert(lowEntity);
+  if(oldP) {
+    Assert(IsCanonicalPosition(world, *oldP));
   }
-  Assert(IsCanonicalPosition(World, *NewP));
+  Assert(IsCanonicalPosition(world, *newP));
 
-  if(OldP) {
-    world_chunk *Chunk = GetWorldChunk(World, OldP->ChunkX, OldP->ChunkY, OldP->ChunkZ);
-    Assert(Chunk);
-    entity_block *FirstBlock = &Chunk->EntityBlock;
-    entity_block *Block = &Chunk->EntityBlock;
-    for(; Block; Block = Block->Next) {
-      for(uint32 Index=0; Index < Block->EntityCount; Index++) {
-        if(Block->LowEntities[Index] == LowEntity) {
-          Assert(FirstBlock);
-          Block->LowEntities[Index] = FirstBlock->LowEntities[--FirstBlock->EntityCount];
+  if(oldP) {
+    world_chunk *chunk = GetWorldChunk(world, oldP->chunkX, oldP->chunkY, oldP->chunkZ);
+    Assert(chunk);
+    entity_block *firstBlock = &chunk->entityBlock;
+    entity_block *block = &chunk->entityBlock;
+    for(; block; block = block->next) {
+      for(uint32 index=0; index < block->entityCount; index++) {
+        if(block->lowEntities[index] == lowEntity) {
+          Assert(firstBlock->entityCount > 0);
+          block->lowEntities[index] = firstBlock->lowEntities[--firstBlock->entityCount];
 
-          if(FirstBlock->EntityCount == 0) {
-            Assert(FirstBlock->Next);
-            entity_block *NextBlock = FirstBlock->Next;
-            *FirstBlock = *NextBlock;
+          if(firstBlock->entityCount == 0) {
+            // TODO: figure out why?
+            Assert(firstBlock->next);
+            entity_block *nextBlock = firstBlock->next;
+            *firstBlock = *nextBlock;
 
-            NextBlock->Next = World->FirstFree;
-            World->FirstFree = NextBlock;
+            nextBlock->next = world->firstFree;
+            world->firstFree = nextBlock;
           }
 
-          Block = NULL;
+          block = NULL;
           break;
         }
       }
     }
   }
 
-  world_chunk *Chunk = GetWorldChunk(World, NewP->ChunkX, NewP->ChunkY, NewP->ChunkZ, Arena);
-  Assert(Chunk);
-  entity_block *FirstBlock = &Chunk->EntityBlock;
-  if(FirstBlock->EntityCount == ArrayCount(FirstBlock->LowEntities)) {
-    entity_block *NewBlock = World->FirstFree;
-    if(NewBlock) {
-      World->FirstFree = NewBlock->Next;
+  world_chunk *chunk = GetWorldChunk(world, newP->chunkX, newP->chunkY, newP->chunkZ, arena);
+  Assert(chunk);
+  entity_block *firstBlock = &chunk->entityBlock;
+  if(firstBlock->entityCount == ArrayCount(firstBlock->lowEntities)) {
+    entity_block *newBlock = world->firstFree;
+    if(newBlock) {
+      world->firstFree = newBlock->next;
     } else {
-      NewBlock = PushStruct(Arena, entity_block);
+      newBlock = PushStruct(arena, entity_block);
     }
-    *NewBlock = *FirstBlock;
-    FirstBlock->Next = NewBlock;
-    FirstBlock->EntityCount = 0;
+    *newBlock = *firstBlock;
+    firstBlock->next = newBlock;
+    firstBlock->entityCount = 0;
   }
 
-  Assert(FirstBlock->EntityCount < ArrayCount(FirstBlock->LowEntities));
-  FirstBlock->LowEntities[FirstBlock->EntityCount++] = LowEntity;
+  Assert(firstBlock->entityCount < ArrayCount(firstBlock->lowEntities));
+  firstBlock->lowEntities[firstBlock->entityCount++] = lowEntity;
 }

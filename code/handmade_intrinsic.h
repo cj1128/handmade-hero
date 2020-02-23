@@ -1,97 +1,97 @@
 #ifndef HANDMADE_INTRINSIC_H
+#define HANDMADE_INTRINSIC_H
 
 #include "math.h"
 
 inline real32
-SquareRoot(real32 Value) {
-  real32 Result = sqrtf(Value);
-  return Result;
+SquareRoot(real32 value) {
+  real32 result = sqrtf(value);
+  return result;
 }
 
 inline int32
-RoundReal32ToUint32(real32 Input) {
-  uint32 Result = (uint32)roundf(Input);
-  return Result;
+RoundReal32ToUint32(real32 input) {
+  uint32 result = (uint32)roundf(input);
+  return result;
 }
 
 inline int32
-RoundReal32ToInt32(real32 Input) {
-  int32 Result = (int32)roundf(Input);
-  return Result;
+RoundReal32ToInt32(real32 input) {
+  int32 result = (int32)roundf(input);
+  return result;
 }
 
 inline int32
-FloorReal32ToInt32(real32 Value) {
-  int32 Result = (int32)floor(Value);
-  return Result;
+FloorReal32ToInt32(real32 value) {
+  int32 result = (int32)floor(value);
+  return result;
 }
 
 inline int32
-CeilReal32ToInt32(real32 Value) {
-  int32 Result = (int32)ceil(Value);
-  return Result;
+CeilReal32ToInt32(real32 value) {
+  int32 result = (int32)ceil(value);
+  return result;
 }
 
 inline real32
-Sin(real32 Value) {
-  real32 Result = sinf(Value);
-  return Result;
+Sin(real32 value) {
+  real32 result = sinf(value);
+  return result;
 }
 
 inline real32
-Cos(real32 Value) {
-  real32 Result = cosf(Value);
-  return Result;
+Cos(real32 value) {
+  real32 result = cosf(value);
+  return result;
 }
 
 struct bit_scan_result {
-  bool32 Found;
-  uint32 Index;
+  bool32 found;
+  uint32 index;
 };
 
 inline bit_scan_result
-FindLeastSignificantSetBit(uint32 Value) {
-  bit_scan_result Result = {};
+FindLeastSignificantSetBit(uint32 value) {
+  bit_scan_result result = {};
 
 #if COMPILER_MSVC
-  Result.Found = _BitScanForward((unsigned long*)&Result.Index, Value);
+  result.found = _BitScanForward((unsigned long*)&result.index, value);
 #else
-  uint32 Test = 0;
-  for(uint32 Test = 0; Test < 32; Test++) {
-    if((Value & (1 << Test)) == 1) {
-      Result.Found = true;
-      Result.Index = Test;
+  uint32 test = 0;
+  for(uint32 test = 0; test < 32; test++) {
+    if((value & (1 << test)) == 1) {
+      result.found = true;
+      result.index = test;
     }
   }
 #endif
 
-  return Result;
+  return result;
 }
 
 inline real32
-Square(real32 Value) {
-  real32 Result;
-  Result = Value * Value;
-  return Result;
+Square(real32 value) {
+  real32 result;
+  result = value * value;
+  return result;
 }
 
 inline real32
-AbsoluteValue(real32 Value) {
-  real32 Result = fabsf(Value);
-  return Result;
+AbsoluteValue(real32 value) {
+  real32 result = fabsf(value);
+  return result;
 }
 
 inline uint32
-RotateLeft(uint32 Value, int32 Shift) {
-  uint32 Result = _rotl(Value, Shift);
-  return Result;
+RotateLeft(uint32 value, int32 Shift) {
+  uint32 result = _rotl(value, Shift);
+  return result;
 }
 
 inline uint32
-RotateRight(uint32 Value, int32 Shift) {
-  uint32 Result = _rotr(Value, Shift);
-  return Result;
+RotateRight(uint32 value, int32 Shift) {
+  uint32 result = _rotr(value, Shift);
+  return result;
 }
 
-#define HANDMADE_INTRINSIC_H
 #endif

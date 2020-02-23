@@ -2,142 +2,142 @@
 
 union v2 {
   struct {
-    real32 X, Y;
+    real32 x, y;
   };
-  real32 E[2];
+  real32 e[2];
 };
 
 union v3 {
   struct {
-    real32 X, Y, Z;
+    real32 x, y, z;
   };
   struct {
-    real32 R, G, B;
+    real32 r, g, b;
   };
-  real32 E[2];
+  real32 e[2];
 };
 
 union v4 {
   struct {
-    real32 X, Y, Z, W;
+    real32 x, y, z, w;
   };
   struct {
-    real32 R, G, B, A;
+    real32 r, g, b, a;
   };
-  real32 E[2];
+  real32 e[2];
 };
 
 inline v2
-operator+(v2 A, v2 B) {
-  v2 Result;
-  Result.X = A.X + B.X;
-  Result.Y = A.Y + B.Y;
-  return Result;
+operator+(v2 a, v2 b) {
+  v2 result;
+  result.x = a.x + b.x;
+  result.y = a.y + b.y;
+  return result;
 }
 
 inline v2
-operator+=(v2 &A, v2 B) {
-  A = A + B;
-  return A;
+operator+=(v2 &a, v2 b) {
+  a = a + b;
+  return a;
 }
 
 inline v2
-operator-(v2 A) {
-  v2 Result;
-  Result.X = -A.X;
-  Result.Y = -A.Y;
-  return Result;
+operator-(v2 a) {
+  v2 result;
+  result.x = -a.x;
+  result.y = -a.y;
+  return result;
 }
 
 inline v2
-operator-(v2 A, v2 B) {
-  v2 Result;
-  Result.X = A.X - B.X;
-  Result.Y = A.Y - B.Y;
-  return Result;
+operator-(v2 a, v2 b) {
+  v2 result;
+  result.x = a.x - b.x;
+  result.y = a.y - b.y;
+  return result;
 }
 
 inline v2
-operator-=(v2 &A, v2 B) {
-  A = A - B;
-  return A;
+operator-=(v2 &a, v2 b) {
+  a = a - b;
+  return a;
 }
 
 inline v2
-operator*(real32 A, v2 B) {
-  v2 Result = {A * B.X, A * B.Y};
-  return Result;
+operator*(real32 a, v2 b) {
+  v2 result = {a * b.x, a * b.y};
+  return result;
 }
 
 inline v2
-operator*(v2 B, real32 A) {
-  v2 Result = A * B;
-  return Result;
+operator*(v2 b, real32 a) {
+  v2 result = a * b;
+  return result;
 }
 
 inline v2
-operator*=(v2 &A, real32 B) {
-  A = B * A;
-  return A;
+operator*=(v2 &a, real32 b) {
+  a = b * a;
+  return a;
 }
 
 inline real32
-Inner(v2 A, v2 B) {
-  real32 Result = A.X*B.X + A.Y*B.Y;
-  return Result;
+Inner(v2 a, v2 b) {
+  real32 result = a.x*b.x + a.y*b.y;
+  return result;
 }
 
 inline real32
-LengthSq(v2 A) {
-  real32 Result = Inner(A, A);
-  return Result;
+LengthSq(v2 a) {
+  real32 result = Inner(a, a);
+  return result;
 }
 
 inline real32
-Length(v2 A) {
-  real32 Result = SquareRoot(LengthSq(A));
-  return Result;
+Length(v2 a) {
+  real32 result = SquareRoot(LengthSq(a));
+  return result;
 }
 
 inline bool32
-IsZero(v2 A) {
-  bool32 Result = A.X == 0 && A.Y == 0;
-  return Result;
+IsZero(v2 a) {
+  bool32 result = a.x == 0 && a.y == 0;
+  return result;
 }
 
 struct rectangle2 {
-  v2 Min;
-  v2 Max;
+  v2 min;
+  v2 max;
 };
 
 inline rectangle2
-RectMinMax(v2 Min, v2 Max) {
-  rectangle2 Result = {};
-  Result.Min = Min;
-  Result.Max = Max;
+RectMinMax(v2 min, v2 max) {
+  rectangle2 result = {};
+  result.min = min;
+  result.max = max;
 }
 
 inline rectangle2
-RectCenterHalfDim(v2 Center, v2 HalfDim) {
-  rectangle2 Result = {};
-  Result.Min = Center - HalfDim;
-  Result.Max = Center + HalfDim;
-  return Result;
+RectCenterHalfDim(v2 center, v2 halfDim) {
+  rectangle2 result = {};
+  result.min = center - halfDim;
+  result.max = center + halfDim;
+  return result;
 }
 
 inline rectangle2
-RectCenterDim(v2 Center, v2 Dim) {
-  rectangle2 Result = RectCenterHalfDim(Center, 0.5f*Dim);
-  return Result;
+RectCenterDim(v2 center, v2 dim) {
+  rectangle2 result = RectCenterHalfDim(center, 0.5f*dim);
+  return result;
 }
 
 inline bool32
-IsInRectangle(rectangle2 Rect, v2 Test) {
-  bool32 Result = (Test.X >= Rect.Min.X) &&
-    (Test.X <= Rect.Max.X) &&
-    (Test.Y >= Rect.Min.Y) &&
-    (Test.Y <= Rect.Max.Y);
-  return Result;
+IsInRectangle(rectangle2 rect, v2 test) {
+  bool32 result = (test.x >= rect.min.x) &&
+    (test.x <= rect.max.x) &&
+    (test.y >= rect.min.y) &&
+    (test.y <= rect.max.y);
+  return result;
 }
 
 #define HANDMADE_MATH_H

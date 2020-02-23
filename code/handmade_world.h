@@ -1,4 +1,6 @@
 #ifndef HANDMADE_WORLD_H
+#define HANDMADE_WORLD_H
+
 #define TILES_PER_CHUNK 16
 
 struct world_diff {
@@ -7,39 +9,38 @@ struct world_diff {
 
 struct low_entity;
 struct entity_block {
-  low_entity *LowEntities[16];
-  uint32 EntityCount;
-  entity_block *Next;
+  low_entity *lowEntities[16];
+  uint32 entityCount;
+  entity_block *next;
 };
 
 struct world_chunk {
-  int32 ChunkX;
-  int32 ChunkY;
-  int32 ChunkZ;
+  int32 chunkX;
+  int32 chunkY;
+  int32 chunkZ;
 
-  entity_block EntityBlock;
+  entity_block entityBlock;
 
-  world_chunk *Next;
+  world_chunk *next;
 };
 
 struct world_position {
-  int32 ChunkX;
-  int32 ChunkY;
-  int32 ChunkZ;
+  int32 chunkX;
+  int32 chunkY;
+  int32 chunkZ;
 
   // relative to bottom left
-  v2 Offset_;
+  v2 offset_;
 };
 
-struct world {
-  real32 TileSizeInMeters;
-  real32 ChunkSizeInMeters;
+struct game_world {
+  real32 tileSizeInMeters;
+  real32 chunkSizeInMeters;
 
-  entity_block *FirstFree;
+  entity_block *firstFree;
 
   // NOTE: Currently this has to be power of 2
-  world_chunk *ChunkHash[4096];
+  world_chunk *chunkHash[4096];
 };
 
-#define HANDMADE_WORLD_H value
 #endif
