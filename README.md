@@ -27,21 +27,14 @@ My preferred code style for C is different from Casey's.
 - PascalCase for functions and macro functions, e.g. `GameUpdateVideo`
 - UPPER_SNAKE_CASE for macro constants, e.g. `TILES_PER_CHUNK`
 
-## Windows
+## Marks
 
-### Command Prompt
-
-- `dir /s [keyword]`: search files
-- `findstr -s -n -i -l [keyword]`: find strings
-
-### Win32 API
-
-- `WS_EX_TOPMOST`: make window in front of others
-- `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
-
-### Visual Studio
-
-- `Spy++`: inspect windows and messages
+- `NOTE`:
+- `PLAN`:
+- `RESOURCE`:
+- `DIFF`:
+- `FUN`:
+- `OPINION`:
 
 ## Roadmap
 
@@ -467,7 +460,7 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 
 ### Day 50: Basic Minkowski-based Collision Detection
 
-- INTRODUCTION: Minkowski sum and GJK algorithm
+- Introduction of Minkowski sum and GJK algorithm
 - Implement area collision detection
 - Take player area into account when calculating MinTileX, MaxTileX, MinTileY and MaxTileY
 - Modify speed when player hits the wall
@@ -535,3 +528,28 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 - Define `hit_point` struct
 - Draw hit points
 - Define `v3` and `v4` vectors
+
+### Day 61: Adding a Simple Attack
+
+- OPINION: Always write the usage code first. It will prepare you necessary context for writing real stuff.
+- Define `DrawHitPoints()` and `InitHitPoints()` and add hitpoints for our monster
+- Add `EntityType_Sword` entity type
+- Add `sword` to low entity
+- Add sword bitmap to game state
+- Define `nullPosition` and `isValid` for checking if world position is valid
+
+## Windows
+
+### Command Prompt
+
+- `dir /s [keyword]`: search files
+- `findstr -s -n -i -l [keyword]`: find strings
+
+### Win32 API
+
+- `WS_EX_TOPMOST`: make window in front of others
+- `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
+
+### Visual Studio
+
+- `Spy++`: inspect windows and messages

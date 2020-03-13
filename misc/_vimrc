@@ -40,7 +40,7 @@ function! s:handmade_syntax()
   syntax keyword Keyword CALLBACk
 endfunction
 
-augroup handmade_heor
+augroup handmade_hero
   autocmd!
   au FileType cpp call s:handmade_syntax()
 augroup END

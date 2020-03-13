@@ -337,9 +337,9 @@ SetCamera(game_state *state, world_position NewCameraP) {
   state->cameraP = NewCameraP;
   v2 entityOffset = -Delta.dXY;
 
-  int32 TileSpanX = 17*4;
-  int32 TileSpanY = 9*4;
-  rectangle2 highFrequencyBound = RectCenterDim(v2{0, 0}, world->tileSizeInMeters * v2{(real32)TileSpanX, (real32)TileSpanY});
+  int32 tileSpanX = 17*4;
+  int32 tileSpanY = 9*4;
+  rectangle2 highFrequencyBound = RectCenterDim(v2{0, 0}, world->tileSizeInMeters * v2{(real32)tileSpanX, (real32)tileSpanY});
 
   ProcessEntityOutOfBound(state, entityOffset, highFrequencyBound);
 
@@ -352,7 +352,8 @@ SetCamera(game_state *state, world_position NewCameraP) {
       if(chunk) {
         entity_block *block = &chunk->entityBlock;
         for(; block; block = block->next) {
-          for(uint32 entityIndex = 0;
+          for(
+            uint32 entityIndex = 0;
             entityIndex < block->entityCount;
             entityIndex++
           ) {
@@ -523,8 +524,8 @@ PushRectangle(render_piece_group *group, v2 offset, v2 halfDim, v3 color) {
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&input->controllers[0].terminator - &input->controllers[0].buttons[0]) == ArrayCount(input->controllers[0].buttons))
-
   Assert(sizeof(game_state) <= memory->permanentStorageSize)
+
   game_state *state = (game_state *)(memory->permanentStorage);
   memory_arena *memoryArena = &state->memoryArena;
   game_world *world = &state->world;
@@ -583,7 +584,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     for(uint32 ScreenIndex = 0; ScreenIndex < 10; ScreenIndex++) {
       Assert(RandomIndex < ArrayCount(randomNumberTable));
-      uint32 RandomValue;
+      int RandomValue;
 
       // 0: left
       // 1: bottom
@@ -614,8 +615,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
       for(int32 tileY = 0; tileY < TilesPerHeight; tileY++) {
         for(int32 tileX = 0; tileX < TilesPerWidth; tileX++) {
-          int32 AbsTileX = ScreenX*TilesPerWidth + tileX;
-          int32 AbsTileY = ScreenY*TilesPerHeight + tileY;
+          int32 absTileX = ScreenX*TilesPerWidth + tileX;
+          int32 absTileY = ScreenY*TilesPerHeight + tileY;
           int32 TileValue = 1;
 
           if(tileX == 0) {
@@ -632,13 +633,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           }
           if(tileY == 0) {
             TileValue = 2;
-            if(DoorBottom && AbsTileX == (TilesPerWidth / 2)) {
+            if(DoorBottom && tileX == (TilesPerWidth / 2)) {
               TileValue = 1;
             }
           }
           if(tileY == (TilesPerHeight - 1)) {
             TileValue = 2;
-            if(DoorTop && AbsTileX == (TilesPerWidth / 2)) {
+            if(DoorTop && tileX == (TilesPerWidth / 2)) {
               TileValue = 1;
             }
           }
@@ -648,7 +649,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
           }
 
           if(TileValue == 2) {
-            AddWall(state, AbsTileX, tileY, tileZ);
+            AddWall(state, absTileX, absTileY, tileZ);
           }
         }
       }
