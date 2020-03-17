@@ -532,11 +532,10 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 ### Day 61: Adding a Simple Attack
 
 - OPINION: Always write the usage code first. It will prepare you necessary context for writing real stuff.
-- Define `DrawHitPoints()` and `InitHitPoints()` and add hitpoints for our monster
 - Add `EntityType_Sword` entity type
-- Add `sword` to low entity
-- Add sword bitmap to game state
-- Define `nullPosition` and `isValid` for checking if world position is valid
+- Define `DrawHitPoints()` and `InitHitPoints()` and add hitpoints for our monster
+- Add sword bitmap to game state and show the sword when some key is pressed
+- Define `NullPosition()` and `IsPositionValid()`
 
 ## Windows
 

@@ -73,8 +73,14 @@ AddLowEntity(
   state->lowEntityCount++;
   low_entity *entity = state->lowEntities + state->lowEntityCount - 1;
   entity->type = type;
-  entity->p = *entityP;
-  ChangeEntityLocation(&state->memoryArena, &state->world, entity, NULL, entityP);
+
+  if(entityP) {
+    entity->p = *entityP;
+    ChangeEntityLocation(&state->memoryArena, &state->world, entity, NULL, entityP);
+  } else {
+    entity->p = NullPosition();
+  }
+
   return entity;
 }
 
@@ -100,15 +106,24 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ) {
   return entity;
 }
 
+internal void
+InitHitPoints(low_entity *lowEntity, int value) {
+  lowEntity->hitPointCount = value;
+  for(int i = 0; i < value; i++) {
+    lowEntity->hitPoints[i].amount = HIT_POINT_AMOUNT;
+  }
+}
+
 internal high_entity *
 AddHero(game_state *state) {
   low_entity *lowEntity = AddLowEntity(state, EntityType_Hero, &state->cameraP);
   lowEntity->height = 0.5f;
   lowEntity->width = 1.0f;
   lowEntity->collides = true;
-  lowEntity->hitPointCount = 3;
-  lowEntity->hitPoints[0].amount = HIT_POINT_AMOUNT;
-  lowEntity->hitPoints[1] = lowEntity->hitPoints[2] = lowEntity->hitPoints[0];
+
+  InitHitPoints(lowEntity, 3);
+
+  lowEntity->sword = AddLowEntity(state, EntityType_Sword, NULL);
 
   high_entity *highEntity = MakeEntityHighFrequency(state, lowEntity);
   highEntity->facingDirection = 0;
@@ -122,6 +137,7 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ) {
   lowEntity->height = 0.5f;
   lowEntity->width = 1.0f;
   lowEntity->collides = true;
+  InitHitPoints(lowEntity, 3);
 }
 
 internal void
@@ -331,11 +347,11 @@ DrawRectangle(
 }
 
 internal void
-SetCamera(game_state *state, world_position NewCameraP) {
+SetCamera(game_state *state, world_position newCameraP) {
   game_world *world = &state->world;
-  world_diff Delta = SubtractPosition(world, NewCameraP, state->cameraP);
-  state->cameraP = NewCameraP;
-  v2 entityOffset = -Delta.dXY;
+  world_diff delta = SubtractPosition(world, newCameraP, state->cameraP);
+  state->cameraP = newCameraP;
+  v2 entityOffset = -delta.dXY;
 
   int32 tileSpanX = 17*4;
   int32 tileSpanY = 9*4;
@@ -343,12 +359,12 @@ SetCamera(game_state *state, world_position NewCameraP) {
 
   ProcessEntityOutOfBound(state, entityOffset, highFrequencyBound);
 
-  world_position MinChunk = MapIntoWorldSpace(world, NewCameraP, highFrequencyBound.min);
-  world_position MaxChunk = MapIntoWorldSpace(world, NewCameraP, highFrequencyBound.max);
+  world_position minChunk = MapIntoWorldSpace(world, newCameraP, highFrequencyBound.min);
+  world_position maxChunk = MapIntoWorldSpace(world, newCameraP, highFrequencyBound.max);
 
-  for(int32 chunkY = MinChunk.chunkY; chunkY < MaxChunk.chunkY; chunkY++) {
-    for(int32 chunkX = MinChunk.chunkX; chunkX < MaxChunk.chunkX; chunkX++) {
-      world_chunk *chunk= GetWorldChunk(world, chunkX, chunkY, NewCameraP.chunkZ);
+  for(int32 chunkY = minChunk.chunkY; chunkY < maxChunk.chunkY; chunkY++) {
+    for(int32 chunkX = minChunk.chunkX; chunkX < maxChunk.chunkX; chunkX++) {
+      world_chunk *chunk= GetWorldChunk(world, chunkX, chunkY, newCameraP.chunkZ);
       if(chunk) {
         entity_block *block = &chunk->entityBlock;
         for(; block; block = block->next) {
@@ -360,8 +376,8 @@ SetCamera(game_state *state, world_position NewCameraP) {
             low_entity *low = block->lowEntities[entityIndex];
             Assert(low);
             if(!low->highEntity) {
-              v2 cameraSpaceP = SubtractPosition(world, low->p, NewCameraP).dXY;
-              if(low->p.chunkZ == NewCameraP.chunkZ &&
+              v2 cameraSpaceP = SubtractPosition(world, low->p, newCameraP).dXY;
+              if(low->p.chunkZ == newCameraP.chunkZ &&
                 IsInRectangle(highFrequencyBound, cameraSpaceP)) {
                 MakeEntityHighFrequency(state, low, cameraSpaceP);
               }
@@ -522,6 +538,24 @@ PushRectangle(render_piece_group *group, v2 offset, v2 halfDim, v3 color) {
   group->pieces[group->pieceCount++] = piece;
 }
 
+internal void
+DarwHitPoints(low_entity *lowEntity, render_piece_group *pieceGroup) {
+  if(lowEntity->hitPointCount > 0) {
+    v2 halfDim = {0.2f, 0.1f};
+    real32 spanX = 1.5f*2*halfDim.x;
+    real32 startX = -0.5f*(lowEntity->hitPointCount - 1)*spanX;
+    real32 startY = -0.75f * lowEntity->height;
+    for(uint32 hitPointIndex = 0; hitPointIndex < lowEntity->hitPointCount; hitPointIndex++) {
+      hit_point *hitPoint = lowEntity->hitPoints + hitPointIndex;
+      v3 color = v3{0.25f, 0.25f, 0.25f};
+      if(hitPoint->amount > 0) {
+        color = v3{1.0f, 0.0f, 0.0f};
+      }
+      PushRectangle(pieceGroup, v2{startX + spanX*hitPointIndex, startY}, halfDim, color);
+    }
+  }
+}
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert((&input->controllers[0].terminator - &input->controllers[0].buttons[0]) == ArrayCount(input->controllers[0].buttons))
   Assert(sizeof(game_state) <= memory->permanentStorageSize)
@@ -540,6 +574,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     memory->isInitialized = true;
     state->background = LoadBMP(thread, memory->debugPlatformReadFile, "test/test_background.bmp");
     state->tree = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tree00.bmp");
+    state->sword = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock03.bmp");
 
     hero_bitmaps *heroBitmaps = &state->heroBitmaps[0];
     heroBitmaps->offset = v2{72, 35};
@@ -679,11 +714,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       }
     }
 
-    world_position NewCameraP = {};
-    NewCameraP = WorldPositionFromTilePosition(world, 8, 4, 0);
+    world_position newCameraP = {};
+    newCameraP = WorldPositionFromTilePosition(world, 8, 4, 0);
     AddMonster(state, 10, 6, 0);
     AddFamiliar(state, 6, 6, 0);
-    SetCamera(state, NewCameraP);
+    SetCamera(state, newCameraP);
   }
 
 #define TILE_COUNT_X 256
@@ -720,6 +755,28 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       }
 
       MoveEntity(state, lowEntity->highEntity, input->dt, ddP);
+
+      v2 dSword = {};
+      if(Controller->actionUp.isEndedDown) {
+        dSword.y = 1.0f;
+      }
+      if(Controller->actionDown.isEndedDown) {
+        dSword.y = -1.0f;
+      }
+      if(Controller->actionLeft.isEndedDown) {
+        dSword.x = -1.0f;
+      }
+      if(Controller->actionRight.isEndedDown) {
+        dSword.x = 1.0f;
+      }
+
+      if(dSword.x != 0.0f || dSword.y != 0.0f) {
+        low_entity *sword = lowEntity->sword;
+        if(sword && !IsPositionValid(sword->p)) {
+          sword->p = lowEntity->p;
+          ChangeEntityLocation(&state->memoryArena, &state->world, sword, NULL, &sword->p);
+        }
+      }
     } else {
       if(Controller->start.isEndedDown) {
         high_entity *playerEntity = AddHero(state);
@@ -735,10 +792,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   low_entity *cameraFollowingEntity = state->cameraFollowingEntity;
   if(cameraFollowingEntity) {
     bool32 HasChanged = false;
-    world_position NewCameraP = state->cameraP;
+    world_position newCameraP = state->cameraP;
 
-    if(cameraFollowingEntity->highEntity->chunkZ != NewCameraP.chunkZ) {
-      NewCameraP.chunkZ = cameraFollowingEntity->highEntity->chunkZ;
+    if(cameraFollowingEntity->highEntity->chunkZ != newCameraP.chunkZ) {
+      newCameraP.chunkZ = cameraFollowingEntity->highEntity->chunkZ;
       HasChanged = true;
     }
 #if 0
@@ -747,26 +804,26 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     real32 ScreenHeight = TilesPerHeight * world->tileSizeInMeters;
     if(Diff.x > 0.5f*ScreenWidth) {
       HasChanged = true;
-      NewCameraP = MapIntoWorldSpace(world, NewCameraP, v2{ScreenWidth, 0});
+      newCameraP = MapIntoWorldSpace(world, newCameraP, v2{ScreenWidth, 0});
     }
     if(Diff.x < -0.5f*ScreenWidth){
       HasChanged = true;
-      NewCameraP = MapIntoWorldSpace(world, NewCameraP, v2{-ScreenWidth, 0});
+      newCameraP = MapIntoWorldSpace(world, newCameraP, v2{-ScreenWidth, 0});
     }
     if(Diff.y > 0.5f*ScreenHeight) {
       HasChanged = true;
-      NewCameraP = MapIntoWorldSpace(world, NewCameraP, v2{0, ScreenHeight});
+      newCameraP = MapIntoWorldSpace(world, newCameraP, v2{0, ScreenHeight});
     }
     if(Diff.y < -0.5f*ScreenHeight) {
       HasChanged = true;
-      NewCameraP = MapIntoWorldSpace(world, NewCameraP, v2{0, -ScreenHeight});
+      newCameraP = MapIntoWorldSpace(world, newCameraP, v2{0, -ScreenHeight});
     }
 #else
     HasChanged = true;
-    NewCameraP = cameraFollowingEntity->p;
+    newCameraP = cameraFollowingEntity->p;
 #endif
     if(HasChanged) {
-      SetCamera(state, NewCameraP);
+      SetCamera(state, newCameraP);
     }
   }
 
@@ -791,20 +848,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       case EntityType_Hero: {
         PushPiece(&pieceGroup, &heroBitmaps.cape, heroBitmaps.offset);
         PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
-        if(lowEntity->hitPointCount > 0) {
-          v2 halfDim = {0.2f, 0.1f};
-          real32 spanX = 1.5f*2*halfDim.x;
-          real32 startX = -0.5f*(lowEntity->hitPointCount - 1)*spanX;
-          real32 startY = -0.75f * lowEntity->height;
-          for(uint32 hitPointIndex = 0; hitPointIndex < lowEntity->hitPointCount; hitPointIndex++) {
-            hit_point *hitPoint = lowEntity->hitPoints + hitPointIndex;
-            v3 color = v3{0.25f, 0.25f, 0.25f};
-            if(hitPoint->amount > 0) {
-              color = v3{1.0f, 0.0f, 0.0f};
-            }
-            PushRectangle(&pieceGroup, v2{startX + spanX*hitPointIndex, startY}, halfDim, color);
-          }
-        }
+        DarwHitPoints(lowEntity, &pieceGroup);
+      } break;
+
+      case EntityType_Sword: {
+        PushPiece(&pieceGroup, &state->sword, v2{28, 22});
       } break;
 
       case EntityType_Wall: {
@@ -813,6 +861,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
       case EntityType_Monster: {
         PushPiece(&pieceGroup, &heroBitmaps.torso, heroBitmaps.offset);
+        DarwHitPoints(lowEntity, &pieceGroup);
       } break;
 
       case EntityType_Familiar: {

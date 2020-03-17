@@ -1,5 +1,17 @@
 #include "handmade_world.h"
 
+inline world_position
+NullPosition() {
+  world_position result = {};
+  result.chunkX = INT32_MAX;
+  return result;
+}
+
+inline bool32
+IsPositionValid(world_position p) {
+  return p.chunkX != INT32_MAX;
+}
+
 inline world_chunk *
 GetWorldChunk(
   game_world *world,

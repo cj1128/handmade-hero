@@ -56,6 +56,7 @@ enum entity_type {
   EntityType_Wall,
   EntityType_Monster,
   EntityType_Familiar,
+  EntityType_Sword,
 };
 
 struct low_entity;
@@ -84,6 +85,7 @@ struct low_entity {
   high_entity *highEntity;
   uint32 hitPointCount;
   hit_point hitPoints[16];
+  low_entity *sword;
 };
 
 struct game_state {
@@ -103,6 +105,7 @@ struct game_state {
 
   loaded_bitmap background;
   loaded_bitmap tree;
+  loaded_bitmap sword;
   hero_bitmaps heroBitmaps[4];
 };
 
