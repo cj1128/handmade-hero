@@ -55,7 +55,7 @@ ProcessEntityOutOfBound(
   ) {
     high_entity *high = state->highEntities + entityIndex;
     high->p += entityOffset;
-    if(!IsInRectangle(highFrequencyBound, high->p)) {
+    if(!IsInRectangle(highFrequencyBound, high->p) || !IsPositionValid(high->lowEntity->p)) {
       MakeEntityLowFrequency(state, high);
     } else {
       entityIndex++;
@@ -114,19 +114,29 @@ InitHitPoints(low_entity *lowEntity, int value) {
   }
 }
 
+internal low_entity *
+AddSword(game_state *state) {
+  low_entity *sword = AddLowEntity(state, EntityType_Sword, NULL);
+  sword->width = 1.0f;
+  sword->height = 0.5f;
+  sword->collides = false;
+
+  return sword;
+}
+
 internal high_entity *
 AddHero(game_state *state) {
-  low_entity *lowEntity = AddLowEntity(state, EntityType_Hero, &state->cameraP);
-  lowEntity->height = 0.5f;
-  lowEntity->width = 1.0f;
-  lowEntity->collides = true;
+  low_entity *hero = AddLowEntity(state, EntityType_Hero, &state->cameraP);
+  hero->height = 0.5f;
+  hero->width = 1.0f;
+  hero->collides = true;
 
-  InitHitPoints(lowEntity, 3);
+  InitHitPoints(hero, 3);
 
-  lowEntity->sword = AddLowEntity(state, EntityType_Sword, NULL);
-
-  high_entity *highEntity = MakeEntityHighFrequency(state, lowEntity);
+  high_entity *highEntity = MakeEntityHighFrequency(state, hero);
   highEntity->facingDirection = 0;
+
+  hero->sword = AddSword(state);
 
   return highEntity;
 }
@@ -403,81 +413,98 @@ TestWall(real32 WallX, real32 PlayerDeltaX, real32 PlayerDeltaY, real32 RelX, re
       }
     }
   }
+
   return Hit;
 }
 
+struct move_spec {
+  real32 ddPScale;
+  real32 drag;
+};
+
+inline move_spec
+HeroMoveSpec() {
+  move_spec result = {};
+  result.ddPScale = 80.0f;
+  result.drag = 8.0f;
+  return result;
+}
+
 internal void
-MoveEntity(game_state *state, high_entity *entity, real32 dt, v2 ddP) {
+MoveEntity(move_spec *spec, game_state *state, high_entity *entity, real32 dt, v2 ddP) {
   Assert(entity);
   game_world *world = &state->world;
 
-  real32 ddPLength = Length(ddP);
-  if(ddPLength > 1) {
-    ddP *= (1.0f / ddPLength);
-  }
-  real32 PlayerSpeed = 80.0f; // m/s^2
-  ddP *= PlayerSpeed;
-  ddP += -8*entity->dP;
+  ddP *= spec->ddPScale;
+  ddP += -spec->drag * entity->dP;
 
-  v2 PlayerDelta = 0.5f*ddP*Square(dt) + entity->dP*dt;
-  v2 OldPlayerP = entity->p;
+  v2 entityDelta = 0.5f*ddP*Square(dt) + entity->dP*dt;
+  v2 oldEntityP = entity->p;
   entity->dP += ddP*dt;
 
-  for(
-    int32 Iteration = 0;
-    Iteration < 4;
-    Iteration++
-  ) {
-    real32 tMin = 1.0f;
-    high_entity *HitEntity = 0;
-    v2 WallNormal = {};
-    v2 TargetPlayerP = OldPlayerP + PlayerDelta;
+  if(entity->lowEntity->collides) {
+    for(
+      int32 Iteration = 0;
+      Iteration < 4;
+      Iteration++
+    ) {
+      real32 tMin = 1.0f;
+      high_entity *HitEntity = 0;
+      v2 WallNormal = {};
+      v2 targetEntityP = oldEntityP + entityDelta;
 
-    for(uint32 entityIndex = 0; entityIndex < state->highEntityCount; entityIndex++) {
-      high_entity* testEntity = state->highEntities + entityIndex;
-      if(testEntity != entity) {
-        if(testEntity->lowEntity->collides) {
-          v2 Rel = entity->p - testEntity->p;
+      for(
+        uint32 entityIndex = 0;
+        entityIndex < state->highEntityCount;
+        entityIndex++
+      ) {
+        high_entity* testEntity = state->highEntities + entityIndex;
+        if(testEntity != entity) {
+          if(testEntity->lowEntity->collides) {
+            v2 Rel = entity->p - testEntity->p;
 
-          real32 radiusW = 0.5f*testEntity->lowEntity->width + 0.5f*entity->lowEntity->width;
-          real32 radiusH = 0.5f*testEntity->lowEntity->height + 0.5f*entity->lowEntity->height;
+            real32 radiusW = 0.5f*testEntity->lowEntity->width + 0.5f*entity->lowEntity->width;
+            real32 radiusH = 0.5f*testEntity->lowEntity->height + 0.5f*entity->lowEntity->height;
 
-          // left
-          if(TestWall(-radiusW, PlayerDelta.x, PlayerDelta.y, Rel.x, Rel.y, radiusH, &tMin)) {
-            WallNormal = {1, 0};
-            HitEntity = testEntity;
-          }
+            // left
+            if(TestWall(-radiusW, entityDelta.x, entityDelta.y, Rel.x, Rel.y, radiusH, &tMin)) {
+              WallNormal = {1, 0};
+              HitEntity = testEntity;
+            }
 
-          // right
-          if(TestWall(radiusW, PlayerDelta.x, PlayerDelta.y, Rel.x, Rel.y, radiusH, &tMin)) {
-            WallNormal = {-1, 0};
-            HitEntity = testEntity;
-          }
+            // right
+            if(TestWall(radiusW, entityDelta.x, entityDelta.y, Rel.x, Rel.y, radiusH, &tMin)) {
+              WallNormal = {-1, 0};
+              HitEntity = testEntity;
+            }
 
-          // bottom
-          if(TestWall(-radiusH, PlayerDelta.y, PlayerDelta.x, Rel.y, Rel.x, radiusW, &tMin)) {
-            WallNormal = {0, 1};
-            HitEntity = testEntity;
-          }
+            // bottom
+            if(TestWall(-radiusH, entityDelta.y, entityDelta.x, Rel.y, Rel.x, radiusW, &tMin)) {
+              WallNormal = {0, 1};
+              HitEntity = testEntity;
+            }
 
-          // top
-          if(TestWall(radiusH, PlayerDelta.y, PlayerDelta.x, Rel.y, Rel.x, radiusW, &tMin)) {
-            WallNormal = {0, -1};
-            HitEntity = testEntity;
+            // top
+            if(TestWall(radiusH, entityDelta.y, entityDelta.x, Rel.y, Rel.x, radiusW, &tMin)) {
+              WallNormal = {0, -1};
+              HitEntity = testEntity;
+            }
           }
         }
       }
-    }
 
-    entity->p += tMin*PlayerDelta;
-    if(HitEntity) {
-      entity->dP = entity->dP - 1*Inner(entity->dP, WallNormal)*WallNormal;
-      PlayerDelta = TargetPlayerP - entity->p;
-      PlayerDelta = PlayerDelta - 1*Inner(PlayerDelta, WallNormal)*WallNormal;
-      // entity->chunkZ += HitEntity->lowEntity->dAbsTileZ;
-    } else {
-      break;
+      entity->p += tMin*entityDelta;
+      if(HitEntity) {
+        entity->dP = entity->dP - 1*Inner(entity->dP, WallNormal)*WallNormal;
+        entityDelta = targetEntityP - entity->p;
+        entityDelta = entityDelta - 1*Inner(entityDelta, WallNormal)*WallNormal;
+        // entity->chunkZ += HitEntity->lowEntity->dAbsTileZ;
+      } else {
+        break;
+      }
     }
+  } else {
+    entity->p += entityDelta;
   }
 
   if(AbsoluteValue(entity->dP.x) > AbsoluteValue(entity->dP.y)) {
@@ -494,7 +521,13 @@ MoveEntity(game_state *state, high_entity *entity, real32 dt, v2 ddP) {
     }
   }
 
-  entity->lowEntity->p = MapIntoWorldSpace(world, state->cameraP, entity->p);
+  world_position newP = MapIntoWorldSpace(world, state->cameraP, entity->p);
+  ChangeEntityLocation(
+    &state->memoryArena, &state->world,
+    entity->lowEntity,
+    &entity->lowEntity->p, &newP
+  );
+  entity->lowEntity->p = newP;
 }
 
 inline void
@@ -524,7 +557,9 @@ UpdateFamiliar(game_state *state, high_entity *entity, real32 dt) {
 
   if(ClosestHero) {
     v2 ddP = ClosestHero->p - entity->p;
-    MoveEntity(state, entity, dt, 0.2f * ddP);
+
+    move_spec moveSpec = HeroMoveSpec();
+    MoveEntity(&moveSpec, state, entity, dt, 0.2f * ddP);
   }
 }
 
@@ -553,6 +588,28 @@ DarwHitPoints(low_entity *lowEntity, render_piece_group *pieceGroup) {
       }
       PushRectangle(pieceGroup, v2{startX + spanX*hitPointIndex, startY}, halfDim, color);
     }
+  }
+}
+
+internal void
+UpdateSword(game_state *state, high_entity *sword, real32 dt) {
+  move_spec moveSpec = {};
+  moveSpec.ddPScale = 0.0f;
+  moveSpec.drag = 0.0f;
+
+  v2 oldP = sword->p;
+  MoveEntity(&moveSpec, state, sword, dt, v2{0, 0});
+  real32 distance = Length(sword->p - oldP);
+  sword->lowEntity->distanceRemaining -= distance;
+
+  if(sword->lowEntity->distanceRemaining <= 0) {
+    ChangeEntityLocation(
+      &state->memoryArena,
+      &state->world,
+      sword->lowEntity,
+      &sword->lowEntity->p, NULL
+    );
+    sword->lowEntity->p = NullPosition();
   }
 }
 
@@ -754,7 +811,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         }
       }
 
-      MoveEntity(state, lowEntity->highEntity, input->dt, ddP);
+      move_spec moveSpec = HeroMoveSpec();
+      MoveEntity(&moveSpec, state, lowEntity->highEntity, input->dt, ddP);
 
       v2 dSword = {};
       if(Controller->actionUp.isEndedDown) {
@@ -775,6 +833,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         if(sword && !IsPositionValid(sword->p)) {
           sword->p = lowEntity->p;
           ChangeEntityLocation(&state->memoryArena, &state->world, sword, NULL, &sword->p);
+          MakeEntityHighFrequency(state, sword);
+          sword->distanceRemaining = 5.0f;
+          sword->highEntity->dP = 8.0f*dSword;
         }
       }
     } else {
@@ -852,6 +913,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } break;
 
       case EntityType_Sword: {
+        UpdateSword(state, entity, input->dt);
         PushPiece(&pieceGroup, &state->sword, v2{28, 22});
       } break;
 

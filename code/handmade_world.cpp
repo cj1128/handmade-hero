@@ -119,33 +119,35 @@ WorldPositionFromTilePosition(
   return result;
 }
 
-// lowEntity may be NULL
+// oldP, newP may be NULL
 internal void
 ChangeEntityLocation(
   memory_arena *arena, game_world *world,
-  low_entity *lowEntity, world_position *oldP,
-  world_position *newP
+  low_entity *lowEntity,
+  world_position *oldP, world_position *newP
 ){
   Assert(lowEntity);
+
   if(oldP) {
-    Assert(IsCanonicalPosition(world, *oldP));
+    Assert(IsPositionValid(*oldP) && IsCanonicalPosition(world, *oldP));
   }
-  Assert(IsCanonicalPosition(world, *newP));
+  if(newP) {
+    Assert(IsPositionValid(*newP) && IsCanonicalPosition(world, *newP));
+  }
 
   if(oldP) {
     world_chunk *chunk = GetWorldChunk(world, oldP->chunkX, oldP->chunkY, oldP->chunkZ);
     Assert(chunk);
     entity_block *firstBlock = &chunk->entityBlock;
     entity_block *block = &chunk->entityBlock;
-    for(; block; block = block->next) {
+    bool32 notFound = true;
+    for(; block && notFound; block = block->next) {
       for(uint32 index=0; index < block->entityCount; index++) {
         if(block->lowEntities[index] == lowEntity) {
           Assert(firstBlock->entityCount > 0);
           block->lowEntities[index] = firstBlock->lowEntities[--firstBlock->entityCount];
 
-          if(firstBlock->entityCount == 0) {
-            // TODO: figure out why?
-            Assert(firstBlock->next);
+          if(firstBlock->entityCount == 0 && firstBlock->next) {
             entity_block *nextBlock = firstBlock->next;
             *firstBlock = *nextBlock;
 
@@ -153,28 +155,29 @@ ChangeEntityLocation(
             world->firstFree = nextBlock;
           }
 
-          block = NULL;
-          break;
+          notFound = false;
         }
       }
     }
   }
 
-  world_chunk *chunk = GetWorldChunk(world, newP->chunkX, newP->chunkY, newP->chunkZ, arena);
-  Assert(chunk);
-  entity_block *firstBlock = &chunk->entityBlock;
-  if(firstBlock->entityCount == ArrayCount(firstBlock->lowEntities)) {
-    entity_block *newBlock = world->firstFree;
-    if(newBlock) {
-      world->firstFree = newBlock->next;
-    } else {
-      newBlock = PushStruct(arena, entity_block);
+  if(newP) {
+    world_chunk *chunk = GetWorldChunk(world, newP->chunkX, newP->chunkY, newP->chunkZ, arena);
+    Assert(chunk);
+    entity_block *firstBlock = &chunk->entityBlock;
+    if(firstBlock->entityCount == ArrayCount(firstBlock->lowEntities)) {
+      entity_block *newBlock = world->firstFree;
+      if(newBlock) {
+        world->firstFree = newBlock->next;
+      } else {
+        newBlock = PushStruct(arena, entity_block);
+      }
+      *newBlock = *firstBlock;
+      firstBlock->next = newBlock;
+      firstBlock->entityCount = 0;
     }
-    *newBlock = *firstBlock;
-    firstBlock->next = newBlock;
-    firstBlock->entityCount = 0;
-  }
 
-  Assert(firstBlock->entityCount < ArrayCount(firstBlock->lowEntities));
-  firstBlock->lowEntities[firstBlock->entityCount++] = lowEntity;
+    Assert(firstBlock->entityCount < ArrayCount(firstBlock->lowEntities));
+    firstBlock->lowEntities[firstBlock->entityCount++] = lowEntity;
+  }
 }

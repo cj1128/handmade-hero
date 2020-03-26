@@ -3,6 +3,7 @@
 
 #include "handmade_platform.h"
 #include "handmade_intrinsic.h"
+#include "handmade_math.h"
 
 #define PI32 3.14159265359
 
@@ -22,9 +23,6 @@ PushSize_(memory_arena *arena, size_t size) {
 
 #define PushArray(arena, count, type) (type *)PushSize_(arena, (count)*sizeof(type))
 #define PushStruct(arena, type) (type *)PushSize_((arena), sizeof(type))
-
-#include "handmade_math.h"
-#include "handmade_world.cpp"
 
 struct loaded_bitmap {
   uint32 *pixel;
@@ -59,7 +57,39 @@ enum entity_type {
   EntityType_Sword,
 };
 
-struct low_entity;
+#define HIT_POINT_AMOUNT 4
+struct hit_point {
+  uint8 flags;
+  uint8 amount;
+};
+
+#include "handmade_world.cpp"
+
+struct high_entity;
+struct low_entity {
+  entity_type type;
+
+  world_position p;
+
+  real32 width;
+
+  real32 height;
+
+  bool32 collides;
+
+  int32 dAbsTileZ;
+
+  high_entity *highEntity;
+
+  uint32 hitPointCount;
+
+  hit_point hitPoints[16];
+
+  low_entity *sword;
+
+  real32 distanceRemaining;
+};
+
 struct high_entity {
   v2 p;
   v2 dP;
@@ -69,24 +99,6 @@ struct high_entity {
   low_entity *lowEntity;
 };
 
-#define HIT_POINT_AMOUNT 4
-struct hit_point {
-  uint8 flags;
-  uint8 amount;
-};
-
-struct low_entity {
-  entity_type type;
-  world_position p;
-  real32 width;
-  real32 height;
-  bool32 collides;
-  int32 dAbsTileZ;
-  high_entity *highEntity;
-  uint32 hitPointCount;
-  hit_point hitPoints[16];
-  low_entity *sword;
-};
 
 struct game_state {
   memory_arena memoryArena;

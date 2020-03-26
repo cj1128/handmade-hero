@@ -537,6 +537,12 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 - Add sword bitmap to game state and show the sword when some key is pressed
 - Define `NullPosition()` and `IsPositionValid()`
 
+### Day 62: Basic Moving Projectiles
+
+- Define `move_spec` and pass it to `MoveEntity`
+- Add `distanceRemaining` to sword
+- Define `UpdateSword` and make sword disappaer when distance remaining reaches to zero
+
 ## Windows
 
 ### Command Prompt
