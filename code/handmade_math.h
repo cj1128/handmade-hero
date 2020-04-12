@@ -1,4 +1,5 @@
 #ifndef HANDMADE_MATH_H
+#define HANDMADE_MATH_H
 
 union v2 {
   struct {
@@ -83,7 +84,7 @@ operator*=(v2 &a, real32 b) {
 
 inline real32
 Inner(v2 a, v2 b) {
-  real32 result = a.x*b.x + a.y*b.y;
+  real32 result = a.x * b.x + a.y * b.y;
   return result;
 }
 
@@ -127,18 +128,15 @@ RectCenterHalfDim(v2 center, v2 halfDim) {
 
 inline rectangle2
 RectCenterDim(v2 center, v2 dim) {
-  rectangle2 result = RectCenterHalfDim(center, 0.5f*dim);
+  rectangle2 result = RectCenterHalfDim(center, 0.5f * dim);
   return result;
 }
 
 inline bool32
 IsInRectangle(rectangle2 rect, v2 test) {
-  bool32 result = (test.x >= rect.min.x) &&
-    (test.x <= rect.max.x) &&
-    (test.y >= rect.min.y) &&
-    (test.y <= rect.max.y);
+  bool32 result = (test.x >= rect.min.x) && (test.x <= rect.max.x) &&
+                  (test.y >= rect.min.y) && (test.y <= rect.max.y);
   return result;
 }
 
-#define HANDMADE_MATH_H
 #endif

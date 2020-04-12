@@ -7,9 +7,9 @@ struct world_diff {
   v2 dXY;
 };
 
-struct low_entity;
+struct stored_entity;
 struct entity_block {
-  low_entity *lowEntities[16];
+  stored_entity *entities[16];
   uint32 entityCount;
   entity_block *next;
 };
@@ -39,7 +39,7 @@ struct game_world {
 
   entity_block *firstFree;
 
-  // NOTE: Currently this has to be power of 2
+  // NOTE: Size has to be power of 2
   world_chunk *chunkHash[4096];
 };
 

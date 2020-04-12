@@ -543,6 +543,10 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 - Add `distanceRemaining` to sword
 - Define `UpdateSword` and make sword disappaer when distance remaining reaches to zero
 
+### Day 63 & 64 & 65 & 66 Major Refactoring
+
+- stored_entity / entity
+
 ## Windows
 
 ### Command Prompt
