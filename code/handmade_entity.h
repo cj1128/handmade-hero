@@ -21,17 +21,19 @@ enum entity_type {
 
 enum entity_flag {
   EntityFlag_Collides = (1 << 1),
-  EntityFlag_Nonspatial = (1 << 2),
+  EntityFlag_NonSpatial = (1 << 2),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),
 };
 
 struct stored_entity;
-// union entity_reference {
-//   sim_entity *entity;
-//   stored_entity *stored;
-// };
+struct sim_entity;
+union entity_reference {
+  sim_entity *entity;
+  stored_entity *stored;
+};
+
 struct sim_entity {
   entity_type type;
 
@@ -52,6 +54,8 @@ struct sim_entity {
   hit_point hitPoints[16];
 
   real32 distanceRemaining;
+
+  entity_reference sword;
 };
 
 struct stored_entity {
@@ -73,6 +77,19 @@ AddFlag(sim_entity *entity, uint32 flag) {
 inline void
 ClearFlag(sim_entity *entity, uint32 flag) {
   entity->flags &= ~flag;
+}
+
+inline void
+MakeEntityNonSpatial(sim_entity *entity) {
+  AddFlag(entity, EntityFlag_NonSpatial);
+  entity->p = INVALID_P;
+}
+
+inline void
+MakeEntitySpatial(sim_entity *entity, v2 p, v2 dP) {
+  ClearFlag(entity, EntityFlag_NonSpatial);
+  entity->p = p;
+  entity->dP = dP;
 }
 
 #endif

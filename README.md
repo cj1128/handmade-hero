@@ -16,7 +16,7 @@ Deepest thanks to _Casey Muratori_ for this excellent project. It's really aweso
 
 ## Env
 
-Windows 10 with Visual Studio 2019 community version and gVim.
+Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 
 ## Code Style
 
@@ -29,23 +29,108 @@ My preferred code style for C is different from Casey's.
 
 ## Marks
 
-- `NOTE`:
-- `PLAN`:
-- `RESOURCE`:
-- `DIFF`:
-- `FUN`:
-- `OPINION`:
+- `NOTE`: Something we need to pay attention to
+- `PLAN`: Something we plan to do it later
+- `RESOURCE`: External valuable resource
+- `DIFF`: Something I have done it differently from Casey
+- `FUN`: Something interesting to know, like Windows can't correctly handle file formats they invented
+- `OPINION`: Casey's opinion about programming
+
+## Windows Programming
+
+### Command Prompt
+
+- `dir /s [keyword]`: search files
+- `findstr -s -n -i -l [keyword]`: find strings
+
+### Win32 API
+
+- `WS_EX_TOPMOST`: make window in front of others
+- `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
+
+### Visual Studio
+
+- `Spy++`: inspect windows and messages
 
 ## Roadmap
+
+<!-- MarkdownTOC -->
+
+- [Day 1: Setting Up the Windows Build](#day-1-setting-up-the-windows-build)
+- [Day 2: Opening a Win32 Window](#day-2-opening-a-win32-window)
+- [Day 3: Allocating a Back Buffer](#day-3-allocating-a-back-buffer)
+- [Day 4: Animating the Back Buffer](#day-4-animating-the-back-buffer)
+- [Day 5: Windows Graphics Review](#day-5-windows-graphics-review)
+- [Day 6: Gamepad and Keyboard Input](#day-6-gamepad-and-keyboard-input)
+- [Day 7: Initializing DirectSound](#day-7-initializing-directsound)
+- [Day 8: Writing a Square Wave to DirectSound](#day-8-writing-a-square-wave-to-directsound)
+- [Day 9: Variable-Pitch Sine Wave Output](#day-9-variable-pitch-sine-wave-output)
+- [Day 10: QueryPerformanceCounter and RDTSC](#day-10-queryperformancecounter-and-rdtsc)
+- [Day 11: The Basics of Platform API Design](#day-11-the-basics-of-platform-api-design)
+- [Day 12: Platform-Independent Sound Output](#day-12-platform-independent-sound-output)
+- [Day 13: Platform-Independent User Input](#day-13-platform-independent-user-input)
+- [Day 14: Platform-Independent Game Memory](#day-14-platform-independent-game-memory)
+- [Day 15: Platform-Independent Debug File](#day-15-platform-independent-debug-file)
+- [Day 16: Visual Studio Compiler Switches](#day-16-visual-studio-compiler-switches)
+- [Day 17: Unified Keyboard and Gamepad Input](#day-17-unified-keyboard-and-gamepad-input)
+- [Day 18: Enforcing a Video Frame Rate](#day-18-enforcing-a-video-frame-rate)
+- [Day 19: Improving Audio Synchronization](#day-19-improving-audio-synchronization)
+- [Day 20: Debugging the Audio Sync](#day-20-debugging-the-audio-sync)
+- [Day 21: Loading Game Code Dynamically](#day-21-loading-game-code-dynamically)
+- [Day 22: Instantaneous Live Code Editing](#day-22-instantaneous-live-code-editing)
+- [Day 23: Looped Live Code Editing](#day-23-looped-live-code-editing)
+- [Day 24: Win32 Platform Layer Cleanup](#day-24-win32-platform-layer-cleanup)
+- [Day 25: Finishing the Win32 Prototyping Layer](#day-25-finishing-the-win32-prototyping-layer)
+- [Day 26: Introduction to Game Architecture](#day-26-introduction-to-game-architecture)
+- [Day 27: Exploration-based Architecture](#day-27-exploration-based-architecture)
+- [Day 28: Drawing a Tilemap](#day-28-drawing-a-tilemap)
+- [Day 29: Basic Tilemap Collision Checking](#day-29-basic-tilemap-collision-checking)
+- [Day 30: Moving Between Tilemaps](#day-30-moving-between-tilemaps)
+- [Day 31: Tilemap Coordinate Systems](#day-31-tilemap-coordinate-systems)
+- [Day 32: Unified Position Representation](#day-32-unified-position-representation)
+- [Day 33: Virtualized Tilemaps](#day-33-virtualized-tilemaps)
+- [Day 34: Tilemap Memory](#day-34-tilemap-memory)
+- [Day 35: Basic Sparse Tilemap Storage](#day-35-basic-sparse-tilemap-storage)
+- [Day 36: Loading BMPs](#day-36-loading-bmps)
+- [Day 37: Basic Bitmap Rendering](#day-37-basic-bitmap-rendering)
+- [Day 38: Basic Linear Bitmap Blending](#day-38-basic-linear-bitmap-blending)
+- [Day 39: Basic Bitmap Rendering Cleanup](#day-39-basic-bitmap-rendering-cleanup)
+- [Day 40: Cursor Hiding and Fullscreen](#day-40-cursor-hiding-and-fullscreen)
+- [Day 41: Overview of the Types of Math Used in Games](#day-41-overview-of-the-types-of-math-used-in-games)
+- [Day 42: Basic 2D Vectors](#day-42-basic-2d-vectors)
+- [Day 43: The Equations of Motion](#day-43-the-equations-of-motion)
+- [Day 44: Reflecting Vectors](#day-44-reflecting-vectors)
+- [Day 45: Geometric vs. Temporal Movement Search](#day-45-geometric-vs-temporal-movement-search)
+- [Day 46: Basic Multiplayer Support](#day-46-basic-multiplayer-support)
+- [Day 47: Vector Lengths](#day-47-vector-lengths)
+- [Day 48: Line Segment Intersection Collision](#day-48-line-segment-intersection-collision)
+- [Day 49: Debugging Canonical Coordinates](#day-49-debugging-canonical-coordinates)
+- [Day 50: Basic Minkowski-based Collision Detection](#day-50-basic-minkowski-based-collision-detection)
+- [Day 51: Separating Entities by Update Frequency](#day-51-separating-entities-by-update-frequency)
+- [Day 52: Entity Movement in Camera Space](#day-52-entity-movement-in-camera-space)
+- [Day 53: Environment Elements as Entities](#day-53-environment-elements-as-entities)
+- [Day 54: Removing the Dormant Entity Concept](#day-54-removing-the-dormant-entity-concept)
+- [Day 55: Hash-based World Storage](#day-55-hash-based-world-storage)
+- [Day 56: Switching from Tiles to Entities](#day-56-switching-from-tiles-to-entities)
+- [Day 57: Spatially Partitioning Entities](#day-57-spatially-partitioning-entities)
+- [Day 58: Using the Spatial Partition](#day-58-using-the-spatial-partition)
+- [Day 59: Adding a Basic Familiar Entity](#day-59-adding-a-basic-familiar-entity)
+- [Day 60: Adding Hitpoints](#day-60-adding-hitpoints)
+- [Day 61: Adding a Simple Attack](#day-61-adding-a-simple-attack)
+- [Day 62: Basic Moving Projectiles](#day-62-basic-moving-projectiles)
+- [Day 63 & 64 & 65 & 66: Major Refactoring with Simulation Region](#day-63--64--65--66-major-refactoring-with-simulation-region)
+
+<!-- /MarkdownTOC -->
+
 
 ### Day 1: Setting Up the Windows Build
 
 - Install Visual Studio 2019
 - Call `vsdevcmd` to init command line tools
 - Use `cl` to build our program
-- Use `devenv` to start visual studio to debug, e.g. `devenv w:\build\win32_handmade.exe`
-- `WinMain`: windows program entry
-- `MessageBox`: show a message box
+- Use `devenv` to start visual studio to debug. e.g. `devenv w:\build\win32_handmade.exe`
+- `WinMain`: Entry of Windows program
+- `MessageBox`: Show a message box
 
 ### Day 2: Opening a Win32 Window
 
@@ -303,12 +388,12 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 
 ### Day 31: Tilemap Coordinate Systems
 
-- NOTE: basically any CPU we are gonna target at has SSE2
+- NOTE: Basically any CPU we are gonna target at has SSE2
 - Define `handmade_intrinsic.h`
 - Define `TileSizeInMeters` and `TileSizeInPixels`
 - Optimization switches: `/O2 /Oi /fp:fast`
-- PLAN: pack tilemap index and tile index into a single 32-bit integer
-- PLAN: convert TileRelX and TileRelY to resolution independent world units
+- PLAN: Pack tilemap index and tile index into a single 32-bit integer
+- PLAN: Convert TileRelX and TileRelY to resolution independent world units
 - RESOURCE: Intel Intrinsics Guide, https://software.intel.com/sites/landingpage/IntrinsicsGuide/
 
 ### Day 32: Unified Position Representation
@@ -322,7 +407,7 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 
 - Rename `canonical_position` to `world_position`
 - Make Y axis go upward
-- RESOURCE: a great book about typology, Galois' Dream: Group Theory and Differential Equations
+- RESOURCE: a great book about typology: *Galois' Dream: Group Theory and Differential Equations*
 - Remove TileMapX and TileMapY
 - Define `tile_map_position`
 - 24-bit for tilemap and 8-bit for tiles
@@ -392,31 +477,32 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 
 ### Day 41: Overview of the Types of Math Used in Games
 
-- Math we are gonna need:
-  - Arithmetic
-  - Algebra
-  - Euclidean Geometry
-  - Trigonometry
-  - Arithmetic
-  - Calculus
-  - Linear Algebra
-  - Partial Differential Equation
-  - Ordinary Differential Equation
-  - Complex Numbers
-  - Non-Euclidean Geometry
-  - Topology
-  - Minkowski Algebra
-  - Control Theory
-  - Interval Arithmetic
-  - Graph Theory
-  - Operations Research
-  - Probability and Statistics
-  - Cryptography / Pseudo Number Generator
+Math we are gonna need:
+
+- Arithmetic
+- Algebra
+- Euclidean Geometry
+- Trigonometry
+- Arithmetic
+- Calculus
+- Linear Algebra
+- Partial Differential Equation
+- Ordinary Differential Equation
+- Complex Numbers
+- Non-Euclidean Geometry
+- Topology
+- Minkowski Algebra
+- Control Theory
+- Interval Arithmetic
+- Graph Theory
+- Operations Research
+- Probability and Statistics
+- Cryptography / Pseudo Number Generator
 
 ### Day 42: Basic 2D Vectors
 
 - Fix diagonal movement problem
-- Define `v2` and add operator, minus operator and unary minus operator in `handmade_math.h`
+- Define `v2` and implement add operator, minus operator and unary minus operator in `handmade_math.h`
 - Use v2 instead of x and y
 
 ### Day 43: The Equations of Motion
@@ -427,11 +513,11 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 ### Day 44: Reflecting Vectors
 
 - Implement inner product for vectors
-- Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math (v' = v - 2 * Inner(v, r) * r). r means the vector of the reflecting direction. For bottom wall, r is '(0, 1)'.
+- Reflect speed when player hits the wall (or make the speed align the wall). This can be implemented by a clever verctor math `v' = v - 2 * Inner(v, r) * r`. r means the vector of the reflecting direction. For bottom wall, r is `(0, 1)`.
 
 ### Day 45: Geometric vs. Temporal Movement Search
 
-- OPINION: Search in p(position) is way better than searing in t(time)
+- OPINION: Search in p (position) is way better than searing in t (time)
 - Part of new collision detection algorithm
 - There is no code today. I will write the new collision detection algorithm when it's complete.
 
@@ -445,12 +531,12 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 ### Day 47: Vector Lengths
 
 - Define `Length`, `SquareRoot` to fix diagonal movement problem
-- We will _USE_ search in t instead of search in p, because the later will have to build the search space and that is a complicated thing to do
+- We will ue **search in t instead of search in p**. Because to implement the later, we have to build the whole search space. It's complex and doesn't pay off.
 - Part of new collision detection algorithm
 
 ### Day 48: Line Segment Intersection Collision
 
-- Implement the new collistion test
+- Implement the new collistion detection algorithm
 - Add a `tEpsilon` to tolerate floating point problem
 
 ### Day 49: Debugging Canonical Coordinates
@@ -476,7 +562,7 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 ### Day 52: Entity Movement in Camera Space
 
 - Make player move again
-- Map entity float position to tile map position after moving player
+- Map float position to tile map position after moving player
 - Make camera move again
 
 ### Day 53: Environment Elements as Entities
@@ -494,16 +580,16 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 
 ### Day 55: Hash-based World Storage
 
-- Use int32 as tile index
+- Use int32 as chunk index, so 0 will be the center.
 - Add `TileChunkHash` to tile map
 - `GetTileChunk` should take a memroy arena
-- DIFF: I will store pointers in TileChunkHash array
+- DIFF: I will store pointers instead of index in TileChunkHash array
 
 ### Day 56: Switching from Tiles to Entities
 
 - Rename `CameraBound` to `HighFrequencyBound`
 - Rename `handmade_tile.h/cpp` to `handmade_world.h/cpp`
-- Tile chunk is now world chunk
+- Rename tile chunk to world chunk. We dont have *tiles* anymore.
 
 ### Day 57: Spatially Partitioning Entities
 
@@ -514,8 +600,8 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 ### Day 58: Using the Spatial Partition
 
 - Reimplement `SetCamera` using spatial partition
-- Call `ChangeEntityLocation` when adding low entity
-- Load tree bitmap
+- Call `ChangeEntityLocation` when adding low entities
+- Load tree bitmap and render it as wall
 
 ### Day 59: Adding a Basic Familiar Entity
 
@@ -534,8 +620,8 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 - OPINION: Always write the usage code first. It will prepare you necessary context for writing real stuff.
 - Add `EntityType_Sword` entity type
 - Define `DrawHitPoints()` and `InitHitPoints()` and add hitpoints for our monster
-- Add sword bitmap to game state and show the sword when some key is pressed
-- Define `NullPosition()` and `IsPositionValid()`
+- Load *rock03.bmp* as sword and render it when some key is pressed
+- Define `NullPosition()` and `IsPositionValid()`. Use some specific value to represent a null position.
 
 ### Day 62: Basic Moving Projectiles
 
@@ -543,22 +629,11 @@ In Casey's view, game architect is like a __Urban Planner__. Their job are organ
 - Add `distanceRemaining` to sword
 - Define `UpdateSword` and make sword disappaer when distance remaining reaches to zero
 
-### Day 63 & 64 & 65 & 66 Major Refactoring
+### Day 63 & 64 & 65 & 66: Major Refactoring with Simulation Region
 
-- stored_entity / entity
+This is a big change but it defeinitely worth it.
 
-## Windows
-
-### Command Prompt
-
-- `dir /s [keyword]`: search files
-- `findstr -s -n -i -l [keyword]`: find strings
-
-### Win32 API
-
-- `WS_EX_TOPMOST`: make window in front of others
-- `WS_EX_LAYERED` and `SetLayeredWindowAttributes `: change window alpha
-
-### Visual Studio
-
-- `Spy++`: inspect windows and messages
+- Remove `low_entity` and `high_entity`. They are never a good idea.
+- Define `sim_entity` and `stored_entity`. `stored_entity` is for storage and `sim_entity` is for simulation.
+- Every frame, pull relevant entities to our simulation region, simulate it and render it.
+- Lots of modifications adjusted for this new model

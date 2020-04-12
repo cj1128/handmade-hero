@@ -2,6 +2,7 @@
 #define HANDMADE_SIM_REGION_H
 
 struct move_spec {
+  bool32 unitddP;
   real32 ddPScale;
   real32 drag;
 };

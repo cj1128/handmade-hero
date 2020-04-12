@@ -70,7 +70,7 @@ AddHero(game_state *state) {
   InitHitPoints(hero, 3);
 
   hero->sim.facingDirection = 0;
-  // hero->sim.sword.stored = AddSword(state);
+  hero->sim.sword.stored = AddSword(state);
 
   return hero;
 }
@@ -203,10 +203,10 @@ internal void
 DrawBitmap(
   game_offscreen_buffer *buffer,
   loaded_bitmap *bitmap,
-  v2 Position,
+  v2 position,
   v2 offset = v2{}) {
-  int32 minX = RoundReal32ToInt32(Position.x - offset.x);
-  int32 minY = RoundReal32ToInt32(Position.y - offset.y);
+  int32 minX = RoundReal32ToInt32(position.x - offset.x);
+  int32 minY = RoundReal32ToInt32(position.y - offset.y);
   int32 maxX = minX + bitmap->width;
   int32 maxY = minY + bitmap->height;
 
@@ -656,6 +656,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
             move_spec moveSpec = HeroMoveSpec();
             MoveEntity(simRegion, &moveSpec, entity, input->dt, conHero->ddP);
             if(conHero->dSword.x != 0.0f || conHero->dSword.y != 0.0f) {
+              sim_entity *sword = entity->sword.entity;
+              Assert(sword);
+
+              if(HasFlag(sword, EntityFlag_NonSpatial)) {
+                sword->distanceRemaining = 5.0f;
+                MakeEntitySpatial(sword, entity->p, 8.0f * conHero->dSword);
+              }
             }
           }
         }
@@ -666,23 +673,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } break;
 
       case EntityType_Sword: {
-        // if(dSword.x != 0.0f || dSword.y != 0.0f) {
-        //   stored_entity *sword = stored->sword;
-        //   if(sword && !IsPositionValid(sword->p)) {
-        //     sword->p = stored->p;
-        //     ChangeEntityLocation(
-        //       &state->worldArena,
-        //       &state->world,
-        //       sword,
-        //       NULL,
-        //       &sword->p);
-        //     MakeEntityHighFrequency(state, sword);
-        //     sword->distanceRemaining = 5.0f;
-        //     sword->highEntity->dP = 8.0f * dSword;
-        //   }
-        // }
-        // UpdateSword(state, entity, input->dt);
-        // PushPiece(&pieceGroup, &state->sword, v2{28, 22});
+        UpdateSword(simRegion, entity, input->dt);
+        PushPiece(&pieceGroup, &state->sword, v2{28, 22});
       } break;
 
       case EntityType_Wall: {

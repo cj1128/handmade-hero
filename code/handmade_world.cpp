@@ -221,7 +221,9 @@ ChangeEntityLocation(
 
   if(newP) {
     stored->p = *newP;
+    ClearFlag(&stored->sim, EntityFlag_NonSpatial);
   } else {
     stored->p = NullPosition();
+    AddFlag(&stored->sim, EntityFlag_NonSpatial);
   }
 }

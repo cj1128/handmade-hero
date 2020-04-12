@@ -3,6 +3,7 @@ HeroMoveSpec() {
   move_spec result = {};
   result.ddPScale = 80.0f;
   result.drag = 8.0f;
+  result.unitddP = true;
   return result;
 }
 
@@ -29,24 +30,22 @@ UpdateFamiliar(sim_region *simRegion, sim_entity *entity, real32 dt) {
   }
 }
 
-// internal void
-// UpdateSword(game_state *state, high_entity *sword, real32 dt) {
-//   move_spec moveSpec = {};
-//   moveSpec.ddPScale = 0.0f;
-//   moveSpec.drag = 0.0f;
+internal void
+UpdateSword(sim_region *simRegion, sim_entity *sword, real32 dt) {
+  if(HasFlag(sword, EntityFlag_NonSpatial)) {
+    return;
+  }
 
-//   v2 oldP = sword->p;
-//   MoveEntity(&moveSpec, state, sword, dt, v2{0, 0});
-//   real32 distance = Length(sword->p - oldP);
-//   sword->stored->distanceRemaining -= distance;
+  move_spec moveSpec = {};
+  moveSpec.ddPScale = 0.0f;
+  moveSpec.drag = 0.0f;
 
-//   if(sword->stored->distanceRemaining <= 0) {
-//     ChangeEntityLocation(
-//       &state->worldArena,
-//       &state->world,
-//       sword->stored,
-//       &sword->stored->p,
-//       NULL);
-//     sword->stored->p = NullPosition();
-//   }
-// }
+  v2 oldP = sword->p;
+  MoveEntity(simRegion, &moveSpec, sword, dt, v2{0, 0});
+  real32 distance = Length(sword->p - oldP);
+  sword->distanceRemaining -= distance;
+
+  if(sword->distanceRemaining <= 0) {
+    MakeEntityNonSpatial(sword);
+  }
+}

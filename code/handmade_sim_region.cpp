@@ -57,32 +57,31 @@ GetHashFromStored(sim_region *simRegion, stored_entity *stored) {
   return result;
 }
 
+internal void
+LoadEntityReference(sim_region *simRegion, entity_reference *ref);
 internal sim_entity *
 AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v2 p) {
   Assert(stored);
-  Assert(p.x != INVALID_P.x && p.y != INVALID_P.y);
 
   sim_entity *result = NULL;
-  sim_region_hash *entry = GetHashFromStored(simRegion, stored);
-  Assert(entry);
 
+  sim_region_hash *entry = GetHashFromStored(simRegion, stored);
   if(entry->stored == NULL) {
     Assert(simRegion->entityCount < ArrayCount(simRegion->entities));
     sim_entity *entity = simRegion->entities + simRegion->entityCount++;
     *entity = stored->sim;
     entity->stored = stored;
-    // TOOD: load entity reference
+
+    LoadEntityReference(simRegion, &entity->sword);
 
     Assert(!HasFlag(&stored->sim, EntityFlag_Simming));
     AddFlag(&stored->sim, EntityFlag_Simming);
-    Assert(HasFlag(&stored->sim, EntityFlag_Simming));
 
     entry->entity = entity;
     entry->stored = stored;
 
     result = entity;
   } else {
-    Assert(!"error");
     result = entry->entity;
   }
 
@@ -90,6 +89,20 @@ AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v2 p) {
   result->p = p;
 
   return result;
+}
+
+inline void
+StoreEntityReference(entity_reference *ref) {
+  if(ref->entity) {
+    ref->stored = ref->entity->stored;
+  }
+}
+
+internal void
+LoadEntityReference(sim_region *simRegion, entity_reference *ref) {
+  if(ref->stored) {
+    ref->entity = AddEntityToSimRegion(simRegion, ref->stored, INVALID_P);
+  }
 }
 
 internal sim_region *
@@ -123,7 +136,7 @@ BeginSim(
             stored_entity *stored = block->entities[index];
             Assert(stored);
 
-            if(!HasFlag(&stored->sim, EntityFlag_Nonspatial)) {
+            if(!HasFlag(&stored->sim, EntityFlag_NonSpatial)) {
               v2 simSpaceP = GetSimSpaceP(simRegion, stored);
 
               if(IsInRectangle(bounds, simSpaceP)) {
@@ -149,6 +162,14 @@ MoveEntity(
   Assert(entity);
 
   game_world *world = simRegion->world;
+
+  // Fix diagonal movement problem
+  if(spec->unitddP) {
+    real32 ddPLength = Length(ddP);
+    if(ddPLength > 1.0f) {
+      ddP *= (1.0f / ddPLength);
+    }
+  }
 
   ddP *= spec->ddPScale;
   ddP += -spec->drag * entity->dP;
@@ -267,10 +288,11 @@ EndSim(sim_region *simRegion, game_state *state) {
 
     Assert(HasFlag(&stored->sim, EntityFlag_Simming));
     stored->sim = *entity;
-    Assert(!HasFlag(&stored->sim, EntityFlag_Simming));
+
+    StoreEntityReference(&stored->sim.sword);
 
     world_position newP =
-      HasFlag(entity, EntityFlag_Nonspatial)
+      HasFlag(entity, EntityFlag_NonSpatial)
         ? NullPosition()
         : MapIntoWorldSpace(simRegion->world, simRegion->origin, entity->p);
 
