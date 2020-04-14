@@ -20,8 +20,8 @@ enum entity_type {
 };
 
 enum entity_flag {
-  EntityFlag_Collides = (1 << 1),
-  EntityFlag_NonSpatial = (1 << 2),
+  EntityFlag_Collides = (1 << 0),
+  EntityFlag_NonSpatial = (1 << 1),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),
@@ -35,9 +35,10 @@ union entity_reference {
 };
 
 struct sim_entity {
-  entity_type type;
-
   stored_entity *stored;
+  bool32 updatable;
+
+  entity_type type;
 
   uint32 flags;
 

@@ -132,6 +132,14 @@ RectCenterDim(v2 center, v2 dim) {
   return result;
 }
 
+inline rectangle2
+AddRadiusWH(rectangle2 rect, real32 w, real32 h) {
+  rectangle2 result = rect;
+  result.min -= v2{w, h};
+  result.max += v2{w, h};
+  return result;
+}
+
 inline bool32
 IsInRectangle(rectangle2 rect, v2 test) {
   bool32 result = (test.x >= rect.min.x) && (test.x <= rect.max.x) &&

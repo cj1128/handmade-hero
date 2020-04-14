@@ -12,6 +12,11 @@ IsValid(world_position *p) {
   return p->chunkX != INT32_MAX;
 }
 
+inline bool32
+IsValid(v2 p) {
+  return p.x != INVALID_P.x && p.y != INVALID_P.y;
+}
+
 inline world_chunk *
 GetWorldChunk(
   game_world *world,

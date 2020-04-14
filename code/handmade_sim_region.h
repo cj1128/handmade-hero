@@ -17,6 +17,7 @@ struct sim_region {
 
   world_position origin;
   rectangle2 bounds;
+  rectangle2 updatableBounds;
 
   uint32 entityCount;
   sim_entity entities[4096];

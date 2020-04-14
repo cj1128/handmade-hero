@@ -25,12 +25,13 @@ TestWall(
 
 internal v2
 GetSimSpaceP(sim_region *simRegion, stored_entity *entity) {
-  v2 result = {};
-  Assert(IsValid(&entity->p));
+  v2 result = INVALID_P;
 
-  world_diff diff =
-    SubtractPosition(simRegion->world, entity->p, simRegion->origin);
-  result = diff.dXY;
+  if(IsValid(&entity->p)) {
+    world_diff diff =
+      SubtractPosition(simRegion->world, entity->p, simRegion->origin);
+    result = diff.dXY;
+  }
 
   return result;
 }
@@ -77,6 +78,12 @@ AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v2 p) {
     Assert(!HasFlag(&stored->sim, EntityFlag_Simming));
     AddFlag(&stored->sim, EntityFlag_Simming);
 
+    if(IsValid(p) && IsInRectangle(simRegion->updatableBounds, p)) {
+      entity->updatable = true;
+    } else {
+      entity->updatable = false;
+    }
+
     entry->entity = entity;
     entry->stored = stored;
 
@@ -101,7 +108,10 @@ StoreEntityReference(entity_reference *ref) {
 internal void
 LoadEntityReference(sim_region *simRegion, entity_reference *ref) {
   if(ref->stored) {
-    ref->entity = AddEntityToSimRegion(simRegion, ref->stored, INVALID_P);
+    ref->entity = AddEntityToSimRegion(
+      simRegion,
+      ref->stored,
+      GetSimSpaceP(simRegion, ref->stored));
   }
 }
 
@@ -115,9 +125,13 @@ BeginSim(
   simRegion->entityCount = 0;
   ZeroStruct(simRegion->hash);
 
+  real32 inactiveRadius = 1.0f;
+
   simRegion->world = &state->world;
   simRegion->origin = origin;
-  simRegion->bounds = bounds;
+  simRegion->updatableBounds = bounds;
+  simRegion->bounds =
+    AddRadiusWH(simRegion->updatableBounds, inactiveRadius, inactiveRadius);
 
   world_position minChunk =
     MapIntoWorldSpace(simRegion->world, origin, bounds.min);
@@ -139,7 +153,7 @@ BeginSim(
             if(!HasFlag(&stored->sim, EntityFlag_NonSpatial)) {
               v2 simSpaceP = GetSimSpaceP(simRegion, stored);
 
-              if(IsInRectangle(bounds, simSpaceP)) {
+              if(IsInRectangle(simRegion->bounds, simSpaceP)) {
                 AddEntityToSimRegion(simRegion, stored, simSpaceP);
               }
             }

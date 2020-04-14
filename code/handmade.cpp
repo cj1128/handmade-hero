@@ -320,7 +320,7 @@ PushRectangle(render_piece_group *group, v2 offset, v2 halfDim, v3 color) {
 internal void
 DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup) {
   if(entity->hitPointCount > 0) {
-    v2 halfDim = {0.2f, 0.1f};
+    v2 halfDim = {0.1f, 0.08f};
     real32 spanX = 1.5f * 2 * halfDim.x;
     real32 startX = -0.5f * (entity->hitPointCount - 1) * spanX;
     real32 startY = -0.75f * entity->height;
@@ -643,9 +643,18 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
+
+    if(!entity->updatable) {
+      continue;
+    }
+
     render_piece_group pieceGroup = {};
 
     hero_bitmaps heroBitmaps = state->heroBitmaps[entity->facingDirection];
+
+    move_spec moveSpec = {};
+    v2 ddP = {};
+    v2 oldSwordP = {};
 
     switch(entity->type) {
       case EntityType_Hero: {
@@ -653,8 +662,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
             conIndex++) {
           controlled_hero *conHero = state->controlledHeroes + conIndex;
           if(entity->stored == conHero->stored) {
-            move_spec moveSpec = HeroMoveSpec();
-            MoveEntity(simRegion, &moveSpec, entity, input->dt, conHero->ddP);
+            moveSpec = HeroMoveSpec();
+            ddP = conHero->ddP;
+
             if(conHero->dSword.x != 0.0f || conHero->dSword.y != 0.0f) {
               sim_entity *sword = entity->sword.entity;
               Assert(sword);
@@ -673,7 +683,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } break;
 
       case EntityType_Sword: {
-        UpdateSword(simRegion, entity, input->dt);
+        if(!HasFlag(entity, EntityFlag_NonSpatial)) {
+          oldSwordP = entity->p;
+          moveSpec.ddPScale = 0.0f;
+          moveSpec.drag = 0.0f;
+        }
+
         PushPiece(&pieceGroup, &state->sword, v2{28, 22});
       } break;
 
@@ -687,12 +702,42 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } break;
 
       case EntityType_Familiar: {
-        UpdateFamiliar(simRegion, entity, input->dt);
+        sim_entity *closestHero = NULL;
+        real32 closestDSq = Square(10.0f);
+
+        for(uint32 i = 0; i < simRegion->entityCount; i++) {
+          sim_entity *testEntity = simRegion->entities + i;
+          if(testEntity->type == EntityType_Hero) {
+            real32 testDSq = LengthSq(testEntity->p - entity->p);
+            if(testDSq < closestDSq) {
+              closestDSq = testDSq;
+              closestHero = testEntity;
+            }
+          }
+        }
+
+        if(closestHero && (closestDSq >= Square(3.0f))) {
+          ddP = closestHero->p - entity->p;
+        }
+
+        moveSpec = HeroMoveSpec();
         PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
       } break;
 
       default: {
         InvalidCodePath;
+      }
+    }
+
+    if(!HasFlag(entity, EntityFlag_NonSpatial)) {
+      MoveEntity(simRegion, &moveSpec, entity, input->dt, ddP);
+
+      if(entity->type == EntityType_Sword) {
+        real32 distance = Length(entity->p - oldSwordP);
+        entity->distanceRemaining -= distance;
+        if(entity->distanceRemaining <= 0) {
+          MakeEntityNonSpatial(entity);
+        }
       }
     }
 

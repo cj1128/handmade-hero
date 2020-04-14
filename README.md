@@ -119,6 +119,7 @@ My preferred code style for C is different from Casey's.
 - [Day 61: Adding a Simple Attack](#day-61-adding-a-simple-attack)
 - [Day 62: Basic Moving Projectiles](#day-62-basic-moving-projectiles)
 - [Day 63 & 64 & 65 & 66: Major Refactoring with Simulation Region](#day-63--64--65--66-major-refactoring-with-simulation-region)
+- [Day 67: Making Updates Conditional](#day-67-making-updates-conditional)
 
 <!-- /MarkdownTOC -->
 
@@ -637,3 +638,12 @@ This is a big change but it defeinitely worth it.
 - Define `sim_entity` and `stored_entity`. `stored_entity` is for storage and `sim_entity` is for simulation.
 - Every frame, pull relevant entities to our simulation region, simulate it and render it.
 - Lots of modifications adjusted for this new model
+
+### Day 67: Making Updates Conditional
+
+- Add `updatable` to sim entity and set it correspondingly
+- Add `updatableBounds` to sim region. Previous bounds becomes total bounds.
+- `LoadEntityReference` should get position from reference entity
+- `UpdateSword` doesn't have to check NonSpatial flag
+- Move update logic back to our main function
+- OPINION: Avoid callbacks, plain switch statements are just better on every aspect.
