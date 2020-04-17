@@ -120,6 +120,7 @@ My preferred code style for C is different from Casey's.
 - [Day 62: Basic Moving Projectiles](#day-62-basic-moving-projectiles)
 - [Day 63 & 64 & 65 & 66: Major Refactoring with Simulation Region](#day-63--64--65--66-major-refactoring-with-simulation-region)
 - [Day 67: Making Updates Conditional](#day-67-making-updates-conditional)
+- [Day 68: Exact Enforcement of Maximum Movement Distances](#day-68-exact-enforcement-of-maximum-movement-distances)
 
 <!-- /MarkdownTOC -->
 
@@ -647,3 +648,9 @@ This is a big change but it defeinitely worth it.
 - `UpdateSword` doesn't have to check NonSpatial flag
 - Move update logic back to our main function
 - OPINION: Avoid callbacks, plain switch statements are just better on every aspect.
+
+### Day 68: Exact Enforcement of Maximum Movement Distances
+
+- Consider `distanceLimit` in moveEntity function
+- OPINION: Fight the double dispatch problem with a property system.
+- Define a simple `HandleCollision` function to make sword hurt monster when they collides

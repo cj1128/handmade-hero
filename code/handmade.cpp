@@ -1,8 +1,8 @@
 #include "handmade.h"
 #include "handmade_random.h"
 #include "handmade_world.cpp"
-#include "handmade_sim_region.cpp"
 #include "handmade_entity.cpp"
+#include "handmade_sim_region.cpp"
 
 internal stored_entity *
 AddStoredEntity(game_state *state, entity_type type, world_position p) {
@@ -17,12 +17,11 @@ AddStoredEntity(game_state *state, entity_type type, world_position p) {
 }
 
 internal stored_entity *
-AddStoredEntity(
-  game_state *state,
-  entity_type type,
-  int32 tileX,
-  int32 tileY,
-  int32 tileZ) {
+AddStoredEntity(game_state *state,
+                entity_type type,
+                int32 tileX,
+                int32 tileY,
+                int32 tileZ) {
   world_position p =
     WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
   return AddStoredEntity(state, type, p);
@@ -135,10 +134,9 @@ ProcessPixelWithMask(uint32 Pixel, uint32 Mask) {
 // we just need to load sutff from ourself's
 // pixels from bottom to top
 internal loaded_bitmap
-LoadBMP(
-  thread_context *thread,
-  debug_platform_read_file ReadFile,
-  char *fileName) {
+LoadBMP(thread_context *thread,
+        debug_platform_read_file ReadFile,
+        char *fileName) {
   loaded_bitmap result = {};
 
   debug_read_file_result ReadResult = ReadFile(thread, fileName);
@@ -200,11 +198,10 @@ InitializeArena(memory_arena *arena, size_t size, void *base) {
 }
 
 internal void
-DrawBitmap(
-  game_offscreen_buffer *buffer,
-  loaded_bitmap *bitmap,
-  v2 position,
-  v2 offset = v2{}) {
+DrawBitmap(game_offscreen_buffer *buffer,
+           loaded_bitmap *bitmap,
+           v2 position,
+           v2 offset = v2{}) {
   int32 minX = RoundReal32ToInt32(position.x - offset.x);
   int32 minY = RoundReal32ToInt32(position.y - offset.y);
   int32 maxX = minX + bitmap->width;
@@ -331,11 +328,10 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup) {
       if(hitPoint->amount > 0) {
         color = v3{1.0f, 0.0f, 0.0f};
       }
-      PushRectangle(
-        pieceGroup,
-        v2{startX + spanX * hitPointIndex, startY},
-        halfDim,
-        color);
+      PushRectangle(pieceGroup,
+                    v2{startX + spanX * hitPointIndex, startY},
+                    halfDim,
+                    color);
     }
   }
 }
@@ -356,10 +352,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   if(!memory->isInitialized) {
     memory->isInitialized = true;
 
-    state->background = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_background.bmp");
+    state->background = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_background.bmp");
     state->tree =
       LoadBMP(thread, memory->debugPlatformReadFile, "test2/tree00.bmp");
     state->sword =
@@ -367,68 +362,55 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     hero_bitmaps *heroBitmaps = &state->heroBitmaps[0];
     heroBitmaps->offset = v2{72, 35};
-    heroBitmaps->head = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_right_head.bmp");
-    heroBitmaps->cape = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_right_cape.bmp");
-    heroBitmaps->torso = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_right_torso.bmp");
+    heroBitmaps->head = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_right_head.bmp");
+    heroBitmaps->cape = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_right_cape.bmp");
+    heroBitmaps->torso = LoadBMP(thread,
+                                 memory->debugPlatformReadFile,
+                                 "test/test_hero_right_torso.bmp");
     heroBitmaps++;
 
     heroBitmaps->offset = v2{72, 35};
-    heroBitmaps->head = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_back_head.bmp");
-    heroBitmaps->cape = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_back_cape.bmp");
-    heroBitmaps->torso = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_back_torso.bmp");
+    heroBitmaps->head = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_back_head.bmp");
+    heroBitmaps->cape = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_back_cape.bmp");
+    heroBitmaps->torso = LoadBMP(thread,
+                                 memory->debugPlatformReadFile,
+                                 "test/test_hero_back_torso.bmp");
     heroBitmaps++;
 
     heroBitmaps->offset = v2{72, 35};
-    heroBitmaps->head = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_left_head.bmp");
-    heroBitmaps->cape = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_left_cape.bmp");
-    heroBitmaps->torso = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_left_torso.bmp");
+    heroBitmaps->head = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_left_head.bmp");
+    heroBitmaps->cape = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_left_cape.bmp");
+    heroBitmaps->torso = LoadBMP(thread,
+                                 memory->debugPlatformReadFile,
+                                 "test/test_hero_left_torso.bmp");
     heroBitmaps++;
 
     heroBitmaps->offset = v2{72, 35};
-    heroBitmaps->head = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_front_head.bmp");
-    heroBitmaps->cape = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_front_cape.bmp");
-    heroBitmaps->torso = LoadBMP(
-      thread,
-      memory->debugPlatformReadFile,
-      "test/test_hero_front_torso.bmp");
+    heroBitmaps->head = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_front_head.bmp");
+    heroBitmaps->cape = LoadBMP(thread,
+                                memory->debugPlatformReadFile,
+                                "test/test_hero_front_cape.bmp");
+    heroBitmaps->torso = LoadBMP(thread,
+                                 memory->debugPlatformReadFile,
+                                 "test/test_hero_front_torso.bmp");
 
-    InitializeArena(
-      worldArena,
-      memory->permanentStorageSize - sizeof(game_state),
-      (uint8 *)memory->permanentStorage + sizeof(game_state));
+    InitializeArena(worldArena,
+                    memory->permanentStorageSize - sizeof(game_state),
+                    (uint8 *)memory->permanentStorage + sizeof(game_state));
 
     world->tileSizeInMeters = 1.4f;
     world->chunkSizeInMeters = TILES_PER_CHUNK * world->tileSizeInMeters;
@@ -547,11 +529,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     int32 cameraTileX = screenBaseX * tilesPerWidth + tilesPerWidth / 2;
     int32 cameraTileY = screenBaseY * tilesPerHeight + tilesPerHeight / 2;
     int32 cameraTileZ = 0;
-    newCameraP = WorldPositionFromTilePosition(
-      world,
-      cameraTileX,
-      cameraTileY,
-      cameraTileZ);
+    newCameraP = WorldPositionFromTilePosition(world,
+                                               cameraTileX,
+                                               cameraTileY,
+                                               cameraTileZ);
     state->cameraP = newCameraP;
 
     AddMonster(state, cameraTileX + 2, cameraTileY + 2, cameraTileZ);
@@ -622,21 +603,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     world->tileSizeInMeters * v2{(real32)tileSpanX, (real32)tileSpanY});
 
   memory_arena simArena;
-  InitializeArena(
-    &simArena,
-    memory->transientStorageSize,
-    memory->transientStorage);
+  InitializeArena(&simArena,
+                  memory->transientStorageSize,
+                  memory->transientStorage);
   sim_region *simRegion =
     BeginSim(&simArena, state, state->cameraP, cameraBounds);
 
   // Render
 
   // Background
-  DrawRectangle(
-    buffer,
-    v2{0, 0},
-    v2{(real32)buffer->width, (real32)buffer->height},
-    v3{0.5f, 0.5f, 0.5f});
+  DrawRectangle(buffer,
+                v2{0, 0},
+                v2{(real32)buffer->width, (real32)buffer->height},
+                v3{0.5f, 0.5f, 0.5f});
   // DrawBitmap(buffer, state->background, 0, 0);
 
   v2 ScreenCenter = {(real32)buffer->width / 2, (real32)buffer->height / 2};
@@ -670,7 +649,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
               Assert(sword);
 
               if(HasFlag(sword, EntityFlag_NonSpatial)) {
-                sword->distanceRemaining = 5.0f;
+                sword->distanceLimit = 5.0f;
                 MakeEntitySpatial(sword, entity->p, 8.0f * conHero->dSword);
               }
             }
@@ -683,10 +662,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       } break;
 
       case EntityType_Sword: {
-        if(!HasFlag(entity, EntityFlag_NonSpatial)) {
-          oldSwordP = entity->p;
-          moveSpec.ddPScale = 0.0f;
-          moveSpec.drag = 0.0f;
+        moveSpec.ddPScale = 0.0f;
+        moveSpec.drag = 0.0f;
+
+        if(entity->distanceLimit <= 0.0f) {
+          MakeEntityNonSpatial(entity);
         }
 
         PushPiece(&pieceGroup, &state->sword, v2{28, 22});
@@ -731,23 +711,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
     if(!HasFlag(entity, EntityFlag_NonSpatial)) {
       MoveEntity(simRegion, &moveSpec, entity, input->dt, ddP);
-
-      if(entity->type == EntityType_Sword) {
-        real32 distance = Length(entity->p - oldSwordP);
-        entity->distanceRemaining -= distance;
-        if(entity->distanceRemaining <= 0) {
-          MakeEntityNonSpatial(entity);
-        }
-      }
     }
 
     v2 entityCenter = ScreenCenter + entity->p * MetersToPixels;
-    v2 entityMin = entityCenter + v2{
-                                    -0.5f * entity->width * MetersToPixels,
-                                    -0.5f * entity->height * MetersToPixels};
-    v2 entityMax = entityCenter + v2{
-                                    0.5f * entity->width * MetersToPixels,
-                                    0.5f * entity->height * MetersToPixels};
+    v2 entityMin = entityCenter + v2{-0.5f * entity->width * MetersToPixels,
+                                     -0.5f * entity->height * MetersToPixels};
+    v2 entityMax = entityCenter + v2{0.5f * entity->width * MetersToPixels,
+                                     0.5f * entity->height * MetersToPixels};
 
     DrawRectangle(buffer, entityMin, entityMax, v3{1.0f, 1.0f, 0.0f});
 
@@ -757,13 +727,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       if(piece->bitmap) {
         DrawBitmap(buffer, piece->bitmap, entityCenter, piece->offset);
       } else {
-        DrawRectangle(
-          buffer,
-          entityCenter + MetersToPixels * piece->offset -
-            MetersToPixels * piece->halfDim,
-          entityCenter + MetersToPixels * piece->offset +
-            MetersToPixels * piece->halfDim,
-          piece->color);
+        DrawRectangle(buffer,
+                      entityCenter + MetersToPixels * piece->offset -
+                        MetersToPixels * piece->halfDim,
+                      entityCenter + MetersToPixels * piece->offset +
+                        MetersToPixels * piece->halfDim,
+                      piece->color);
       }
     }
   }

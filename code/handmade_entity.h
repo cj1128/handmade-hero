@@ -54,7 +54,8 @@ struct sim_entity {
   uint32 hitPointCount;
   hit_point hitPoints[16];
 
-  real32 distanceRemaining;
+  // 0 means no limit
+  real32 distanceLimit;
 
   entity_reference sword;
 };
