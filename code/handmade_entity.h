@@ -20,8 +20,7 @@ enum entity_type {
 };
 
 enum entity_flag {
-  EntityFlag_Collides = (1 << 0),
-  EntityFlag_NonSpatial = (1 << 1),
+  EntityFlag_NonSpatial = (1 << 0),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),

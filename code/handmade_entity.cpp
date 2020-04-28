@@ -9,20 +9,23 @@ HeroMoveSpec() {
 
 internal bool32
 HandleCollision(sim_entity *a, sim_entity *b) {
-  // TODO: this is ugly
-  if(a->type == EntityType_Sword && b->type == EntityType_Monster) {
-    if(b->hitPointCount > 0) {
-      b->hitPointCount--;
-    }
-    return true;
+  bool32 stopsOnCollision = true;
+
+  if(a->type > b->type) {
+    sim_entity *tmp = a;
+    a = b;
+    b = tmp;
+  }
+
+  if(b->type == EntityType_Sword) {
+    stopsOnCollision = false;
   }
 
   if(a->type == EntityType_Monster && b->type == EntityType_Sword) {
-    if(b->hitPointCount > 0) {
-      b->hitPointCount--;
+    if(a->hitPointCount > 0) {
+      a->hitPointCount--;
     }
-    return true;
   }
 
-  return false;
+  return stopsOnCollision;
 }

@@ -58,8 +58,7 @@ GetHashFromStored(sim_region *simRegion, stored_entity *stored) {
   return result;
 }
 
-internal void
-LoadEntityReference(sim_region *simRegion, entity_reference *ref);
+internal void LoadEntityReference(sim_region *simRegion, entity_reference *ref);
 internal sim_entity *
 AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v2 p) {
   Assert(stored);
@@ -165,7 +164,88 @@ BeginSim(memory_arena *arena,
 }
 
 internal void
-MoveEntity(sim_region *simRegion,
+ClearCollisionRulesFor(game_state *state, stored_entity *entity) {
+  // TODO: need a better way than linear search
+  for(uint32 bucket = 0; bucket < ArrayCount(state->collisionRuleHash);
+      bucket++) {
+    for(pairwise_collision_rule **rule = &state->collisionRuleHash[bucket];
+        *rule;) {
+      if((*rule)->a == entity || (*rule)->b == entity) {
+        pairwise_collision_rule *removed = *rule;
+        *rule = (*rule)->nextInHash;
+        removed->nextInHash = state->firstFreeCollisionRule;
+        state->firstFreeCollisionRule = removed;
+      } else {
+        rule = &(*rule)->nextInHash;
+      }
+    }
+  }
+}
+
+internal void
+AddCollisionRule(game_state *state,
+                 stored_entity *a,
+                 stored_entity *b,
+                 bool32 shouldCollide) {
+  if(a->sim.type > b->sim.type) {
+    stored_entity *tmp = a;
+    a = b;
+    b = tmp;
+  }
+
+  pairwise_collision_rule *found = NULL;
+  uint32 bucket = (uintptr_t)a & (ArrayCount(state->collisionRuleHash) - 1);
+  for(pairwise_collision_rule *rule = state->collisionRuleHash[bucket]; rule;
+      rule = rule->nextInHash) {
+    if(rule->a == a && rule->b == b) {
+      found = rule;
+      break;
+    }
+  }
+
+  if(!found) {
+    found = state->firstFreeCollisionRule;
+
+    if(found) {
+      state->firstFreeCollisionRule = found->nextInHash;
+    } else {
+      found = PushStruct(&state->worldArena, pairwise_collision_rule);
+    }
+
+    found->nextInHash = state->collisionRuleHash[bucket];
+    state->collisionRuleHash[bucket] = found;
+  }
+
+  found->a = a;
+  found->b = b;
+  found->shouldCollide = shouldCollide;
+}
+
+internal bool32
+ShouldCollide(game_state *state, stored_entity *a, stored_entity *b) {
+  bool32 result = true;
+
+  if(a->sim.type > b->sim.type) {
+    stored_entity *tmp = a;
+    a = b;
+    b = tmp;
+  }
+
+  uint32 hashBucket = (uintptr_t)a & (ArrayCount(state->collisionRuleHash) - 1);
+  for(pairwise_collision_rule *rule = state->collisionRuleHash[hashBucket];
+      rule;
+      rule = rule->nextInHash) {
+    if(rule->a == a && rule->b == b) {
+      result = rule->shouldCollide;
+    }
+  }
+
+  return result;
+}
+
+internal void
+MoveEntity(game_state *state,
+           sim_region *simRegion,
            move_spec *spec,
            sim_entity *entity,
            real32 dt,
@@ -199,14 +279,13 @@ MoveEntity(sim_region *simRegion,
 
     real32 entityDeltaLength = Length(entityDelta);
 
-    if(entityDeltaLength <= 0.0f) {
+    if(entityDeltaLength == 0.0f) {
       break;
     }
 
     if(entityDeltaLength > distanceRemaining) {
       tMin = distanceRemaining / entityDeltaLength;
     }
-    real32 originalTMin = tMin;
 
     sim_entity *hitEntity = NULL;
     v2 WallNormal = {};
@@ -215,7 +294,8 @@ MoveEntity(sim_region *simRegion,
     for(uint32 index = 0; index < simRegion->entityCount; index++) {
       sim_entity *testEntity = simRegion->entities + index;
       if(testEntity != entity) {
-        if(HasFlag(testEntity, EntityFlag_Collides)) {
+        if(!HasFlag(testEntity, EntityFlag_NonSpatial) &&
+           ShouldCollide(state, entity->stored, testEntity->stored)) {
           v2 Rel = entity->p - testEntity->p;
 
           real32 radiusW = 0.5f * testEntity->width + 0.5f * entity->width;
@@ -272,26 +352,21 @@ MoveEntity(sim_region *simRegion,
       }
     }
 
-    if(!HasFlag(entity, EntityFlag_Collides)) {
-      tMin = originalTMin;
-    }
-
     entity->p += tMin * entityDelta;
     distanceRemaining -= tMin * entityDeltaLength;
 
     if(hitEntity) {
-      if(HandleCollision(entity, hitEntity)) {
-        MakeEntityNonSpatial(entity);
-      }
+      entityDelta = targetEntityP - entity->p;
 
-      if(HasFlag(entity, EntityFlag_Collides)) {
+      bool32 stopsOnCollision = HandleCollision(entity, hitEntity);
+
+      if(stopsOnCollision) {
         entity->dP =
           entity->dP - 1 * Inner(entity->dP, WallNormal) * WallNormal;
-        entityDelta = targetEntityP - entity->p;
         entityDelta =
           entityDelta - 1 * Inner(entityDelta, WallNormal) * WallNormal;
       } else {
-        break;
+        AddCollisionRule(state, entity->stored, hitEntity->stored, false);
       }
     } else {
       break;

@@ -71,6 +71,13 @@ struct controlled_hero {
   v2 dSword;
 };
 
+struct pairwise_collision_rule {
+  stored_entity *a;
+  stored_entity *b;
+  bool32 shouldCollide;
+  pairwise_collision_rule *nextInHash;
+};
+
 struct game_state {
   memory_arena worldArena;
   game_world world;
@@ -87,6 +94,10 @@ struct game_state {
   loaded_bitmap tree;
   loaded_bitmap sword;
   hero_bitmaps heroBitmaps[4];
+
+  // NOTE: need to be power of two
+  pairwise_collision_rule *collisionRuleHash[4096];
+  pairwise_collision_rule *firstFreeCollisionRule;
 };
 
 #endif

@@ -33,7 +33,6 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ) {
     AddStoredEntity(state, EntityType_Wall, tileX, tileY, tileZ);
   stored->sim.width = state->world.tileSizeInMeters;
   stored->sim.height = stored->sim.width;
-  AddFlag(&stored->sim, EntityFlag_Collides);
 
   return stored;
 }
@@ -64,7 +63,6 @@ AddHero(game_state *state) {
 
   hero->sim.height = 0.5f;
   hero->sim.width = 1.0f;
-  AddFlag(&hero->sim, EntityFlag_Collides);
 
   InitHitPoints(hero, 3);
 
@@ -82,8 +80,6 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ) {
   stored->sim.height = 0.5f;
   stored->sim.width = 1.0f;
 
-  AddFlag(&stored->sim, EntityFlag_Collides);
-
   InitHitPoints(stored, 3);
 }
 
@@ -94,8 +90,6 @@ AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ) {
 
   stored->sim.height = 0.5f;
   stored->sim.width = 1.0f;
-
-  AddFlag(&stored->sim, EntityFlag_Collides);
 }
 
 #pragma pack(push, 1)
@@ -667,6 +661,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
 
         if(entity->distanceLimit <= 0.0f) {
           MakeEntityNonSpatial(entity);
+          ClearCollisionRulesFor(state, entity->stored);
         }
 
         PushPiece(&pieceGroup, &state->sword, v2{28, 22});
@@ -710,7 +705,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
 
     if(!HasFlag(entity, EntityFlag_NonSpatial)) {
-      MoveEntity(simRegion, &moveSpec, entity, input->dt, ddP);
+      MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
     v2 entityCenter = ScreenCenter + entity->p * MetersToPixels;

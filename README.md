@@ -121,6 +121,7 @@ My preferred code style for C is different from Casey's.
 - [Day 63 & 64 & 65 & 66: Major Refactoring with Simulation Region](#day-63--64--65--66-major-refactoring-with-simulation-region)
 - [Day 67: Making Updates Conditional](#day-67-making-updates-conditional)
 - [Day 68: Exact Enforcement of Maximum Movement Distances](#day-68-exact-enforcement-of-maximum-movement-distances)
+- [Day 69: Pairwise Collision Rules](#day-69-pairwise-collision-rules)
 
 <!-- /MarkdownTOC -->
 
@@ -654,3 +655,11 @@ This is a big change but it defeinitely worth it.
 - Consider `distanceLimit` in moveEntity function
 - OPINION: Fight the double dispatch problem with a property system.
 - Define a simple `HandleCollision` function to make sword hurt monster when they collides
+
+### Day 69: Pairwise Collision Rules
+
+- Remove `EntityFlag_Collides`
+- Define `ShouldCollide` to check whether two entities should collide
+- Define `pairwise_collision_rule`
+- Add `collisionRuleHash` and `firstFreeCollisionRule` to game state
+- Define `AddCollisionRule` and `ClearCollisionRulesFor`
