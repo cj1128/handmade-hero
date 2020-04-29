@@ -187,7 +187,7 @@ AddCollisionRule(game_state *state,
                  stored_entity *a,
                  stored_entity *b,
                  bool32 shouldCollide) {
-  if(a->sim.type > b->sim.type) {
+  if(a > b) {
     stored_entity *tmp = a;
     a = b;
     b = tmp;
