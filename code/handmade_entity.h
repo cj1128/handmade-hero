@@ -1,7 +1,7 @@
 #ifndef HANDMADE_ENTITY_H
 #define HANDMADE_ENTITY_H
 
-#define INVALID_P (v2{1000, 1000})
+#define INVALID_P (v3{1000, 1000, 1000})
 
 #define HIT_POINT_AMOUNT 4
 struct hit_point {
@@ -41,8 +41,8 @@ struct sim_entity {
 
   uint32 flags;
 
-  v2 p;
-  v2 dP;
+  v3 p;
+  v3 dP;
 
   // 0: right, 1: up, 2: left, 3: down
   uint32 facingDirection;
@@ -87,7 +87,7 @@ MakeEntityNonSpatial(sim_entity *entity) {
 }
 
 inline void
-MakeEntitySpatial(sim_entity *entity, v2 p, v2 dP) {
+MakeEntitySpatial(sim_entity *entity, v3 p, v3 dP) {
   ClearFlag(entity, EntityFlag_NonSpatial);
   entity->p = p;
   entity->dP = dP;

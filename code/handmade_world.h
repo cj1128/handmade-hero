@@ -3,10 +3,6 @@
 
 #define TILES_PER_CHUNK 16
 
-struct world_diff {
-  v2 dXY;
-};
-
 struct stored_entity;
 struct entity_block {
   stored_entity *entities[16];
@@ -30,12 +26,13 @@ struct world_position {
   int32 chunkZ;
 
   // relative to bottom left
-  v2 offset_;
+  v3 _offset;
 };
 
 struct game_world {
   real32 tileSizeInMeters;
-  real32 chunkSizeInMeters;
+  real32 tileDepthInMeters;
+  v3 chunkDimInMeters;
 
   entity_block *firstFree;
 

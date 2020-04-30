@@ -123,6 +123,7 @@ My preferred code style for C is different from Casey's.
 - [Day 68: Exact Enforcement of Maximum Movement Distances](#day-68-exact-enforcement-of-maximum-movement-distances)
 - [Day 69: Pairwise Collision Rules](#day-69-pairwise-collision-rules)
 - [Day 70: Exploration To-do List](#day-70-exploration-to-do-list)
+- [Day 71: Converting to Full 3D Positioning](#day-71-converting-to-full-3d-positioning)
 
 <!-- /MarkdownTOC -->
 
@@ -713,3 +714,11 @@ To-do list:
 - GAME
   - World generation
   - Entity system
+
+### Day 71: Converting to Full 3D Positioning
+
+- Remove `world_diff`
+- Remove `chunkSizeInMeters` and add `chunkDimInMeters`
+- Define `Hadamard` for v2 and v3
+- Make `p` and `dP` v3 in sim entity
+- Define `rectangle3`

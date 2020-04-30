@@ -13,25 +13,23 @@ IsValid(world_position *p) {
 }
 
 inline bool32
-IsValid(v2 p) {
-  return p.x != INVALID_P.x && p.y != INVALID_P.y;
+IsValid(v3 p) {
+  return p.x != INVALID_P.x && p.y != INVALID_P.y && p.z != INVALID_P.z;
 }
 
 inline world_chunk *
-GetWorldChunk(
-  game_world *world,
-  int32 chunkX,
-  int32 chunkY,
-  int32 chunkZ,
-  memory_arena *arena = NULL) {
+GetWorldChunk(game_world *world,
+              int32 chunkX,
+              int32 chunkY,
+              int32 chunkZ,
+              memory_arena *arena = NULL) {
   uint32 hashIndex = (chunkX * 19 + chunkY * 7 + chunkZ * 3) &
                      (ArrayCount(world->chunkHash) - 1);
   world_chunk *chunk = world->chunkHash[hashIndex];
 
   while(chunk) {
-    if(
-      chunk->chunkX == chunkX && chunk->chunkY == chunkY &&
-      chunk->chunkZ == chunkZ) {
+    if(chunk->chunkX == chunkX && chunk->chunkY == chunkY &&
+       chunk->chunkZ == chunkZ) {
       break;
     }
 
@@ -53,16 +51,17 @@ GetWorldChunk(
 }
 
 inline bool32
-IsCanonicalCoord(game_world *world, real32 value) {
-  bool32 result = (value >= 0) && (value <= world->chunkSizeInMeters);
+IsCanonicalCoord(real32 chunkDim, real32 value) {
+  bool32 result = (value >= 0) && (value <= chunkDim);
   return result;
 }
 
 inline bool32
 IsCanonicalPosition(game_world *world, world_position *p) {
   Assert(IsValid(p));
-  bool32 result = IsCanonicalCoord(world, p->offset_.x) &&
-                  IsCanonicalCoord(world, p->offset_.y);
+  bool32 result = IsCanonicalCoord(world->chunkDimInMeters.x, p->_offset.x) &&
+                  IsCanonicalCoord(world->chunkDimInMeters.y, p->_offset.y) &&
+                  IsCanonicalCoord(world->chunkDimInMeters.z, p->_offset.z);
   return result;
 }
 
@@ -71,65 +70,70 @@ AreInSameChunk(game_world *world, world_position *p1, world_position *p2) {
   Assert(IsCanonicalPosition(world, p1));
   Assert(IsCanonicalPosition(world, p2));
 
-  bool32 result =
-    ((p1->chunkX == p2->chunkX) && (p1->chunkY == p2->chunkY) &&
-     (p1->chunkZ == p2->chunkZ));
+  bool32 result = ((p1->chunkX == p2->chunkX) && (p1->chunkY == p2->chunkY) &&
+                   (p1->chunkZ == p2->chunkZ));
 
   return result;
 }
 
 internal inline void
-RecanonicalizeCoord(game_world *world, int32 *chunk, real32 *chunkRel) {
+RecanonicalizeCoord(real32 chunkDim, int32 *chunk, real32 *chunkRel) {
   // NOTE: game_world is not allowd to be wrapped
-  int32 offset = FloorReal32ToInt32(*chunkRel / world->chunkSizeInMeters);
+  int32 offset = FloorReal32ToInt32(*chunkRel / chunkDim);
   *chunk += offset;
-  *chunkRel -= offset * world->chunkSizeInMeters;
+  *chunkRel -= offset * chunkDim;
 
   Assert(*chunkRel >= 0);
-  Assert(*chunkRel <= world->chunkSizeInMeters);
+  Assert(*chunkRel <= chunkDim);
 }
 
 internal inline world_position
 RecanonicalizePosition(game_world *world, world_position pos) {
   world_position result = pos;
-  RecanonicalizeCoord(world, &result.chunkX, &result.offset_.x);
-  RecanonicalizeCoord(world, &result.chunkY, &result.offset_.y);
+  RecanonicalizeCoord(world->chunkDimInMeters.x,
+                      &result.chunkX,
+                      &result._offset.x);
+  RecanonicalizeCoord(world->chunkDimInMeters.y,
+                      &result.chunkY,
+                      &result._offset.y);
+  RecanonicalizeCoord(world->chunkDimInMeters.z,
+                      &result.chunkZ,
+                      &result._offset.z);
   return result;
 }
 
-inline world_diff
+inline v3
 SubtractPosition(game_world *world, world_position p1, world_position p2) {
-  world_diff result = {};
-  result.dXY.x =
-    world->chunkSizeInMeters * ((real32)p1.chunkX - (real32)p2.chunkX) +
-    p1.offset_.x - p2.offset_.x;
-  result.dXY.y =
-    world->chunkSizeInMeters * ((real32)p1.chunkY - (real32)p2.chunkY) +
-    p1.offset_.y - p2.offset_.y;
+  v3 dChunk = {
+    (real32)p1.chunkX - (real32)p2.chunkX,
+    (real32)p1.chunkY - (real32)p2.chunkY,
+    (real32)p1.chunkZ - (real32)p2.chunkZ,
+  };
+  v3 result =
+    Hadamard(world->chunkDimInMeters, dChunk) + (p1._offset - p2._offset);
   return result;
 }
 
 inline world_position
-MapIntoWorldSpace(game_world *world, world_position pos, v2 offset) {
-  pos.offset_ += offset;
+MapIntoWorldSpace(game_world *world, world_position pos, v3 offset) {
+  pos._offset += offset;
   pos = RecanonicalizePosition(world, pos);
   return pos;
 }
 
 inline world_position
-WorldPositionFromTilePosition(
-  game_world *world,
-  int32 tileX,
-  int32 tileY,
-  int32 tileZ) {
+WorldPositionFromTilePosition(game_world *world,
+                              int32 tileX,
+                              int32 tileY,
+                              int32 tileZ) {
   world_position result = {};
   result.chunkX = FloorReal32ToInt32((real32)tileX / (real32)TILES_PER_CHUNK);
   result.chunkY = FloorReal32ToInt32((real32)tileY / (real32)TILES_PER_CHUNK);
   result.chunkZ = tileZ;
 
-  result.offset_.x =
+  result._offset.x =
     world->tileSizeInMeters * (tileX - result.chunkX * TILES_PER_CHUNK);
-  result.offset_.y =
+  result._offset.y =
     world->tileSizeInMeters * (tileY - result.chunkY * TILES_PER_CHUNK);
 
   Assert(IsCanonicalPosition(world, &result));
@@ -139,12 +143,11 @@ WorldPositionFromTilePosition(
 
 // oldP, newP may be null
 internal void
-ChangeEntityLocationRaw(
-  memory_arena *arena,
-  game_world *world,
-  stored_entity *stored,
-  world_position *oldP,
-  world_position *newP) {
+ChangeEntityLocationRaw(memory_arena *arena,
+                        game_world *world,
+                        stored_entity *stored,
+                        world_position *oldP,
+                        world_position *newP) {
   Assert(stored);
   Assert(!oldP || IsCanonicalPosition(world, oldP));
   Assert(!newP || IsCanonicalPosition(world, newP));
@@ -204,13 +207,10 @@ ChangeEntityLocationRaw(
 }
 
 internal void
-ChangeEntityLocation(
-  memory_arena *arena,
-  game_world *world,
-  stored_entity *stored,
-  world_position newPInit) {
-  Assert(stored);
-
+ChangeEntityLocation(memory_arena *arena,
+                     game_world *world,
+                     stored_entity *stored,
+                     world_position newPInit) {
   world_position *oldP = NULL;
   world_position *newP = NULL;
 

@@ -23,14 +23,12 @@ TestWall(real32 wallX,
   return hit;
 }
 
-internal v2
+internal v3
 GetSimSpaceP(sim_region *simRegion, stored_entity *entity) {
-  v2 result = INVALID_P;
+  v3 result = INVALID_P;
 
   if(IsValid(&entity->p)) {
-    world_diff diff =
-      SubtractPosition(simRegion->world, entity->p, simRegion->origin);
-    result = diff.dXY;
+    result = SubtractPosition(simRegion->world, entity->p, simRegion->origin);
   }
 
   return result;
@@ -60,7 +58,7 @@ GetHashFromStored(sim_region *simRegion, stored_entity *stored) {
 
 internal void LoadEntityReference(sim_region *simRegion, entity_reference *ref);
 internal sim_entity *
-AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v2 p) {
+AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v3 p) {
   Assert(stored);
 
   sim_entity *result = NULL;
@@ -117,7 +115,7 @@ internal sim_region *
 BeginSim(memory_arena *arena,
          game_state *state,
          world_position origin,
-         rectangle2 bounds) {
+         rectangle3 bounds) {
   sim_region *simRegion = PushStruct(arena, sim_region);
   simRegion->entityCount = 0;
   ZeroStruct(simRegion->hash);
@@ -128,7 +126,8 @@ BeginSim(memory_arena *arena,
   simRegion->origin = origin;
   simRegion->updatableBounds = bounds;
   simRegion->bounds =
-    AddRadiusWH(simRegion->updatableBounds, inactiveRadius, inactiveRadius);
+    AddRadius(simRegion->updatableBounds,
+              v3{inactiveRadius, inactiveRadius, inactiveRadius});
 
   world_position minChunk =
     MapIntoWorldSpace(simRegion->world, origin, bounds.min);
@@ -148,7 +147,7 @@ BeginSim(memory_arena *arena,
             Assert(stored);
 
             if(!HasFlag(&stored->sim, EntityFlag_NonSpatial)) {
-              v2 simSpaceP = GetSimSpaceP(simRegion, stored);
+              v3 simSpaceP = GetSimSpaceP(simRegion, stored);
 
               if(IsInRectangle(simRegion->bounds, simSpaceP)) {
                 AddEntityToSimRegion(simRegion, stored, simSpaceP);
@@ -249,7 +248,7 @@ MoveEntity(game_state *state,
            move_spec *spec,
            sim_entity *entity,
            real32 dt,
-           v2 ddP) {
+           v3 ddP) {
   Assert(entity);
 
   game_world *world = simRegion->world;
@@ -265,7 +264,7 @@ MoveEntity(game_state *state,
   ddP *= spec->ddPScale;
   ddP += -spec->drag * entity->dP;
 
-  v2 entityDelta = 0.5f * ddP * Square(dt) + entity->dP * dt;
+  v3 entityDelta = 0.5f * ddP * Square(dt) + entity->dP * dt;
   entity->dP += ddP * dt;
 
   real32 distanceRemaining = entity->distanceLimit;
@@ -288,15 +287,15 @@ MoveEntity(game_state *state,
     }
 
     sim_entity *hitEntity = NULL;
-    v2 WallNormal = {};
-    v2 targetEntityP = entity->p + entityDelta;
+    v3 WallNormal = {};
+    v3 targetEntityP = entity->p + entityDelta;
 
     for(uint32 index = 0; index < simRegion->entityCount; index++) {
       sim_entity *testEntity = simRegion->entities + index;
       if(testEntity != entity) {
         if(!HasFlag(testEntity, EntityFlag_NonSpatial) &&
            ShouldCollide(state, entity->stored, testEntity->stored)) {
-          v2 Rel = entity->p - testEntity->p;
+          v3 Rel = entity->p - testEntity->p;
 
           real32 radiusW = 0.5f * testEntity->width + 0.5f * entity->width;
           real32 radiusH = 0.5f * testEntity->height + 0.5f * entity->height;
@@ -309,7 +308,7 @@ MoveEntity(game_state *state,
                       Rel.y,
                       radiusH,
                       &tMin)) {
-            WallNormal = {1, 0};
+            WallNormal = {1, 0, 0};
             hitEntity = testEntity;
           }
 
@@ -321,7 +320,7 @@ MoveEntity(game_state *state,
                       Rel.y,
                       radiusH,
                       &tMin)) {
-            WallNormal = {-1, 0};
+            WallNormal = {-1, 0, 0};
             hitEntity = testEntity;
           }
 
@@ -333,7 +332,7 @@ MoveEntity(game_state *state,
                       Rel.x,
                       radiusW,
                       &tMin)) {
-            WallNormal = {0, 1};
+            WallNormal = {0, 1, 0};
             hitEntity = testEntity;
           }
 
@@ -345,7 +344,7 @@ MoveEntity(game_state *state,
                       Rel.x,
                       radiusW,
                       &tMin)) {
-            WallNormal = {0, -1};
+            WallNormal = {0, -1, 0};
             hitEntity = testEntity;
           }
         }

@@ -330,6 +330,15 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup) {
   }
 }
 
+internal void
+InitializeWorld(game_world *world, real32 tileSizeInMeters) {
+  world->tileSizeInMeters = tileSizeInMeters;
+  world->tileDepthInMeters = tileSizeInMeters;
+  world->chunkDimInMeters = {(real32)TILES_PER_CHUNK * tileSizeInMeters,
+                             (real32)TILES_PER_CHUNK * tileSizeInMeters,
+                             world->tileDepthInMeters};
+}
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
   Assert(
     (&input->controllers[0].terminator - &input->controllers[0].buttons[0]) ==
@@ -406,8 +415,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
                     memory->permanentStorageSize - sizeof(game_state),
                     (uint8 *)memory->permanentStorage + sizeof(game_state));
 
-    world->tileSizeInMeters = 1.4f;
-    world->chunkSizeInMeters = TILES_PER_CHUNK * world->tileSizeInMeters;
+    InitializeWorld(world, 1.4f);
 
     uint32 screenBaseX = 0;
     uint32 screenBaseY = 0;
@@ -543,7 +551,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     controlled_hero *conHero = state->controlledHeroes + controllerIndex;
 
     if(conHero->stored) {
-      v2 ddP = {};
+      v3 ddP = {};
 
       if(controller->isAnalog) {
         ddP = {controller->stickAverageX, controller->stickAverageY};
@@ -562,7 +570,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
         }
       }
 
-      v2 dSword = {};
+      v3 dSword = {};
       if(controller->actionUp.isEndedDown) {
         dSword.y = 1.0f;
       }
@@ -590,11 +598,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     }
   }
 
-  int32 tileSpanX = tilesPerWidth * 1;
-  int32 tileSpanY = tilesPerHeight * 1;
-  rectangle2 cameraBounds = RectCenterDim(
-    v2{0, 0},
-    world->tileSizeInMeters * v2{(real32)tileSpanX, (real32)tileSpanY});
+  int32 tileSpanX = tilesPerWidth * 3;
+  int32 tileSpanY = tilesPerHeight * 3;
+  int32 tileSpanZ = 1;
+  rectangle3 cameraBounds = RectCenterDim(
+    v3{0, 0, 0},
+    world->tileSizeInMeters *
+      v3{(real32)tileSpanX, (real32)tileSpanY, (real32)tileSpanZ});
 
   memory_arena simArena;
   InitializeArena(&simArena,
@@ -626,8 +636,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
     hero_bitmaps heroBitmaps = state->heroBitmaps[entity->facingDirection];
 
     move_spec moveSpec = {};
-    v2 ddP = {};
-    v2 oldSwordP = {};
+    v3 ddP = {};
+    v3 oldSwordP = {};
 
     switch(entity->type) {
       case EntityType_Hero: {
@@ -708,7 +718,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo) {
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
-    v2 entityCenter = ScreenCenter + entity->p * MetersToPixels;
+    v2 entityCenter = ScreenCenter + entity->p.xy * MetersToPixels;
     v2 entityMin = entityCenter + v2{-0.5f * entity->width * MetersToPixels,
                                      -0.5f * entity->height * MetersToPixels};
     v2 entityMax = entityCenter + v2{0.5f * entity->width * MetersToPixels,

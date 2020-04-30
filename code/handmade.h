@@ -67,8 +67,8 @@ struct hero_bitmaps {
 struct controlled_hero {
   stored_entity *stored;
 
-  v2 ddP;
-  v2 dSword;
+  v3 ddP;
+  v3 dSword;
 };
 
 struct pairwise_collision_rule {
