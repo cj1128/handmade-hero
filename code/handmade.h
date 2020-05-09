@@ -14,7 +14,8 @@ struct memory_arena {
 };
 
 internal void *
-PushSize_(memory_arena *arena, size_t size) {
+PushSize_(memory_arena *arena, size_t size)
+{
   Assert((arena->used + size) <= arena->size);
   uint8 *result = arena->base + arena->used;
   arena->used += size;
@@ -22,14 +23,15 @@ PushSize_(memory_arena *arena, size_t size) {
 }
 
 internal void
-ZeroSize(void *ptr, size_t size) {
+ZeroSize(void *ptr, size_t size)
+{
   uint8 *byte = (uint8 *)ptr;
   while(size--) {
     *byte++ = 0;
   }
 }
 
-#define PushArray(arena, count, type) \
+#define PushArray(arena, count, type)                                          \
   (type *)PushSize_(arena, (count) * sizeof(type))
 #define PushStruct(arena, type) (type *)PushSize_((arena), sizeof(type))
 
@@ -45,7 +47,9 @@ struct render_piece {
   loaded_bitmap *bitmap;
   v2 halfDim;
   v3 color;
+  real32 alpha;
   v2 offset;
+  real32 entityZC;
 };
 
 struct render_piece_group {
@@ -67,8 +71,9 @@ struct hero_bitmaps {
 struct controlled_hero {
   stored_entity *stored;
 
-  v3 ddP;
+  v2 ddP;
   v3 dSword;
+  real32 dZ;
 };
 
 struct pairwise_collision_rule {
@@ -83,6 +88,8 @@ struct game_state {
   game_world world;
   world_position cameraP;
 
+  bool32 debugDrawBoundary = false;
+
   uint32 entityCount;
   stored_entity entities[4096];
 
@@ -93,6 +100,7 @@ struct game_state {
   loaded_bitmap background;
   loaded_bitmap tree;
   loaded_bitmap sword;
+  loaded_bitmap shadow;
   hero_bitmaps heroBitmaps[4];
 
   // NOTE: need to be power of two

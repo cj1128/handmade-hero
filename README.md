@@ -124,6 +124,7 @@ My preferred code style for C is different from Casey's.
 - [Day 69: Pairwise Collision Rules](#day-69-pairwise-collision-rules)
 - [Day 70: Exploration To-do List](#day-70-exploration-to-do-list)
 - [Day 71: Converting to Full 3D Positioning](#day-71-converting-to-full-3d-positioning)
+- [Day 72: Proper 3D Inclusion Test](#day-72-proper-3d-inclusion-test)
 
 <!-- /MarkdownTOC -->
 
@@ -722,3 +723,11 @@ To-do list:
 - Define `Hadamard` for v2 and v3
 - Make `p` and `dP` v3 in sim entity
 - Define `rectangle3`
+
+### Day 72: Proper 3D Inclusion Test
+
+- Implement the simple jump (Casey implemented this long time ago)
+- `AABB`: Axis aligned bounding boxes
+- Add `maxEntityRadius`, `maxEntityVelocity` to sim region
+- Change `width` and `height` in sim entity to `dim`
+- Define `EntityOverlapsRectangle` and use this method to test whether entity is inside a rectangle

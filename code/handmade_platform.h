@@ -50,9 +50,9 @@ typedef double real64;
 #define Maximum(a, b) ((a) > (b) ? (a) : (b))
 
 #ifdef HANDMADE_SLOW
-#define Assert(expression) \
-  if(!(expression)) {      \
-    *(int *)0 = 0;         \
+#define Assert(expression)                                                     \
+  if(!(expression)) {                                                          \
+    *(int *)0 = 0;                                                             \
   }
 #else
 #define Assert(expression)
@@ -61,7 +61,8 @@ typedef double real64;
 #define InvalidCodePath Assert(!"InvalidCodePath")
 
 inline uint32
-SafeTruncateUInt64(uint64 value) {
+SafeTruncateUInt64(uint64 value)
+{
   Assert(value <= 0xFFFFFFFF) uint32 result = (uint32)value;
   return result;
 }
@@ -107,10 +108,10 @@ struct game_controller_input {
       game_button_state moveLeft;
       game_button_state moveRight;
 
-      game_button_state actionUp;     // Y
-      game_button_state actionDown;   // A
-      game_button_state actionLeft;   // x
-      game_button_state actionRight;  // B
+      game_button_state actionUp; // Y
+      game_button_state actionDown; // A
+      game_button_state actionLeft; // x
+      game_button_state actionRight; // B
 
       game_button_state leftShoulder;
       game_button_state rightShoulder;
@@ -138,19 +139,18 @@ struct debug_read_file_result {
   void *memory;
 };
 
-#define DEBUG_PLATFORM_READ_FILE(name) \
+#define DEBUG_PLATFORM_READ_FILE(name)                                         \
   debug_read_file_result name(thread_context *thread, char *fileName)
 typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
 
-#define DEBUG_PLATFORM_WRITE_FILE(name) \
-  bool32 name(                          \
-    thread_context *thread,             \
-    char *fileName,                     \
-    void *memory,                       \
+#define DEBUG_PLATFORM_WRITE_FILE(name)                                        \
+  bool32 name(thread_context *thread,                                          \
+    char *fileName,                                                            \
+    void *memory,                                                              \
     uint32 fileSize)
 typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) \
+#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name)                                  \
   void name(thread_context *thread, void *memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 #endif
@@ -159,7 +159,7 @@ struct game_memory {
   bool32 isInitialized;
 
   size_t permanentStorageSize;
-  void *permanentStorage;  // required to be cleared to zero
+  void *permanentStorage; // required to be cleared to zero
 
   size_t transientStorageSize;
   void *transientStorage;
@@ -169,18 +169,17 @@ struct game_memory {
   debug_platform_free_file_memory *debugPlatformFreeFileMemory;
 };
 
-#define GAME_UPDATE_VIDEO(name) \
-  void name(                    \
-    thread_context *thread,     \
-    game_memory *memory,        \
-    game_input *input,          \
+#define GAME_UPDATE_VIDEO(name)                                                \
+  void name(thread_context *thread,                                            \
+    game_memory *memory,                                                       \
+    game_input *input,                                                         \
+    game_input *oldInput,                                                      \
     game_offscreen_buffer *buffer)
 typedef GAME_UPDATE_VIDEO(game_update_video);
 
-#define GAME_UPDATE_AUDIO(name) \
-  void name(                    \
-    thread_context *thread,     \
-    game_memory *memory,        \
+#define GAME_UPDATE_AUDIO(name)                                                \
+  void name(thread_context *thread,                                            \
+    game_memory *memory,                                                       \
     game_sound_buffer *soundBuffer)
 typedef GAME_UPDATE_AUDIO(game_update_audio);
 

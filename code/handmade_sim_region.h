@@ -19,6 +19,9 @@ struct sim_region {
   rectangle3 bounds;
   rectangle3 updatableBounds;
 
+  real32 maxEntityRadius;
+  real32 maxEntityVelocity;
+
   uint32 entityCount;
   sim_entity entities[4096];
 
