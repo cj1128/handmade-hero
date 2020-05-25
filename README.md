@@ -125,6 +125,7 @@ My preferred code style for C is different from Casey's.
 - [Day 70: Exploration To-do List](#day-70-exploration-to-do-list)
 - [Day 71: Converting to Full 3D Positioning](#day-71-converting-to-full-3d-positioning)
 - [Day 72: Proper 3D Inclusion Test](#day-72-proper-3d-inclusion-test)
+- [Day 73: Temporarily Overlapping Entities](#day-73-temporarily-overlapping-entities)
 
 <!-- /MarkdownTOC -->
 
@@ -731,3 +732,11 @@ To-do list:
 - Add `maxEntityRadius`, `maxEntityVelocity` to sim region
 - Change `width` and `height` in sim entity to `dim`
 - Define `EntityOverlapsRectangle` and use this method to test whether entity is inside a rectangle
+
+### Day 73: Temporarily Overlapping Entities
+
+- Add `EntityType_Stairwell` and use rock_02 bmp as our stairwell asset
+- Implement `AddStair` and draw our stair
+- Define `overlappingCount` and `overlappingEntites` and `RectanglesIntersect`
+- Pass `wasOverlapping` to `HandleCollision`
+- Move `AddCollisionRule` to handle collision

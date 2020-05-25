@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <windows.h>
+
 internal bool32
 TestWall(real32 wallX,
   real32 deltaX,
@@ -215,7 +218,7 @@ AddCollisionRule(game_state *state,
   stored_entity *b,
   bool32 shouldCollide)
 {
-  if(a > b) {
+  if((uintptr_t)a > (uintptr_t)b) {
     stored_entity *tmp = a;
     a = b;
     b = tmp;
@@ -254,7 +257,7 @@ ShouldCollide(game_state *state, stored_entity *a, stored_entity *b)
 {
   bool32 result = true;
 
-  if(a->sim.type > b->sim.type) {
+  if((uintptr_t)a > (uintptr_t)b) {
     stored_entity *tmp = a;
     a = b;
     b = tmp;
@@ -270,6 +273,39 @@ ShouldCollide(game_state *state, stored_entity *a, stored_entity *b)
   }
 
   return result;
+}
+
+internal bool32
+HandleCollision(game_state *state,
+  sim_entity *a,
+  sim_entity *b,
+  bool32 wasOverlapping)
+{
+  bool32 stopsOnCollision = true;
+
+  if(a->type > b->type) {
+    sim_entity *tmp = a;
+    a = b;
+    b = tmp;
+  }
+
+  if(b->type == EntityType_Sword) {
+    stopsOnCollision = false;
+    AddCollisionRule(state, a->stored, b->stored, false);
+  }
+
+  if(b->type == EntityType_Stairwell) {
+    stopsOnCollision = false;
+    AddCollisionRule(state, a->stored, b->stored, false);
+  }
+
+  if(a->type == EntityType_Monster && b->type == EntityType_Sword) {
+    if(a->hitPointCount > 0) {
+      a->hitPointCount--;
+    }
+  }
+
+  return stopsOnCollision;
 }
 
 internal void
@@ -305,6 +341,28 @@ MoveEntity(game_state *state,
 
   if(distanceRemaining == 0.0f) {
     distanceRemaining = 1000.0f;
+  }
+
+  // Check overlapping
+  uint32 overlappingCount = 0;
+  sim_entity *overlappingEntites[16];
+  rectangle3 entityRect = RectCenterDim(entity->p, entity->dim);
+  for(uint32 testIndex = 0; testIndex < simRegion->entityCount; testIndex++) {
+    sim_entity *testEntity = simRegion->entities + testIndex;
+
+    if(testEntity == entity)
+      continue;
+
+    if(ShouldCollide(state, entity->stored, testEntity->stored)) {
+      rectangle3 testEntityRect = RectCenterDim(testEntity->p, testEntity->dim);
+      if(RectanglesIntersect(entityRect, testEntityRect)) {
+        if(overlappingCount < ArrayCount(overlappingEntites)) {
+          overlappingEntites[overlappingCount++] = testEntity;
+        } else {
+          InvalidCodePath;
+        }
+      }
+    }
   }
 
   for(int32 Iteration = 0; Iteration < 4; Iteration++) {
@@ -389,17 +447,25 @@ MoveEntity(game_state *state,
     distanceRemaining -= tMin * entityDeltaLength;
 
     if(hitEntity) {
-      entityDelta = targetEntityP - entity->p;
+      uint32 overlappingIndex = overlappingCount;
+      for(uint32 testIndex = 0; testIndex < overlappingCount; testIndex++) {
+        if(overlappingEntites[testIndex] == hitEntity) {
+          overlappingIndex = testIndex;
+          break;
+        }
+      }
 
-      bool32 stopsOnCollision = HandleCollision(entity, hitEntity);
+      bool32 wasOverlapping = overlappingIndex != overlappingCount;
+
+      entityDelta = targetEntityP - entity->p;
+      bool32 stopsOnCollision
+        = HandleCollision(state, entity, hitEntity, wasOverlapping);
 
       if(stopsOnCollision) {
         entity->dP
           = entity->dP - 1 * Inner(entity->dP, WallNormal) * WallNormal;
         entityDelta
           = entityDelta - 1 * Inner(entityDelta, WallNormal) * WallNormal;
-      } else {
-        AddCollisionRule(state, entity->stored, hitEntity->stored, false);
       }
     } else {
       break;
@@ -429,9 +495,6 @@ MoveEntity(game_state *state,
     entity->distanceLimit = distanceRemaining;
   }
 }
-
-#include <windows.h>
-#include <stdio.h>
 
 internal void
 EndSim(sim_region *simRegion, game_state *state)

@@ -1,7 +1,7 @@
 #include "handmade.h"
-#include "handmade_entity.cpp"
 #include "handmade_random.h"
 #include "handmade_world.cpp"
+#include "handmade_entity.cpp"
 #include "handmade_sim_region.cpp"
 
 internal stored_entity *
@@ -29,6 +29,16 @@ AddStoredEntity(game_state *state,
   return AddStoredEntity(state, type, p);
 }
 
+internal void
+InitHitPoints(stored_entity *stored, int value)
+{
+  stored->sim.hitPointCount = value;
+
+  for(int i = 0; i < value; i++) {
+    stored->sim.hitPoints[i].amount = HIT_POINT_AMOUNT;
+  }
+}
+
 internal stored_entity *
 AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
@@ -38,16 +48,6 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
   stored->sim.dim.y = stored->sim.dim.x;
 
   return stored;
-}
-
-internal void
-InitHitPoints(stored_entity *stored, int value)
-{
-  stored->sim.hitPointCount = value;
-
-  for(int i = 0; i < value; i++) {
-    stored->sim.hitPoints[i].amount = HIT_POINT_AMOUNT;
-  }
 }
 
 internal stored_entity *
@@ -91,13 +91,24 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 }
 
 internal void
+AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+{
+  stored_entity *stored
+    = AddStoredEntity(state, EntityType_Stairwell, tileX, tileY, tileZ);
+
+  stored->sim.dim.x = state->world.tileSizeInMeters;
+  stored->sim.dim.y = stored->sim.dim.x;
+  stored->sim.dim.z = state->world.tileDepthInMeters;
+}
+
+internal void
 AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
   stored_entity *stored
     = AddStoredEntity(state, EntityType_Familiar, tileX, tileY, tileZ);
 
-  stored->sim.dim.y = 0.5f;
-  stored->sim.dim.x = 1.0f;
+  stored->sim.dim.x = 0.5;
+  stored->sim.dim.y = 1.0f;
 }
 
 #pragma pack(push, 1)
@@ -304,6 +315,7 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
   }
 }
 
+// `offset` is from the bottom-left
 inline void
 PushPiece(render_piece_group *group,
   loaded_bitmap *bitmap,
@@ -392,6 +404,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tree00.bmp");
     state->sword
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock03.bmp");
+    state->stairwell
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock02.bmp");
 
     hero_bitmaps *heroBitmaps = &state->heroBitmaps[0];
     heroBitmaps->offset = v2{ 72, 35 };
@@ -447,33 +461,40 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     InitializeWorld(world, 1.4f);
 
-    uint32 screenBaseX = 0;
-    uint32 screenBaseY = 0;
-    uint32 screenX = screenBaseX;
-    uint32 screenY = screenBaseY;
-    uint32 randomIndex = 0;
+    int32 screenBaseX = 0;
+    int32 screenBaseY = 0;
+    int32 screenBaseZ = 0;
+    int32 screenX = screenBaseX;
+    int32 screenY = screenBaseY;
+
+    int32 randomIndex = 0;
     bool32 doorLeft = false;
     bool32 doorRight = false;
     bool32 doorTop = false;
     bool32 doorBottom = false;
     bool32 doorUp = false;
     bool32 doorDown = false;
-    uint32 tileZ = 0;
+    int32 absTileZ = 0;
 
-    for(int ScreenIndex = 0; ScreenIndex < 10; ScreenIndex++) {
+    for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
       Assert(randomIndex < ArrayCount(randomNumberTable));
-      int RandomValue;
+      int randomValue;
 
       // 0: left
       // 1: bottom
       // 2: up/down
-      if(1) { // (doorUp || doorDown) {
-        RandomValue = randomNumberTable[randomIndex++] % 2;
+      if(doorUp || doorDown) {
+        randomValue = randomNumberTable[randomIndex++] % 2;
       } else {
-        RandomValue = randomNumberTable[randomIndex++] % 3;
+        randomValue = randomNumberTable[randomIndex++] % 3;
       }
 
-      switch(RandomValue) {
+      // Make a stariwell in first screen
+      if(screenIndex == 0) {
+        randomValue = 2;
+      }
+
+      switch(randomValue) {
       case 0: {
         doorLeft = true;
       } break;
@@ -483,9 +504,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case 2:
-        if(tileZ == 0) {
+        if(absTileZ == screenBaseZ) {
           doorUp = true;
-        } else if(tileZ == 1) {
+        } else {
           doorDown = true;
         }
         break;
@@ -522,12 +543,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             }
           }
 
-          if(tileX == 10 && tileY == 4 && (doorUp || doorDown)) {
-            TileValue = 3;
+          if(TileValue == 2) {
+            AddWall(state, absTileX, absTileY, absTileZ);
           }
 
-          if(TileValue == 2) {
-            AddWall(state, absTileX, absTileY, tileZ);
+          if(tileX == 10 && tileY == 4 && (doorUp || doorDown)) {
+            AddStairwell(state,
+              absTileX,
+              absTileY,
+              doorDown ? absTileZ - 1 : absTileZ);
           }
         }
       }
@@ -537,19 +561,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       doorLeft = false;
       doorBottom = false;
 
-      if(RandomValue == 0) {
+      if(randomValue == 0) {
         screenX--;
-      } else if(RandomValue == 1) {
+      } else if(randomValue == 1) {
         screenY--;
-      } else if(RandomValue == 2) {
-        if(tileZ == 0) {
+      } else if(randomValue == 2) {
+        if(absTileZ == screenBaseZ) {
           doorDown = true;
           doorUp = false;
-          tileZ = 1;
+          absTileZ++;
         } else {
           doorUp = true;
           doorDown = false;
-          tileZ = 0;
+          absTileZ = screenBaseZ;
         }
       } else {
         doorDown = false;
@@ -733,6 +757,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 });
       PushPiece(&pieceGroup, &heroBitmaps.torso, heroBitmaps.offset);
       DrawHitPoints(entity, &pieceGroup);
+    } break;
+
+    case EntityType_Stairwell: {
+      PushPiece(&pieceGroup, &state->stairwell, v2{ 38, 27 });
     } break;
 
     case EntityType_Familiar: {

@@ -101,6 +101,7 @@ struct game_state {
   loaded_bitmap tree;
   loaded_bitmap sword;
   loaded_bitmap shadow;
+  loaded_bitmap stairwell;
   hero_bitmaps heroBitmaps[4];
 
   // NOTE: need to be power of two
