@@ -22,10 +22,11 @@ AddStoredEntity(game_state *state,
   entity_type type,
   int32 tileX,
   int32 tileY,
-  int32 tileZ)
+  int32 tileZ,
+  v3 offset = {})
 {
   world_position p
-    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ, offset);
   return AddStoredEntity(state, type, p);
 }
 
@@ -67,8 +68,11 @@ AddHero(game_state *state)
 {
   stored_entity *hero = AddStoredEntity(state, EntityType_Hero, state->cameraP);
 
-  hero->sim.dim.y = 0.5f;
+  AddFlags(&hero->sim, EntityFlag_Moveable);
+
   hero->sim.dim.x = 1.0f;
+  hero->sim.dim.y = 0.5f;
+  hero->sim.dim.z = 0.5f;
 
   InitHitPoints(hero, 3);
 
@@ -81,20 +85,30 @@ AddHero(game_state *state)
 internal void
 AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *stored
+  stored_entity *monster
     = AddStoredEntity(state, EntityType_Monster, tileX, tileY, tileZ);
 
-  stored->sim.dim.y = 0.5f;
-  stored->sim.dim.x = 1.0f;
+  AddFlags(&monster->sim, EntityFlag_Moveable);
 
-  InitHitPoints(stored, 3);
+  monster->sim.dim.y = 0.5f;
+  monster->sim.dim.x = 1.0f;
+
+  InitHitPoints(monster, 3);
 }
 
 internal void
 AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *stored
-    = AddStoredEntity(state, EntityType_Stairwell, tileX, tileY, tileZ);
+  stored_entity *stored = AddStoredEntity(state,
+    EntityType_Stairwell,
+    tileX,
+    tileY,
+    tileZ,
+    v3{
+      0,
+      0,
+      0.5f * state->world.tileDepthInMeters,
+    });
 
   stored->sim.dim.x = state->world.tileSizeInMeters;
   stored->sim.dim.y = stored->sim.dim.x;
@@ -104,11 +118,13 @@ AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 internal void
 AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *stored
+  stored_entity *familiar
     = AddStoredEntity(state, EntityType_Familiar, tileX, tileY, tileZ);
 
-  stored->sim.dim.x = 0.5;
-  stored->sim.dim.y = 1.0f;
+  AddFlags(&familiar->sim, EntityFlag_Moveable);
+
+  familiar->sim.dim.x = 0.5;
+  familiar->sim.dim.y = 1.0f;
 }
 
 #pragma pack(push, 1)
@@ -404,8 +420,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tree00.bmp");
     state->sword
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock03.bmp");
-    state->stairwell
-      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock02.bmp");
 
     hero_bitmaps *heroBitmaps = &state->heroBitmaps[0];
     heroBitmaps->offset = v2{ 72, 35 };
@@ -593,7 +607,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     AddMonster(state, cameraTileX + 2, cameraTileY + 2, cameraTileZ);
 
-    AddFamiliar(state, cameraTileX - 2, cameraTileY - 2, cameraTileZ);
+    // AddFamiliar(state, cameraTileX - 2, cameraTileY - 2, cameraTileZ);
   }
 
   real32 TileSizeInPixels = 60.0f;
@@ -760,7 +774,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     } break;
 
     case EntityType_Stairwell: {
-      PushPiece(&pieceGroup, &state->stairwell, v2{ 38, 27 });
+      PushRectangle(&pieceGroup, v2{}, 0.5f * entity->dim.xy, v3{ 1.0f, 0, 0 });
     } break;
 
     case EntityType_Familiar: {
@@ -792,7 +806,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
     }
 
-    if(!HasFlag(entity, EntityFlag_NonSpatial)) {
+    if(!HasFlag(entity, EntityFlag_NonSpatial)
+      && HasFlag(entity, EntityFlag_Moveable)) {
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 

@@ -4,43 +4,50 @@
 #include "math.h"
 
 inline real32
-SquareRoot(real32 value) {
+SquareRoot(real32 value)
+{
   real32 result = sqrtf(value);
   return result;
 }
 
 inline int32
-RoundReal32ToUint32(real32 input) {
+RoundReal32ToUint32(real32 input)
+{
   uint32 result = (uint32)roundf(input);
   return result;
 }
 
 inline int32
-RoundReal32ToInt32(real32 input) {
+RoundReal32ToInt32(real32 input)
+{
   int32 result = (int32)roundf(input);
   return result;
 }
 
 inline int32
-FloorReal32ToInt32(real32 value) {
+FloorReal32ToInt32(real32 value)
+{
   int32 result = (int32)floor(value);
   return result;
 }
 
 inline int32
-CeilReal32ToInt32(real32 value) {
+CeilReal32ToInt32(real32 value)
+{
   int32 result = (int32)ceil(value);
   return result;
 }
 
 inline real32
-Sin(real32 value) {
+Sin(real32 value)
+{
   real32 result = sinf(value);
   return result;
 }
 
 inline real32
-Cos(real32 value) {
+Cos(real32 value)
+{
   real32 result = cosf(value);
   return result;
 }
@@ -51,11 +58,12 @@ struct bit_scan_result {
 };
 
 inline bit_scan_result
-FindLeastSignificantSetBit(uint32 value) {
+FindLeastSignificantSetBit(uint32 value)
+{
   bit_scan_result result = {};
 
 #if COMPILER_MSVC
-  result.found = _BitScanForward((unsigned long*)&result.index, value);
+  result.found = _BitScanForward((unsigned long *)&result.index, value);
 #else
   uint32 test = 0;
   for(uint32 test = 0; test < 32; test++) {
@@ -70,26 +78,30 @@ FindLeastSignificantSetBit(uint32 value) {
 }
 
 inline real32
-Square(real32 value) {
+Square(real32 value)
+{
   real32 result;
   result = value * value;
   return result;
 }
 
 inline real32
-AbsoluteValue(real32 value) {
+AbsoluteValue(real32 value)
+{
   real32 result = fabsf(value);
   return result;
 }
 
 inline uint32
-RotateLeft(uint32 value, int32 Shift) {
+RotateLeft(uint32 value, int32 Shift)
+{
   uint32 result = _rotl(value, Shift);
   return result;
 }
 
 inline uint32
-RotateRight(uint32 value, int32 Shift) {
+RotateRight(uint32 value, int32 Shift)
+{
   uint32 result = _rotr(value, Shift);
   return result;
 }

@@ -136,17 +136,22 @@ inline world_position
 WorldPositionFromTilePosition(game_world *world,
   int32 tileX,
   int32 tileY,
-  int32 tileZ)
+  int32 tileZ,
+  v3 offset = {})
 {
   world_position base = {};
-  v3 offset = world->tileSizeInMeters
-    * v3{
-        (real32)tileX,
-        (real32)tileY,
-        (real32)tileZ,
-      };
+  v3 point = Hadamard(v3{ world->tileSizeInMeters,
+                        world->tileSizeInMeters,
+                        world->tileDepthInMeters },
+    v3{
+      (real32)tileX,
+      (real32)tileY,
+      (real32)tileZ,
+    });
 
-  world_position result = MapIntoWorldSpace(world, base, offset);
+  point += offset;
+
+  world_position result = MapIntoWorldSpace(world, base, point);
 
   Assert(IsCanonicalPosition(world, &result));
 
@@ -240,9 +245,9 @@ ChangeEntityLocation(memory_arena *arena,
 
   if(newP) {
     stored->p = *newP;
-    ClearFlag(&stored->sim, EntityFlag_NonSpatial);
+    ClearFlags(&stored->sim, EntityFlag_NonSpatial);
   } else {
     stored->p = NullPosition();
-    AddFlag(&stored->sim, EntityFlag_NonSpatial);
+    AddFlags(&stored->sim, EntityFlag_NonSpatial);
   }
 }

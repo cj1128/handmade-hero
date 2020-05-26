@@ -126,6 +126,7 @@ My preferred code style for C is different from Casey's.
 - [Day 71: Converting to Full 3D Positioning](#day-71-converting-to-full-3d-positioning)
 - [Day 72: Proper 3D Inclusion Test](#day-72-proper-3d-inclusion-test)
 - [Day 73: Temporarily Overlapping Entities](#day-73-temporarily-overlapping-entities)
+- [Day 74: Moving Entities Up and Down Stairwells](#day-74-moving-entities-up-and-down-stairwells)
 
 <!-- /MarkdownTOC -->
 
@@ -740,3 +741,18 @@ To-do list:
 - Define `overlappingCount` and `overlappingEntites` and `RectanglesIntersect`
 - Pass `wasOverlapping` to `HandleCollision`
 - Move `AddCollisionRule` to handle collision
+
+### Day 74: Moving Entities Up and Down Stairwells
+
+- Remove overlapping stuff and define `CanOverlap` and `HandleOverlap`
+- Rename `ShouldCollide` to `CanCollide`
+- Call `HandleOverlap` at the end of `MoveEntity`
+- Draw our stairwell as a rectangle
+- Define `GetBarycentric`
+- Define `SafeRatioN`, `SafeRatio0` and `SafeRatio1`
+- Define `Lerp`
+- Add `EntityFlag_Moveable`
+- Rename `AddFlag` -> `AddFlags`, `ClearFlag` -> `ClearFlags`
+- Define `Clamp` and `Clamp01`
+- Fix `BeginSim` to loop over chunkZ
+- Modify stairwell z so that the minimum z of its volumn is 0

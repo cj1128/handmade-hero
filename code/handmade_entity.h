@@ -22,6 +22,7 @@ enum entity_type {
 
 enum entity_flag {
   EntityFlag_NonSpatial = (1 << 0),
+  EntityFlag_Moveable = (1 << 1),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),
@@ -72,28 +73,28 @@ HasFlag(sim_entity *entity, uint32 flag)
 }
 
 inline void
-AddFlag(sim_entity *entity, uint32 flag)
+AddFlags(sim_entity *entity, uint32 flags)
 {
-  entity->flags |= flag;
+  entity->flags |= flags;
 }
 
 inline void
-ClearFlag(sim_entity *entity, uint32 flag)
+ClearFlags(sim_entity *entity, uint32 flags)
 {
-  entity->flags &= ~flag;
+  entity->flags &= ~flags;
 }
 
 inline void
 MakeEntityNonSpatial(sim_entity *entity)
 {
-  AddFlag(entity, EntityFlag_NonSpatial);
+  AddFlags(entity, EntityFlag_NonSpatial);
   entity->p = INVALID_P;
 }
 
 inline void
 MakeEntitySpatial(sim_entity *entity, v3 p, v3 dP)
 {
-  ClearFlag(entity, EntityFlag_NonSpatial);
+  ClearFlags(entity, EntityFlag_NonSpatial);
   entity->p = p;
   entity->dP = dP;
 }

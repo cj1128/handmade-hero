@@ -357,4 +357,75 @@ RectanglesIntersect(rectangle3 a, rectangle3 b)
   return result;
 }
 
+//
+// other
+//
+inline real32
+SafeRatioN(real32 numerator, real32 divider, real32 n)
+{
+  real32 result = n;
+
+  if(divider != 0) {
+    result = numerator / divider;
+  }
+
+  return result;
+}
+
+inline real32
+SafeRatio0(real32 numerator, real32 divider)
+{
+  real32 result = SafeRatioN(numerator, divider, 0);
+  return result;
+}
+
+inline real32
+Clamp(real32 v, real32 min, real32 max)
+{
+  real32 result = v;
+  if(result < min) {
+    result = min;
+  }
+  if(result > max) {
+    result = max;
+  }
+  return result;
+}
+
+inline real32
+Clamp01(real32 v)
+{
+  real32 result = Clamp(v, 0, 1);
+  return result;
+}
+
+inline v3
+Clamp01(v3 v)
+{
+  v3 result;
+  result.x = Clamp01(v.x);
+  result.y = Clamp01(v.y);
+  result.z = Clamp01(v.z);
+  return result;
+}
+
+inline v3
+GetBarycentric(rectangle3 rect, v3 p)
+{
+  v3 result;
+
+  result.x = SafeRatio0(p.x - rect.min.x, rect.max.x - rect.min.x);
+  result.y = SafeRatio0(p.y - rect.min.y, rect.max.y - rect.min.y);
+  result.z = SafeRatio0(p.z - rect.min.z, rect.max.z - rect.min.z);
+
+  return result;
+}
+
+inline real32
+Lerp(real32 t, real32 a, real32 b)
+{
+  real32 result = (1 - t) * a + t * b;
+  return result;
+}
+
 #endif

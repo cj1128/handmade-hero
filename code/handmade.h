@@ -79,7 +79,7 @@ struct controlled_hero {
 struct pairwise_collision_rule {
   stored_entity *a;
   stored_entity *b;
-  bool32 shouldCollide;
+  bool32 canCollide;
   pairwise_collision_rule *nextInHash;
 };
 
@@ -101,7 +101,6 @@ struct game_state {
   loaded_bitmap tree;
   loaded_bitmap sword;
   loaded_bitmap shadow;
-  loaded_bitmap stairwell;
   hero_bitmaps heroBitmaps[4];
 
   // NOTE: need to be power of two
