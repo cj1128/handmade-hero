@@ -127,6 +127,7 @@ My preferred code style for C is different from Casey's.
 - [Day 72: Proper 3D Inclusion Test](#day-72-proper-3d-inclusion-test)
 - [Day 73: Temporarily Overlapping Entities](#day-73-temporarily-overlapping-entities)
 - [Day 74: Moving Entities Up and Down Stairwells](#day-74-moving-entities-up-and-down-stairwells)
+- [Day 75: Conditional Movements Based on Step Heights](#day-75-conditional-movements-based-on-step-heights)
 
 <!-- /MarkdownTOC -->
 
@@ -756,3 +757,10 @@ To-do list:
 - Define `Clamp` and `Clamp01`
 - Fix `BeginSim` to loop over chunkZ
 - Modify stairwell z so that the minimum z of its volumn is 0
+
+### Day 75: Conditional Movements Based on Step Heights
+
+- Add `EntityFlag_ZSupported`
+- Prevent player from "jumping" when he goes up/down stairs
+- Define `SpeculativeCollide` to prevent hero from stepping out the stair and jumping into the stair
+- Add `zFudge` when rendering

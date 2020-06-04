@@ -86,7 +86,7 @@ Square(real32 value)
 }
 
 inline real32
-AbsoluteValue(real32 value)
+Abs(real32 value)
 {
   real32 result = fabsf(value);
   return result;

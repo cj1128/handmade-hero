@@ -23,6 +23,7 @@ enum entity_type {
 enum entity_flag {
   EntityFlag_NonSpatial = (1 << 0),
   EntityFlag_Moveable = (1 << 1),
+  EntityFlag_ZSupported = (1 << 2),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),

@@ -111,7 +111,7 @@ AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
     });
 
   stored->sim.dim.x = state->world.tileSizeInMeters;
-  stored->sim.dim.y = stored->sim.dim.x;
+  stored->sim.dim.y = 2.0f * stored->sim.dim.x;
   stored->sim.dim.z = state->world.tileDepthInMeters;
 }
 
@@ -605,7 +605,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       cameraTileZ);
     state->cameraP = newCameraP;
 
-    AddMonster(state, cameraTileX + 2, cameraTileY + 2, cameraTileZ);
+    AddMonster(state, cameraTileX - 2, cameraTileY + 2, cameraTileZ);
 
     // AddFamiliar(state, cameraTileX - 2, cameraTileY - 2, cameraTileZ);
   }
@@ -811,7 +811,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
-    v2 entityGroundPoint = screenCenter + entity->p.xy * metersToPixels;
+    real32 zFudge = 1.0f + (0.1f * entity->p.z);
+    v2 entityGroundPoint
+      = screenCenter + zFudge * entity->p.xy * metersToPixels;
     real32 entityZ = entity->p.z * metersToPixels;
 
     if(state->debugDrawBoundary) {
