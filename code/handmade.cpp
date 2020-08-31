@@ -509,21 +509,21 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       }
 
       switch(randomValue) {
-      case 0: {
-        doorLeft = true;
-      } break;
+        case 0: {
+          doorLeft = true;
+        } break;
 
-      case 1: {
-        doorBottom = true;
-      } break;
+        case 1: {
+          doorBottom = true;
+        } break;
 
-      case 2:
-        if(absTileZ == screenBaseZ) {
-          doorUp = true;
-        } else {
-          doorDown = true;
-        }
-        break;
+        case 2:
+          if(absTileZ == screenBaseZ) {
+            doorUp = true;
+          } else {
+            doorDown = true;
+          }
+          break;
       }
 
       for(int32 tileY = 0; tileY < tilesPerHeight; tileY++) {
@@ -716,94 +716,97 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     v3 oldSwordP = {};
 
     switch(entity->type) {
-    case EntityType_Hero: {
-      for(int conIndex = 0; conIndex < ArrayCount(state->controlledHeroes);
-          conIndex++) {
-        controlled_hero *conHero = state->controlledHeroes + conIndex;
-        if(entity->stored == conHero->stored) {
-          moveSpec = HeroMoveSpec();
-          ddP = V3(conHero->ddP, 0.0f);
+      case EntityType_Hero: {
+        for(int conIndex = 0; conIndex < ArrayCount(state->controlledHeroes);
+            conIndex++) {
+          controlled_hero *conHero = state->controlledHeroes + conIndex;
+          if(entity->stored == conHero->stored) {
+            moveSpec = HeroMoveSpec();
+            ddP = V3(conHero->ddP, 0.0f);
 
-          if(conHero->dZ != 0.0f) {
-            entity->dP.z = conHero->dZ;
-          }
+            if(conHero->dZ != 0.0f) {
+              entity->dP.z = conHero->dZ;
+            }
 
-          if(conHero->dSword.x != 0.0f || conHero->dSword.y != 0.0f) {
-            sim_entity *sword = entity->sword.entity;
-            Assert(sword);
+            if(conHero->dSword.x != 0.0f || conHero->dSword.y != 0.0f) {
+              sim_entity *sword = entity->sword.entity;
+              Assert(sword);
 
-            if(HasFlag(sword, EntityFlag_NonSpatial)) {
-              sword->distanceLimit = 5.0f;
-              MakeEntitySpatial(sword, entity->p, 8.0f * conHero->dSword);
+              if(HasFlag(sword, EntityFlag_NonSpatial)) {
+                sword->distanceLimit = 5.0f;
+                MakeEntitySpatial(sword, entity->p, 8.0f * conHero->dSword);
+              }
             }
           }
         }
-      }
 
-      real32 shadowAlpha = 1.0f - 0.5f * entity->p.z;
-      if(shadowAlpha < 0.0f) {
-        shadowAlpha = 0.0f;
-      }
+        real32 shadowAlpha = 1.0f - 0.5f * entity->p.z;
+        if(shadowAlpha < 0.0f) {
+          shadowAlpha = 0.0f;
+        }
 
-      PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 }, 0.0f, shadowAlpha);
-      PushPiece(&pieceGroup, &heroBitmaps.cape, heroBitmaps.offset);
-      PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
-      DrawHitPoints(entity, &pieceGroup);
-    } break;
+        PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 }, 0.0f, shadowAlpha);
+        PushPiece(&pieceGroup, &heroBitmaps.cape, heroBitmaps.offset);
+        PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
+        DrawHitPoints(entity, &pieceGroup);
+      } break;
 
-    case EntityType_Sword: {
-      moveSpec.ddPScale = 0.0f;
-      moveSpec.drag = 0.0f;
+      case EntityType_Sword: {
+        moveSpec.ddPScale = 0.0f;
+        moveSpec.drag = 0.0f;
 
-      if(entity->distanceLimit <= 0.0f) {
-        MakeEntityNonSpatial(entity);
-        ClearCollisionRulesFor(state, entity->stored);
-      }
+        if(entity->distanceLimit <= 0.0f) {
+          MakeEntityNonSpatial(entity);
+          ClearCollisionRulesFor(state, entity->stored);
+        }
 
-      PushPiece(&pieceGroup, &state->sword, v2{ 28, 22 });
-    } break;
+        PushPiece(&pieceGroup, &state->sword, v2{ 28, 22 });
+      } break;
 
-    case EntityType_Wall: {
-      PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 });
-    } break;
+      case EntityType_Wall: {
+        PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 });
+      } break;
 
-    case EntityType_Monster: {
-      PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 });
-      PushPiece(&pieceGroup, &heroBitmaps.torso, heroBitmaps.offset);
-      DrawHitPoints(entity, &pieceGroup);
-    } break;
+      case EntityType_Monster: {
+        PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 });
+        PushPiece(&pieceGroup, &heroBitmaps.torso, heroBitmaps.offset);
+        DrawHitPoints(entity, &pieceGroup);
+      } break;
 
-    case EntityType_Stairwell: {
-      PushRectangle(&pieceGroup, v2{}, 0.5f * entity->dim.xy, v3{ 1.0f, 0, 0 });
-    } break;
+      case EntityType_Stairwell: {
+        PushRectangle(&pieceGroup,
+          v2{},
+          0.5f * entity->dim.xy,
+          v3{ 1.0f, 0, 0 });
+      } break;
 
-    case EntityType_Familiar: {
-      sim_entity *closestHero = NULL;
-      real32 closestDSq = Square(10.0f);
+      case EntityType_Familiar: {
+        sim_entity *closestHero = NULL;
+        real32 closestDSq = Square(10.0f);
 
-      for(uint32 i = 0; i < simRegion->entityCount; i++) {
-        sim_entity *testEntity = simRegion->entities + i;
-        if(testEntity->type == EntityType_Hero) {
-          real32 testDSq = LengthSq(testEntity->p - entity->p);
-          if(testDSq < closestDSq) {
-            closestDSq = testDSq;
-            closestHero = testEntity;
+        for(uint32 i = 0; i < simRegion->entityCount; i++) {
+          sim_entity *testEntity = simRegion->entities + i;
+          if(testEntity->type == EntityType_Hero) {
+            real32 testDSq = LengthSq(testEntity->p - entity->p);
+            if(testDSq < closestDSq) {
+              closestDSq = testDSq;
+              closestHero = testEntity;
+            }
           }
         }
+
+        if(closestHero && (closestDSq >= Square(3.0f))) {
+          ddP = closestHero->p - entity->p;
+        }
+
+        moveSpec = HeroMoveSpec();
+        PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 }, 0.0f);
+        PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
+      } break;
+
+      default: {
+        InvalidCodePath;
       }
-
-      if(closestHero && (closestDSq >= Square(3.0f))) {
-        ddP = closestHero->p - entity->p;
-      }
-
-      moveSpec = HeroMoveSpec();
-      PushPiece(&pieceGroup, &state->shadow, v2{ 70, 37 }, 0.0f);
-      PushPiece(&pieceGroup, &heroBitmaps.head, heroBitmaps.offset);
-    } break;
-
-    default: {
-      InvalidCodePath;
-    }
     }
 
     if(!HasFlag(entity, EntityFlag_NonSpatial)
