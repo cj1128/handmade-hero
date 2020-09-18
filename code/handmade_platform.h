@@ -99,10 +99,10 @@ struct game_controller_input {
   real32 stickAverageX;
   real32 stickAverageY;
 
+  // D-pad
   union {
     game_button_state buttons[12];
     struct {
-      // D-pad
       game_button_state moveUp;
       game_button_state moveDown;
       game_button_state moveLeft;

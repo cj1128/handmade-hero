@@ -200,6 +200,7 @@ ChangeEntityLocationRaw(memory_arena *arena,
         }
       }
     }
+    Assert(!notFound);
   }
 
   if(newP) {

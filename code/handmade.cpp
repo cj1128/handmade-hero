@@ -421,7 +421,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     state->sword
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock03.bmp");
 
-    hero_bitmaps *heroBitmaps = &state->heroBitmaps[0];
+    hero_bitmaps *heroBitmaps = state->heroBitmaps;
     heroBitmaps->offset = v2{ 72, 35 };
     heroBitmaps->head = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -432,8 +432,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     heroBitmaps->torso = LoadBMP(thread,
       memory->debugPlatformReadFile,
       "test/test_hero_right_torso.bmp");
-    heroBitmaps++;
 
+    heroBitmaps++;
     heroBitmaps->offset = v2{ 72, 35 };
     heroBitmaps->head = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -444,8 +444,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     heroBitmaps->torso = LoadBMP(thread,
       memory->debugPlatformReadFile,
       "test/test_hero_back_torso.bmp");
-    heroBitmaps++;
 
+    heroBitmaps++;
     heroBitmaps->offset = v2{ 72, 35 };
     heroBitmaps->head = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -456,8 +456,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     heroBitmaps->torso = LoadBMP(thread,
       memory->debugPlatformReadFile,
       "test/test_hero_left_torso.bmp");
-    heroBitmaps++;
 
+    heroBitmaps++;
     heroBitmaps->offset = v2{ 72, 35 };
     heroBitmaps->head = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -503,7 +503,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         randomValue = randomNumberTable[randomIndex++] % 3;
       }
 
-      // Make a stariwell in first screen
+      // Make a stairwell in first screen
       if(screenIndex == 0) {
         randomValue = 2;
       }
@@ -517,15 +517,17 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           doorBottom = true;
         } break;
 
-        case 2:
+        case 2: {
           if(absTileZ == screenBaseZ) {
             doorUp = true;
           } else {
             doorDown = true;
           }
-          break;
+        } break;
       }
 
+      // 1: empty
+      // 2: wall
       for(int32 tileY = 0; tileY < tilesPerHeight; tileY++) {
         for(int32 tileX = 0; tileX < tilesPerWidth; tileX++) {
           int32 absTileX = screenX * tilesPerWidth + tileX;
@@ -675,12 +677,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
-  int32 tileSpanX = tilesPerWidth * 3;
-  int32 tileSpanY = tilesPerHeight * 3;
-  int32 tileSpanZ = 10;
+  int32 cameraSpanX = tilesPerWidth * 3;
+  int32 cameraSpanY = tilesPerHeight * 3;
+  int32 cameraSpanZ = 10;
   rectangle3 cameraBounds = RectCenterDim(v3{ 0, 0, 0 },
-    world->tileSizeInMeters
-      * v3{ (real32)tileSpanX, (real32)tileSpanY, (real32)tileSpanZ });
+    v3{
+      world->tileSizeInMeters * (real32)cameraSpanX,
+      world->tileSizeInMeters * (real32)cameraSpanY,
+      world->tileDepthInMeters * (real32)cameraSpanZ,
+    });
 
   memory_arena simArena;
   InitializeArena(&simArena,
@@ -689,7 +694,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   sim_region *simRegion
     = BeginSim(&simArena, state, state->cameraP, cameraBounds, input->dt);
 
+  //
   // Render
+  //
 
   // Background
   DrawRectangle(buffer,
@@ -764,7 +771,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Wall: {
-        PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 });
+        PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 }, 0);
       } break;
 
       case EntityType_Monster: {
@@ -815,14 +822,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
 
     real32 zFudge = 1.0f + (0.1f * entity->p.z);
-    v2 entityGroundPoint
-      = screenCenter + zFudge * entity->p.xy * metersToPixels;
+    v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
     real32 entityZ = entity->p.z * metersToPixels;
 
     if(state->debugDrawBoundary) {
       DrawRectangle(buffer,
-        entityGroundPoint - 0.5f * entity->dim.xy * metersToPixels,
-        entityGroundPoint + 0.5f * entity->dim.xy * metersToPixels,
+        entityCenter - 0.5f * entity->dim.xy * metersToPixels,
+        entityCenter + 0.5f * entity->dim.xy * metersToPixels,
         v3{ 1.0f, 1.0f, 0.0f });
     }
 
@@ -830,20 +836,27 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         pieceIndex++) {
       render_piece *piece = pieceGroup.pieces + pieceIndex;
       v2 center = {
-        entityGroundPoint.x - piece->offset.x,
-        entityGroundPoint.y - piece->offset.y + entityZ * (piece->entityZC),
+        entityCenter.x - piece->offset.x,
+        entityCenter.y - piece->offset.y + entityZ * (piece->entityZC),
       };
       if(piece->bitmap) {
         DrawBitmap(buffer, piece->bitmap, center, piece->alpha);
       } else {
         DrawRectangle(buffer,
-          entityGroundPoint + metersToPixels * piece->offset
+          entityCenter + metersToPixels * piece->offset
             - metersToPixels * piece->halfDim,
-          entityGroundPoint + metersToPixels * piece->offset
+          entityCenter + metersToPixels * piece->offset
             + metersToPixels * piece->halfDim,
           piece->color);
       }
     }
+  }
+
+  // Debug: show current floors
+  for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
+    v2 start = { 10 + (real32)i * 15, (real32)buffer->height - 20 };
+
+    DrawRectangle(buffer, start, start + v2{ 10, 10 }, v3{ 0.0f, 1.0f, 0.0f });
   }
 
   EndSim(simRegion, state);
