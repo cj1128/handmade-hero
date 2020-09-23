@@ -229,8 +229,8 @@ AddCollisionRule(game_state *state,
   }
 
   pairwise_collision_rule *found = NULL;
-  uint32 bucket = (uintptr_t)a & (ArrayCount(state->collisionRuleHash) - 1);
-  for(pairwise_collision_rule *rule = state->collisionRuleHash[bucket]; rule;
+  uint32 hashIndex = (uintptr_t)a & (ArrayCount(state->collisionRuleHash) - 1);
+  for(pairwise_collision_rule *rule = state->collisionRuleHash[hashIndex]; rule;
       rule = rule->nextInHash) {
     if(rule->a == a && rule->b == b) {
       found = rule;
@@ -247,8 +247,8 @@ AddCollisionRule(game_state *state,
       found = PushStruct(&state->worldArena, pairwise_collision_rule);
     }
 
-    found->nextInHash = state->collisionRuleHash[bucket];
-    state->collisionRuleHash[bucket] = found;
+    found->nextInHash = state->collisionRuleHash[hashIndex];
+    state->collisionRuleHash[hashIndex] = found;
   }
 
   found->a = a;
@@ -414,68 +414,78 @@ MoveEntity(game_state *state,
     for(uint32 index = 0; index < simRegion->entityCount; index++) {
       sim_entity *testEntity = simRegion->entities + index;
       if(CanCollide(state, entity, testEntity)) {
+        v3 minkowskiDiameter = {
+          testEntity->dim.x + entity->dim.x,
+          testEntity->dim.y + entity->dim.y,
+          testEntity->dim.z + entity->dim.z,
+        };
         v3 rel = entity->p - testEntity->p;
 
-        real32 radiusW = 0.5f * testEntity->dim.x + 0.5f * entity->dim.x;
-        real32 radiusH = 0.5f * testEntity->dim.y + 0.5f * entity->dim.y;
+        v3 minCorner = -0.5f * minkowskiDiameter;
+        v3 maxCorner = 0.5f * minkowskiDiameter;
 
-        v3 testWallNormal = {};
-        real32 testTmin = 1.0f;
-        bool32 hitThis = false;
+        real32 radiusW = 0.5f * minkowskiDiameter.x;
+        real32 radiusH = 0.5f * minkowskiDiameter.y;
 
-        // left
-        if(TestWall(-radiusW,
-             entityDelta.x,
-             entityDelta.y,
-             rel.x,
-             rel.y,
-             radiusH,
-             &testTmin)) {
-          testWallNormal = { 1, 0, 0 };
-          hitThis = true;
-        }
+        if(rel.z >= minCorner.z && rel.z < maxCorner.z) {
+          v3 testWallNormal = {};
+          real32 testTmin = 1.0f;
+          bool32 hitThis = false;
 
-        // right
-        if(TestWall(radiusW,
-             entityDelta.x,
-             entityDelta.y,
-             rel.x,
-             rel.y,
-             radiusH,
-             &testTmin)) {
-          testWallNormal = { -1, 0, 0 };
-          hitThis = true;
-        }
+          // left
+          if(TestWall(minCorner.x,
+               entityDelta.x,
+               entityDelta.y,
+               rel.x,
+               rel.y,
+               radiusH,
+               &testTmin)) {
+            testWallNormal = { 1, 0, 0 };
+            hitThis = true;
+          }
 
-        // bottom
-        if(TestWall(-radiusH,
-             entityDelta.y,
-             entityDelta.x,
-             rel.y,
-             rel.x,
-             radiusW,
-             &testTmin)) {
-          testWallNormal = { 0, 1, 0 };
-          hitThis = true;
-        }
+          // right
+          if(TestWall(maxCorner.x,
+               entityDelta.x,
+               entityDelta.y,
+               rel.x,
+               rel.y,
+               radiusH,
+               &testTmin)) {
+            testWallNormal = { -1, 0, 0 };
+            hitThis = true;
+          }
 
-        // top
-        if(TestWall(radiusH,
-             entityDelta.y,
-             entityDelta.x,
-             rel.y,
-             rel.x,
-             radiusW,
-             &testTmin)) {
-          testWallNormal = { 0, -1, 0 };
-          hitThis = true;
-        }
+          // bottom
+          if(TestWall(minCorner.y,
+               entityDelta.y,
+               entityDelta.x,
+               rel.y,
+               rel.x,
+               radiusW,
+               &testTmin)) {
+            testWallNormal = { 0, 1, 0 };
+            hitThis = true;
+          }
 
-        if(hitThis) {
-          if(SpeculativeCollide(entity, testEntity)) {
-            tMin = testTmin;
-            wallNormal = testWallNormal;
-            hitEntity = testEntity;
+          // top
+          if(TestWall(maxCorner.y,
+               entityDelta.y,
+               entityDelta.x,
+               rel.y,
+               rel.x,
+               radiusW,
+               &testTmin)) {
+            testWallNormal = { 0, -1, 0 };
+            hitThis = true;
+          }
+
+          if(hitThis) {
+            if(SpeculativeCollide(entity, testEntity)) {
+              tMin = testTmin;
+              wallNormal = testWallNormal;
+              hitEntity = testEntity;
+            }
           }
         }
       }

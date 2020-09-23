@@ -30,6 +30,16 @@ AddStoredEntity(game_state *state,
   return AddStoredEntity(state, type, p);
 }
 
+internal stored_entity *
+AddGroundedEntity(game_state *state, entity_type type, world_position p, v3 dim)
+{
+  world_position offsetP
+    = MapIntoWorldSpace(&state->world, p, v3{ 0, 0, 0.5f * dim.z });
+  stored_entity *entity = AddStoredEntity(state, type, p);
+  entity->sim.dim = dim;
+  return entity;
+}
+
 internal void
 InitHitPoints(stored_entity *stored, int value)
 {
@@ -47,6 +57,7 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
     = AddStoredEntity(state, EntityType_Wall, tileX, tileY, tileZ);
   stored->sim.dim.x = state->world.tileSizeInMeters;
   stored->sim.dim.y = stored->sim.dim.x;
+  stored->sim.dim.z = state->world.tileDepthInMeters;
 
   return stored;
 }
@@ -57,8 +68,11 @@ AddSword(game_state *state)
   stored_entity *sword
     = AddStoredEntity(state, EntityType_Sword, NullPosition());
 
+  AddFlags(&sword->sim, EntityFlag_Moveable);
+
   sword->sim.dim.x = 1.0f;
   sword->sim.dim.y = 0.5f;
+  sword->sim.dim.z = 0.1f;
 
   return sword;
 }
@@ -72,7 +86,7 @@ AddHero(game_state *state)
 
   hero->sim.dim.x = 1.0f;
   hero->sim.dim.y = 0.5f;
-  hero->sim.dim.z = 0.5f;
+  hero->sim.dim.z = 1.2f;
 
   InitHitPoints(hero, 3);
 
@@ -90,8 +104,9 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 
   AddFlags(&monster->sim, EntityFlag_Moveable);
 
-  monster->sim.dim.y = 0.5f;
   monster->sim.dim.x = 1.0f;
+  monster->sim.dim.y = 0.5f;
+  monster->sim.dim.z = 0.5f;
 
   InitHitPoints(monster, 3);
 }
@@ -123,8 +138,9 @@ AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 
   AddFlags(&familiar->sim, EntityFlag_Moveable);
 
-  familiar->sim.dim.x = 0.5;
-  familiar->sim.dim.y = 1.0f;
+  familiar->sim.dim.x = 1.0f;
+  familiar->sim.dim.y = 0.5f;
+  familiar->sim.dim.z = 0.5f;
 }
 
 #pragma pack(push, 1)
@@ -383,14 +399,16 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup)
 }
 
 internal void
-InitializeWorld(game_world *world, real32 tileSizeInMeters)
+InitializeWorld(game_world *world,
+  real32 tileSizeInMeters,
+  real32 tileDepthInMeters)
 {
   world->tileSizeInMeters = tileSizeInMeters;
-  world->tileDepthInMeters = tileSizeInMeters;
+  world->tileDepthInMeters = tileDepthInMeters;
   world->chunkDimInMeters = {
     (real32)TILES_PER_CHUNK * tileSizeInMeters,
     (real32)TILES_PER_CHUNK * tileSizeInMeters,
-    world->tileDepthInMeters,
+    tileDepthInMeters,
   };
 }
 
@@ -473,7 +491,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       memory->permanentStorageSize - sizeof(game_state),
       (uint8 *)memory->permanentStorage + sizeof(game_state));
 
-    InitializeWorld(world, 1.4f);
+    InitializeWorld(world, 1.4f, 3.0f);
 
     int32 screenBaseX = 0;
     int32 screenBaseY = 0;
@@ -771,7 +789,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Wall: {
-        PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 }, 0);
+        PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 }, 1);
       } break;
 
       case EntityType_Monster: {

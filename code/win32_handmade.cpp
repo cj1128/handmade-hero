@@ -306,12 +306,20 @@ Win32LoadGameCode(char *dllPath, char *dllTempPath, char *lockPah)
   WIN32_FILE_ATTRIBUTE_DATA ignored;
   if(!GetFileAttributesExA(lockPah, GetFileExInfoStandard, &ignored)) {
     result.gameDLLLastWriteTime = Win32GetFileLastWriteTime(dllPath);
+
     // CopyFile may fail the first few times
-    while(1) {
-      if(CopyFile(dllPath, dllTempPath, false))
+    int loadCounter = 0;
+    while(true) {
+      loadCounter++;
+      Assert(loadCounter <= 10);
+
+      if(CopyFile(dllPath, dllTempPath, false)) {
         break;
-      if(GetLastError() == ERROR_FILE_NOT_FOUND)
+      }
+
+      if(GetLastError() == ERROR_FILE_NOT_FOUND) {
         break;
+      }
     }
 
     HMODULE library = LoadLibraryA(dllTempPath);
@@ -544,120 +552,124 @@ Win32ProcessMessages(win32_state *win32State,
 
   while(PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
     switch(message.message) {
-    case WM_SYSKEYUP:
-    case WM_SYSKEYDOWN:
-    case WM_KEYUP:
-    case WM_KEYDOWN: {
-      uint32 VKCode = (uint32)message.wParam;
-      bool wasDown = (message.lParam & (1 << 30)) != 0;
-      bool isDown = (message.lParam & (1 << 31)) == 0;
+      case WM_SYSKEYUP:
+      case WM_SYSKEYDOWN:
+      case WM_KEYUP:
+      case WM_KEYDOWN: {
+        uint32 VKCode = (uint32)message.wParam;
+        bool wasDown = (message.lParam & (1 << 30)) != 0;
+        bool isDown = (message.lParam & (1 << 31)) == 0;
 
-      if(isDown) {
-        bool32 isAltDown = message.lParam & (1 << 29);
+        if(isDown) {
+          bool32 isAltDown = message.lParam & (1 << 29);
 
-        if(VKCode == VK_F4 && isAltDown) {
-          globalRunning = false;
-        }
-
-        if(VKCode == VK_RETURN && isAltDown) {
-          ToggleFullscreen(message.hwnd);
-        }
-      }
-
-      if(wasDown != isDown) {
-        switch(VKCode) {
-        case 'W': {
-          Win32ProcessKeyboardButtonState(&keyboardController->moveUp, isDown);
-        } break;
-
-        case 'A': {
-          Win32ProcessKeyboardButtonState(&keyboardController->moveLeft,
-            isDown);
-        } break;
-
-        case 'S': {
-          Win32ProcessKeyboardButtonState(&keyboardController->moveDown,
-            isDown);
-        } break;
-
-        case 'D': {
-          Win32ProcessKeyboardButtonState(&keyboardController->moveRight,
-            isDown);
-        } break;
-
-        case 'P': {
-          if(message.message == WM_KEYDOWN) {
-            globalDebugPauseRender = !globalDebugPauseRender;
+          if(VKCode == VK_F4 && isAltDown) {
+            globalRunning = false;
           }
-        };
 
-        case VK_UP: {
-          Win32ProcessKeyboardButtonState(&keyboardController->actionUp,
-            isDown);
-        } break;
+          if(VKCode == VK_RETURN && isAltDown) {
+            ToggleFullscreen(message.hwnd);
+          }
+        }
 
-        case VK_DOWN: {
-          Win32ProcessKeyboardButtonState(&keyboardController->actionDown,
-            isDown);
-        } break;
+        if(wasDown != isDown) {
+          switch(VKCode) {
+            case 'W': {
+              Win32ProcessKeyboardButtonState(&keyboardController->moveUp,
+                isDown);
+            } break;
 
-        case VK_LEFT: {
-          Win32ProcessKeyboardButtonState(&keyboardController->actionLeft,
-            isDown);
-        } break;
+            case 'A': {
+              Win32ProcessKeyboardButtonState(&keyboardController->moveLeft,
+                isDown);
+            } break;
 
-        case VK_RIGHT: {
-          Win32ProcessKeyboardButtonState(&keyboardController->actionRight,
-            isDown);
-        } break;
+            case 'S': {
+              Win32ProcessKeyboardButtonState(&keyboardController->moveDown,
+                isDown);
+            } break;
 
-        case VK_ESCAPE: {
-          Win32ProcessKeyboardButtonState(&keyboardController->back, isDown);
-        } break;
+            case 'D': {
+              Win32ProcessKeyboardButtonState(&keyboardController->moveRight,
+                isDown);
+            } break;
 
-        case VK_SPACE: {
-          Win32ProcessKeyboardButtonState(&keyboardController->start, isDown);
-        } break;
+            case 'P': {
+              if(message.message == WM_KEYDOWN) {
+                globalDebugPauseRender = !globalDebugPauseRender;
+              }
+            };
 
-        // left shoulder
-        case 'Q': {
-          Win32ProcessKeyboardButtonState(&keyboardController->leftShoulder,
-            isDown);
-        } break;
+            case VK_UP: {
+              Win32ProcessKeyboardButtonState(&keyboardController->actionUp,
+                isDown);
+            } break;
 
-        // right shoulder
-        case 'E': {
-          Win32ProcessKeyboardButtonState(&keyboardController->rightShoulder,
-            isDown);
-        } break;
+            case VK_DOWN: {
+              Win32ProcessKeyboardButtonState(&keyboardController->actionDown,
+                isDown);
+            } break;
 
-        case 'L': {
-          if(isDown) {
-            if(win32State->inputRecordingIndex == 0) {
-              if(win32State->inputPlayingBackIndex == 0) {
-                Win32BeginInputRecording(win32State, 1);
-              } else {
-                Win32EndInputPlayingBack(win32State);
-                // Reset all buttons
-                for(int i = 0; i < ArrayCount(keyboardController->buttons);
-                    i++) {
-                  keyboardController->buttons[i] = {};
+            case VK_LEFT: {
+              Win32ProcessKeyboardButtonState(&keyboardController->actionLeft,
+                isDown);
+            } break;
+
+            case VK_RIGHT: {
+              Win32ProcessKeyboardButtonState(&keyboardController->actionRight,
+                isDown);
+            } break;
+
+            case VK_ESCAPE: {
+              Win32ProcessKeyboardButtonState(&keyboardController->back,
+                isDown);
+            } break;
+
+            case VK_SPACE: {
+              Win32ProcessKeyboardButtonState(&keyboardController->start,
+                isDown);
+            } break;
+
+            // left shoulder
+            case 'Q': {
+              Win32ProcessKeyboardButtonState(&keyboardController->leftShoulder,
+                isDown);
+            } break;
+
+            // right shoulder
+            case 'E': {
+              Win32ProcessKeyboardButtonState(
+                &keyboardController->rightShoulder,
+                isDown);
+            } break;
+
+            case 'L': {
+              if(isDown) {
+                if(win32State->inputRecordingIndex == 0) {
+                  if(win32State->inputPlayingBackIndex == 0) {
+                    Win32BeginInputRecording(win32State, 1);
+                  } else {
+                    Win32EndInputPlayingBack(win32State);
+                    // Reset all buttons
+                    for(int i = 0; i < ArrayCount(keyboardController->buttons);
+                        i++) {
+                      keyboardController->buttons[i] = {};
+                    }
+                  }
+                } else {
+                  Win32EndInputRecording(win32State);
+                  Win32BeginInputPlayingBack(win32State, 1);
                 }
               }
-            } else {
-              Win32EndInputRecording(win32State);
-              Win32BeginInputPlayingBack(win32State, 1);
-            }
+            } break;
           }
-        } break;
         }
-      }
-    } break;
+      } break;
 
-    default: {
-      TranslateMessage(&message);
-      DispatchMessage(&message);
-    } break;
+      default: {
+        TranslateMessage(&message);
+        DispatchMessage(&message);
+      } break;
     }
   }
 }
@@ -908,52 +920,52 @@ Win32MainWindowCallback(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
 {
   LRESULT result = 0;
   switch(message) {
-  case WM_SETCURSOR: {
-    if(globalShowCursor) {
+    case WM_SETCURSOR: {
+      if(globalShowCursor) {
+        result = DefWindowProcA(window, message, wParam, lParam);
+      } else {
+        SetCursor(0);
+      }
+    } break;
+
+    case WM_ACTIVATEAPP: {
+      OutputDebugStringA("WM_ACTIVATEAPP\n");
+    } break;
+
+    case WM_CLOSE: {
+      globalRunning = false;
+      OutputDebugStringA("WM_CLOSE\n");
+    } break;
+
+    case WM_DESTROY: {
+      OutputDebugStringA("WM_DESTROY\n");
+    } break;
+
+    case WM_SYSKEYUP:
+    case WM_SYSKEYDOWN:
+    case WM_KEYUP:
+    case WM_KEYDOWN: {
+      Assert(!"no keyboard message here")
+    } break;
+
+    case WM_PAINT: {
+      PAINTSTRUCT paintStruct = {};
+      HDC deviceContext = BeginPaint(window, &paintStruct);
+      win32_window_dimension dimension = Win32GetWindowDimension(window);
+      Win32UpdateWindow(deviceContext,
+        dimension.width,
+        dimension.height,
+        &globalBackBuffer);
+      EndPaint(window, &paintStruct);
+    } break;
+
+    case WM_SIZE: {
+      OutputDebugStringA("WM_SIZE\n");
+    } break;
+
+    default: {
       result = DefWindowProcA(window, message, wParam, lParam);
-    } else {
-      SetCursor(0);
-    }
-  } break;
-
-  case WM_ACTIVATEAPP: {
-    OutputDebugStringA("WM_ACTIVATEAPP\n");
-  } break;
-
-  case WM_CLOSE: {
-    globalRunning = false;
-    OutputDebugStringA("WM_CLOSE\n");
-  } break;
-
-  case WM_DESTROY: {
-    OutputDebugStringA("WM_DESTROY\n");
-  } break;
-
-  case WM_SYSKEYUP:
-  case WM_SYSKEYDOWN:
-  case WM_KEYUP:
-  case WM_KEYDOWN: {
-    Assert(!"no keyboard message here")
-  } break;
-
-  case WM_PAINT: {
-    PAINTSTRUCT paintStruct = {};
-    HDC deviceContext = BeginPaint(window, &paintStruct);
-    win32_window_dimension dimension = Win32GetWindowDimension(window);
-    Win32UpdateWindow(deviceContext,
-      dimension.width,
-      dimension.height,
-      &globalBackBuffer);
-    EndPaint(window, &paintStruct);
-  } break;
-
-  case WM_SIZE: {
-    OutputDebugStringA("WM_SIZE\n");
-  } break;
-
-  default: {
-    result = DefWindowProcA(window, message, wParam, lParam);
-  } break;
+    } break;
   }
 
   return result;

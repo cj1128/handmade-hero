@@ -25,7 +25,7 @@ struct world_position {
   int32 chunkY;
   int32 chunkZ;
 
-  // relative to bottom left
+  // relative to the min corner
   v3 _offset;
 };
 

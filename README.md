@@ -18,6 +18,21 @@ Deepest thanks to _Casey Muratori_ for this excellent project. It's really aweso
 
 Windows 10 with Visual Studio 2019 community version and Sublime Text 3.
 
+Build system for Sublime Text 3:
+
+```json
+{
+  "build_systems":
+  [
+    {
+      "name": "HandmadeHero",
+      "shell_cmd": "build",
+      "file_regex":"^(.+?)\\((\\d+\\))(): (error)(.+)$"
+    }
+  ]
+}
+```
+
 ## Code Style
 
 My preferred code style for C is different from Casey's.
@@ -128,6 +143,7 @@ My preferred code style for C is different from Casey's.
 - [Day 73: Temporarily Overlapping Entities](#day-73-temporarily-overlapping-entities)
 - [Day 74: Moving Entities Up and Down Stairwells](#day-74-moving-entities-up-and-down-stairwells)
 - [Day 75: Conditional Movements Based on Step Heights](#day-75-conditional-movements-based-on-step-heights)
+- [Day 76: Entity Heights and Collision Detection](#day-76-entity-heights-and-collision-detection)
 
 <!-- /MarkdownTOC -->
 
@@ -764,3 +780,11 @@ To-do list:
 - Prevent player from "jumping" when he goes up/down stairs
 - Define `SpeculativeCollide` to prevent hero from stepping out the stair and jumping into the stair
 - Add `zFudge` when rendering
+
+### Day 76: Entity Heights and Collision Detection
+
+- Take into account `z` in `MoveEntity`. Remember to set height for walls.
+- Change `TileDepthInMeters`, currently it's just the same as `TleSizeInMeters`.
+- Modify `RectanglesIntersect`
+- Define `AddGroundedEntity`
+- TODO: need to fix the rendering!
