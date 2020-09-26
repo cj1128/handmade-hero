@@ -10,7 +10,7 @@ TestWall(real32 wallX,
   real32 radiusY,
   real32 *tMin)
 {
-  real32 tEpsilon = 0.01f;
+  real32 tEpsilon = 0.001f;
   bool32 hit = false;
 
   if(deltaX != 0.0f) {
@@ -80,6 +80,10 @@ AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v3 p)
   Assert(stored->sim.dim.x <= 2 * simRegion->maxEntityRadius);
   Assert(stored->sim.dim.y <= 2 * simRegion->maxEntityRadius);
   Assert(stored->sim.dim.z <= 2 * simRegion->maxEntityRadius);
+
+  if(stored->p.chunkZ != 0 && stored->p.chunkX == 0 && stored->p.chunkY == 0) {
+    int breakHere = 0;
+  }
 
   sim_entity *result = NULL;
 
@@ -303,10 +307,7 @@ internal void
 HandleOverlap(sim_entity *mover, sim_entity *region, real32 *ground, real32 dt)
 {
   if(region->type == EntityType_Stairwell) {
-    rectangle3 regionRect = RectCenterDim(region->p, region->dim);
-    v3 bary = Clamp01(GetBarycentric(regionRect, mover->p));
-
-    *ground = Lerp(bary.y, regionRect.min.z, regionRect.max.z);
+    *ground = GetStairwellGround(region, GetEntityGroundPoint(mover));
   }
 }
 
@@ -341,12 +342,12 @@ SpeculativeCollide(sim_entity *mover, sim_entity *region)
   bool32 result = true;
 
   if(region->type == EntityType_Stairwell) {
-    rectangle3 regionRect = RectCenterDim(region->p, region->dim);
-    v3 bary = Clamp01(GetBarycentric(regionRect, mover->p));
-    real32 ground = Lerp(bary.y, regionRect.min.z, regionRect.max.z);
+    v3 moverGround = GetEntityGroundPoint(mover);
+    real32 ground = GetStairwellGround(region, moverGround);
+    real32 stepHeight = 0.1f;
 
-    result
-      = (Abs(ground - mover->p.z) > 0.1f || (bary.y > 0.1f && bary.y < 0.9f));
+    // TODO: prevent the guy moving out of the stairwell
+    result = Abs(ground - moverGround.z) > stepHeight;
   }
 
   return result;
@@ -388,6 +389,7 @@ MoveEntity(game_state *state,
   v3 entityDelta = 0.5f * ddP * Square(dt) + entity->dP * dt;
   entity->dP += ddP * dt;
 
+  Assert(entity->distanceLimit >= 0);
   real32 distanceRemaining = entity->distanceLimit;
 
   if(distanceRemaining == 0.0f) {
@@ -528,6 +530,12 @@ MoveEntity(game_state *state,
     }
   }
 
+  if(entity->type == EntityType_Hero) {
+    int breakHere = 0;
+  }
+
+  ground += entity->p.z - GetEntityGroundPoint(entity).z;
+
   if(entity->p.z <= ground
     || (HasFlag(entity, EntityFlag_ZSupported) && entity->dP.z == 0.0f)) {
     entity->p.z = ground;
@@ -562,6 +570,10 @@ EndSim(sim_region *simRegion, game_state *state)
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
     stored_entity *stored = entity->stored;
+
+    if(entity->type == EntityType_Hero) {
+      int breakHere = 0;
+    }
 
     Assert(HasFlag(&stored->sim, EntityFlag_Simming));
     stored->sim = *entity;

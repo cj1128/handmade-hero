@@ -33,9 +33,9 @@ AddStoredEntity(game_state *state,
 internal stored_entity *
 AddGroundedEntity(game_state *state, entity_type type, world_position p, v3 dim)
 {
-  world_position offsetP
+  world_position newP
     = MapIntoWorldSpace(&state->world, p, v3{ 0, 0, 0.5f * dim.z });
-  stored_entity *entity = AddStoredEntity(state, type, p);
+  stored_entity *entity = AddStoredEntity(state, type, newP);
   entity->sim.dim = dim;
   return entity;
 }
@@ -53,11 +53,16 @@ InitHitPoints(stored_entity *stored, int value)
 internal stored_entity *
 AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *stored
-    = AddStoredEntity(state, EntityType_Wall, tileX, tileY, tileZ);
-  stored->sim.dim.x = state->world.tileSizeInMeters;
-  stored->sim.dim.y = stored->sim.dim.x;
-  stored->sim.dim.z = state->world.tileDepthInMeters;
+  world_position p
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
+  v3 dim = { state->world.tileSizeInMeters,
+    state->world.tileSizeInMeters,
+    state->world.tileDepthInMeters };
+  stored_entity *stored = AddGroundedEntity(state, EntityType_Wall, p, dim);
+
+  if(stored->p.chunkX == 0 && stored->p.chunkY == 0 && stored->p.chunkZ != 0) {
+    int breakHere = 0;
+  }
 
   return stored;
 }
@@ -65,14 +70,11 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 internal stored_entity *
 AddSword(game_state *state)
 {
+  v3 dim = { 1.0f, 0.5f, 0.1f };
   stored_entity *sword
-    = AddStoredEntity(state, EntityType_Sword, NullPosition());
+    = AddGroundedEntity(state, EntityType_Sword, NullPosition(), dim);
 
   AddFlags(&sword->sim, EntityFlag_Moveable);
-
-  sword->sim.dim.x = 1.0f;
-  sword->sim.dim.y = 0.5f;
-  sword->sim.dim.z = 0.1f;
 
   return sword;
 }
@@ -80,13 +82,11 @@ AddSword(game_state *state)
 internal stored_entity *
 AddHero(game_state *state)
 {
-  stored_entity *hero = AddStoredEntity(state, EntityType_Hero, state->cameraP);
+  v3 dim = { 1.0f, 0.5f, 1.2f };
+  stored_entity *hero
+    = AddGroundedEntity(state, EntityType_Hero, state->cameraP, dim);
 
   AddFlags(&hero->sim, EntityFlag_Moveable);
-
-  hero->sim.dim.x = 1.0f;
-  hero->sim.dim.y = 0.5f;
-  hero->sim.dim.z = 1.2f;
 
   InitHitPoints(hero, 3);
 
@@ -99,14 +99,12 @@ AddHero(game_state *state)
 internal void
 AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *monster
-    = AddStoredEntity(state, EntityType_Monster, tileX, tileY, tileZ);
+  v3 dim = { 1.0f, 0.5f, 0.5f };
+  world_position p
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
+  stored_entity *monster = AddGroundedEntity(state, EntityType_Monster, p, dim);
 
   AddFlags(&monster->sim, EntityFlag_Moveable);
-
-  monster->sim.dim.x = 1.0f;
-  monster->sim.dim.y = 0.5f;
-  monster->sim.dim.z = 0.5f;
 
   InitHitPoints(monster, 3);
 }
@@ -114,33 +112,26 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 internal void
 AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  stored_entity *stored = AddStoredEntity(state,
-    EntityType_Stairwell,
-    tileX,
-    tileY,
-    tileZ,
-    v3{
-      0,
-      0,
-      0.5f * state->world.tileDepthInMeters,
-    });
-
-  stored->sim.dim.x = state->world.tileSizeInMeters;
-  stored->sim.dim.y = 2.0f * stored->sim.dim.x;
-  stored->sim.dim.z = state->world.tileDepthInMeters;
+  world_position p
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
+  v3 dim = { state->world.tileSizeInMeters,
+    2.0f * state->world.tileSizeInMeters,
+    1.1f * state->world.tileDepthInMeters };
+  stored_entity *stored
+    = AddGroundedEntity(state, EntityType_Stairwell, p, dim);
+  stored->sim.walkableHeight = state->world.tileDepthInMeters;
 }
 
 internal void
 AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
+  v3 dim = { 1.0f, 0.5f, 0.5f };
+  world_position p
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
   stored_entity *familiar
-    = AddStoredEntity(state, EntityType_Familiar, tileX, tileY, tileZ);
+    = AddGroundedEntity(state, EntityType_Familiar, p, dim);
 
   AddFlags(&familiar->sim, EntityFlag_Moveable);
-
-  familiar->sim.dim.x = 1.0f;
-  familiar->sim.dim.y = 0.5f;
-  familiar->sim.dim.z = 0.5f;
 }
 
 #pragma pack(push, 1)
@@ -245,15 +236,14 @@ InitializeArena(memory_arena *arena, size_t size, void *base)
   arena->used = 0;
 }
 
-// position is the bottm-left corner
 internal void
 DrawBitmap(game_offscreen_buffer *buffer,
   loaded_bitmap *bitmap,
-  v2 position,
+  v2 minCorner,
   real32 cAlpha = 1.0f)
 {
-  int32 minX = RoundReal32ToInt32(position.x);
-  int32 minY = RoundReal32ToInt32(position.y);
+  int32 minX = RoundReal32ToInt32(minCorner.x);
+  int32 minY = RoundReal32ToInt32(minCorner.y);
   int32 maxX = minX + bitmap->width;
   int32 maxY = minY + bitmap->height;
 
@@ -789,6 +779,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Wall: {
+        if(entity->stored->p.chunkZ != 0) {
+          int breakHere = 0;
+        }
+
         PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 }, 1);
       } break;
 
@@ -839,26 +833,28 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
-    real32 zFudge = 1.0f + (0.1f * entity->p.z);
+    real32 entityZ = entity->p.z - 0.5f * entity->dim.z;
+    real32 zFudge = 1.0f + 0.1f * entityZ;
     v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
-    real32 entityZ = entity->p.z * metersToPixels;
 
     if(state->debugDrawBoundary) {
+      v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
       DrawRectangle(buffer,
-        entityCenter - 0.5f * entity->dim.xy * metersToPixels,
-        entityCenter + 0.5f * entity->dim.xy * metersToPixels,
+        entityOrigin - 0.5f * entity->dim.xy * metersToPixels,
+        entityOrigin + 0.5f * entity->dim.xy * metersToPixels,
         v3{ 1.0f, 1.0f, 0.0f });
     }
 
     for(uint32 pieceIndex = 0; pieceIndex < pieceGroup.pieceCount;
         pieceIndex++) {
       render_piece *piece = pieceGroup.pieces + pieceIndex;
-      v2 center = {
-        entityCenter.x - piece->offset.x,
-        entityCenter.y - piece->offset.y + entityZ * (piece->entityZC),
-      };
       if(piece->bitmap) {
-        DrawBitmap(buffer, piece->bitmap, center, piece->alpha);
+        v2 minCorner = {
+          entityCenter.x - piece->offset.x,
+          entityCenter.y - piece->offset.y
+            + entityZ * (piece->entityZC) * metersToPixels,
+        };
+        DrawBitmap(buffer, piece->bitmap, minCorner, piece->alpha);
       } else {
         DrawRectangle(buffer,
           entityCenter + metersToPixels * piece->offset

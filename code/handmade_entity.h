@@ -59,6 +59,9 @@ struct sim_entity {
   real32 distanceLimit;
 
   entity_reference sword;
+
+  // only for stairwell
+  real32 walkableHeight;
 };
 
 struct stored_entity {
@@ -98,6 +101,25 @@ MakeEntitySpatial(sim_entity *entity, v3 p, v3 dP)
   ClearFlags(entity, EntityFlag_NonSpatial);
   entity->p = p;
   entity->dP = dP;
+}
+
+internal v3
+GetEntityGroundPoint(sim_entity *entity)
+{
+  v3 result = entity->p + v3{ 0, 0, -0.5f * entity->dim.z };
+  return result;
+}
+
+internal real32
+GetStairwellGround(sim_entity *entity, v3 moverGround)
+{
+  Assert(entity->type == EntityType_Stairwell);
+
+  rectangle3 entityRect = RectCenterDim(entity->p, entity->dim);
+  v3 bary = Clamp01(GetBarycentric(entityRect, moverGround));
+  real32 ground = entityRect.min.z + bary.y * entity->walkableHeight;
+
+  return ground;
 }
 
 #endif

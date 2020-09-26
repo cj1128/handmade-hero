@@ -308,10 +308,10 @@ Win32LoadGameCode(char *dllPath, char *dllTempPath, char *lockPah)
     result.gameDLLLastWriteTime = Win32GetFileLastWriteTime(dllPath);
 
     // CopyFile may fail the first few times
-    int loadCounter = 0;
+    int copyCounter = 0;
     while(true) {
-      loadCounter++;
-      Assert(loadCounter <= 10);
+      copyCounter++;
+      Assert(copyCounter <= 10);
 
       if(CopyFile(dllPath, dllTempPath, false)) {
         break;

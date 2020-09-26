@@ -144,6 +144,7 @@ My preferred code style for C is different from Casey's.
 - [Day 74: Moving Entities Up and Down Stairwells](#day-74-moving-entities-up-and-down-stairwells)
 - [Day 75: Conditional Movements Based on Step Heights](#day-75-conditional-movements-based-on-step-heights)
 - [Day 76: Entity Heights and Collision Detection](#day-76-entity-heights-and-collision-detection)
+- [Day 77: Entity Ground Points](#day-77-entity-ground-points)
 
 <!-- /MarkdownTOC -->
 
@@ -788,3 +789,11 @@ To-do list:
 - Modify `RectanglesIntersect`
 - Define `AddGroundedEntity`
 - TODO: need to fix the rendering!
+
+### Day 77: Entity Ground Points
+
+- Fix ground handling, need to take the z dimension into account
+- Fix the drawing code
+- Define `GetEntityGroundPoint` and fix `SpeculativeCollide`
+- Add `walkableHeight` to entity which is used only for stairwell, and modify `SpeculativeCollide`
+- Define `GetStairwellGround` and fix `HandleOverlap`. It should use the same method to calculate the stairwell ground as `SpeculativeCollide`.
