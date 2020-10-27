@@ -1,0 +1,1598 @@
+[
+  {
+    "title": "Intro to C on Windows - Day 1 Q&A",
+    "url": "/watch?v=I5fNrmQYeuI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=1"
+  },
+  {
+    "title": "Intro to C on Windows - Day 1",
+    "url": "/watch?v=F3ntGDm6hOs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=2"
+  },
+  {
+    "title": "Intro to C on Windows - Day 2",
+    "url": "/watch?v=KF29ePTqWa4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=3"
+  },
+  {
+    "title": "Intro to C on Windows - Day 2 Q&A",
+    "url": "/watch?v=FVDEIXdGBYo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=4"
+  },
+  {
+    "title": "Intro to C on Windows - Day 3 Q&A",
+    "url": "/watch?v=20LmZk1hakA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=5"
+  },
+  {
+    "title": "Intro to C on Windows - Day 3",
+    "url": "/watch?v=T4CjOB0y9nI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=6"
+  },
+  {
+    "title": "Intro to C on Windows - Day 4 Q&A",
+    "url": "/watch?v=Bf3LiCd1O9c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=7"
+  },
+  {
+    "title": "Intro to C on Windows - Day 4",
+    "url": "/watch?v=0CB1mYS5wBc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=8"
+  },
+  {
+    "title": "Intro to C on Windows - Day 5",
+    "url": "/watch?v=Pb19uCFU2EA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=9"
+  },
+  {
+    "title": "Intro to C on Windows - Day 5 Q&A",
+    "url": "/watch?v=rFA1SzRCRWc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=10"
+  },
+  {
+    "title": "Handmade Hero Day 001 - Setting Up the Windows Build",
+    "url": "/watch?v=Ee3EtYb8d1o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=11"
+  },
+  {
+    "title": "Handmade Hero Day 001 - Q&A",
+    "url": "/watch?v=uxbJo5DDpWY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=12"
+  },
+  {
+    "title": "Handmade Hero Day 002 - Opening a Win32 Window",
+    "url": "/watch?v=4ROiWonnWGk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=13"
+  },
+  {
+    "title": "Handmade Hero Day 002 - Q&A",
+    "url": "/watch?v=d003_D-9EnY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=14"
+  },
+  {
+    "title": "Handmade Hero Day 003 - Allocating a Backbuffer",
+    "url": "/watch?v=GAi_nTx1zG8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=15"
+  },
+  {
+    "title": "Handmade Hero Day 004 - Animating the Backbuffer",
+    "url": "/watch?v=hNKU8Jiza2g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=16"
+  },
+  {
+    "title": "Handmade Hero Day 005 - Windows Graphics Review",
+    "url": "/watch?v=w7ay7QXmo_o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=17"
+  },
+  {
+    "title": "Handmade Hero Day 006 - Gamepad and Keyboard Input",
+    "url": "/watch?v=J3y1x54vyIQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=18"
+  },
+  {
+    "title": "Handmade Hero Day 007 - Initializing DirectSound",
+    "url": "/watch?v=qGC3xiliJW8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=19"
+  },
+  {
+    "title": "Handmade Hero Day 008 - Writing a Square Wave to DirectSound",
+    "url": "/watch?v=uiW1D1Vc7IQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=20"
+  },
+  {
+    "title": "Handmade Hero Day 009 - Variable-Pitch Sine Wave Output",
+    "url": "/watch?v=8y9nPk1c45c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=21"
+  },
+  {
+    "title": "Handmade Hero Day 010 - QueryPerformanceCounter and RDTSC",
+    "url": "/watch?v=tAcUIEoy2Yk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=22"
+  },
+  {
+    "title": "Handmade Hero Day 011 - The Basics of Platform API Design",
+    "url": "/watch?v=_4vnV2Eng7M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=23"
+  },
+  {
+    "title": "Handmade Hero Day 012 - Platform-independent Sound Output",
+    "url": "/watch?v=5YhR2zAkQmo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=24"
+  },
+  {
+    "title": "Handmade Hero Day 013 - Platform-independent User Input",
+    "url": "/watch?v=Lt9DfMzZ9sI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=25"
+  },
+  {
+    "title": "Handmade Hero Day 014 - Platform-independent Game Memory",
+    "url": "/watch?v=tcENxzeTjbI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=26"
+  },
+  {
+    "title": "Handmade Hero Day 015 - Platform-independent Debug File I/O",
+    "url": "/watch?v=kdAte9pdLv8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=27"
+  },
+  {
+    "title": "Handmade Hero Day 016 - VisualStudio Compiler Switches",
+    "url": "/watch?v=zN7llTrMMBU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=28"
+  },
+  {
+    "title": "Handmade Hero Day 017 - Unified Keyboard and Gamepad Input",
+    "url": "/watch?v=WDB718JId4M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=29"
+  },
+  {
+    "title": "Handmade Hero Day 018 - Enforcing a Video Frame Rate",
+    "url": "/watch?v=TPpn2fee77M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=30"
+  },
+  {
+    "title": "Handmade Hero Day 019 - Improving Audio Synchronization",
+    "url": "/watch?v=qFl62ka51Mc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=31"
+  },
+  {
+    "title": "Handmade Hero Day 020 - Debugging the Audio Sync",
+    "url": "/watch?v=hELF8KRqSIs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=32"
+  },
+  {
+    "title": "Handmade Hero Day 021 - Loading Game Code Dynamically",
+    "url": "/watch?v=WMSBRk5WG58&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=33"
+  },
+  {
+    "title": "Basic Emacs Tutorial",
+    "url": "/watch?v=hbmV1bnQ-i0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=34"
+  },
+  {
+    "title": "Handmade Hero Day 022 - Instantaneous Live Code Editing",
+    "url": "/watch?v=oijEnriqqcs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=35"
+  },
+  {
+    "title": "Handmade Hero Day 023 - Looped Live Code Editing",
+    "url": "/watch?v=xrUSrVvB21c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=36"
+  },
+  {
+    "title": "Handmade Hero Day 024 - Win32 Platform Layer Cleanup",
+    "url": "/watch?v=nBBTPRO8AMI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=37"
+  },
+  {
+    "title": "Handmade Hero Day 025 - Finishing the Win32 Prototyping Layer",
+    "url": "/watch?v=es-Bou2dIdY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=38"
+  },
+  {
+    "title": "Handmade Hero Day 026 - Introduction to Game Architecture",
+    "url": "/watch?v=rPJfadFSCyQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=39"
+  },
+  {
+    "title": "Handmade Hero Day 027 - Exploration-based Architecture",
+    "url": "/watch?v=Mi98zVBb6Wk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=40"
+  },
+  {
+    "title": "Handmade Hero Day 028 - Drawing a Tile Map",
+    "url": "/watch?v=QGmQ714rlAc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=41"
+  },
+  {
+    "title": "Handmade Hero Day 029 - Basic Tile Map Collision Checking",
+    "url": "/watch?v=EwhVulgF16g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=42"
+  },
+  {
+    "title": "Handmade Hero Day 030 - Moving Between Tile Maps",
+    "url": "/watch?v=J7suWih0ITQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=43"
+  },
+  {
+    "title": "Handmade Hero Day 031 - Tilemap Coordinate Systems",
+    "url": "/watch?v=lDp4rqcigZs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=44"
+  },
+  {
+    "title": "Handmade Hero Day 032 - Unified Position Representation",
+    "url": "/watch?v=vI39C4iR8P0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=45"
+  },
+  {
+    "title": "Handmade Hero Day 033 - Virtualized Tile Maps",
+    "url": "/watch?v=iHSAOSYOt9E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=46"
+  },
+  {
+    "title": "Handmade Hero Day 034 - Tile Map Memory",
+    "url": "/watch?v=IJYTwhqfKLg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=47"
+  },
+  {
+    "title": "Handmade Hero Day 035 - Basic Sparse Tilemap Storage",
+    "url": "/watch?v=i5-oY8EHkzw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=48"
+  },
+  {
+    "title": "Handmade Hero Day 036 - Loading BMPs",
+    "url": "/watch?v=USFTH9mcaKw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=49"
+  },
+  {
+    "title": "Handmade Hero Day 037 - Basic Bitmap Rendering",
+    "url": "/watch?v=ofMJUSchXwo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=50"
+  },
+  {
+    "title": "Handmade Hero Day 038 - Basic Linear Bitmap Blending",
+    "url": "/watch?v=ydiHNs1YQoI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=51"
+  },
+  {
+    "title": "Handmade Hero Day 039 - Basic Bitmap Rendering Cleanup",
+    "url": "/watch?v=R8BiV_uYT6E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=52"
+  },
+  {
+    "title": "Handmade Hero Day 040 - Cursor Hiding and Fullscreen Support",
+    "url": "/watch?v=YBCOijN2fNA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=53"
+  },
+  {
+    "title": "Handmade Hero Day 041 - Overview of the Types of Math Used in Games",
+    "url": "/watch?v=WN3_d_QcJZE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=54"
+  },
+  {
+    "title": "Handmade Hero Day 042 - Basic 2D Vectors",
+    "url": "/watch?v=eE-D_wSUd0g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=55"
+  },
+  {
+    "title": "Handmade Hero Day 043 - The Equations of Motion",
+    "url": "/watch?v=LoTRzRFEk5I&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=56"
+  },
+  {
+    "title": "Handmade Hero Day 044 - Reflecting Vectors",
+    "url": "/watch?v=2nyNOJoVC8M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=57"
+  },
+  {
+    "title": "Handmade Hero Day 045 - Geometric vs. Temporal Movement Search",
+    "url": "/watch?v=bERy-zhosqY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=58"
+  },
+  {
+    "title": "Handmade Hero Day 046 - Basic Multiplayer Support",
+    "url": "/watch?v=BU5xBpUMdPA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=59"
+  },
+  {
+    "title": "Handmade Hero Day 047 - Vector Lengths",
+    "url": "/watch?v=5KzJ0TDeLxQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=60"
+  },
+  {
+    "title": "Handmade Hero Day 048 - Line Segment Intersection Collisions",
+    "url": "/watch?v=rWpZLvbT02o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=61"
+  },
+  {
+    "title": "Handmade Hero Day 049 - Debugging Canonical Coordinates",
+    "url": "/watch?v=CIe8J9ScmRo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=62"
+  },
+  {
+    "title": "Handmade Hero Day 050 - Basic Minkowski-based Collision Detection",
+    "url": "/watch?v=_g8DLrNyVsQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=63"
+  },
+  {
+    "title": "Handmade Hero Day 051 - Separating Entities By Update Frequency",
+    "url": "/watch?v=RQUP4ql86k0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=64"
+  },
+  {
+    "title": "Handmade Hero Day 052 - Entity Movement in Camera Space",
+    "url": "/watch?v=TfZUAFh-WJg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=65"
+  },
+  {
+    "title": "Handmade Hero Day 053 - Environment Elements as Entities",
+    "url": "/watch?v=KAZrNrcgrRc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=66"
+  },
+  {
+    "title": "Handmade Hero Day 054 - Removing the Dormant Entity Concept",
+    "url": "/watch?v=yqM04duWiiU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=67"
+  },
+  {
+    "title": "Handmade Hero Day 055 - Hash-based World Storage",
+    "url": "/watch?v=WyXBawK1jpE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=68"
+  },
+  {
+    "title": "Handmade Hero Day 056 - Switching from Tiles to Entities",
+    "url": "/watch?v=NMfx9eVrNmQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=69"
+  },
+  {
+    "title": "Handmade Hero Day 057 - Spatially Partitioning Entities",
+    "url": "/watch?v=nAFuhA8xqTk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=70"
+  },
+  {
+    "title": "Handmade Hero Day 058 - Using the Spatial Partition",
+    "url": "/watch?v=W_z9VN1m2Oo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=71"
+  },
+  {
+    "title": "Handmade Hero Day 059 - Adding a Basic Familiar Entity",
+    "url": "/watch?v=KBCNjjeXezM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=72"
+  },
+  {
+    "title": "Handmade Hero Day 060 - Adding Hitpoints",
+    "url": "/watch?v=0_xzS8zxuq4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=73"
+  },
+  {
+    "title": "Handmade Hero Day 061 - Adding a Simple Attack",
+    "url": "/watch?v=bHGLcGgwpWg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=74"
+  },
+  {
+    "title": "Handmade Hero Day 062 - Basic Moving Projectiles",
+    "url": "/watch?v=F7feQINaRnk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=75"
+  },
+  {
+    "title": "Handmade Hero Day 063 - Simulation Regions",
+    "url": "/watch?v=a7_vSEEgArQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=76"
+  },
+  {
+    "title": "Handmade Hero Day 064 - Mapping Entity Indexes to Pointers",
+    "url": "/watch?v=lHKso30LdU8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=77"
+  },
+  {
+    "title": "Handmade Hero Day 065 - Finishing the Simulation Region Change",
+    "url": "/watch?v=XfBTNH0nL4I&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=78"
+  },
+  {
+    "title": "Handmade Hero Day 066 - Adding Support for Non-spatial Entities",
+    "url": "/watch?v=vXPAE5UfcbA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=79"
+  },
+  {
+    "title": "Handmade Hero Day 067 - Making Updates Conditional",
+    "url": "/watch?v=lnnb49-FYqU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=80"
+  },
+  {
+    "title": "Handmade Hero Day 068 - Exact Enforcement of Maximum Movement Distances",
+    "url": "/watch?v=0ZjYHfYAjQg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=81"
+  },
+  {
+    "title": "Handmade Hero Day 069 - Pairwise Collision Rules",
+    "url": "/watch?v=YrqQLA9SOEc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=82"
+  },
+  {
+    "title": "Handmade Hero Day 070 - Exploration To-do List",
+    "url": "/watch?v=afWxzIHB5Ss&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=83"
+  },
+  {
+    "title": "Handmade Hero Day 071 - Converting to Full 3D Positioning",
+    "url": "/watch?v=FVPxhovGsuE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=84"
+  },
+  {
+    "title": "Handmade Hero Day 072 - Proper 3D Inclusion Tests",
+    "url": "/watch?v=tcirDivLd8A&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=85"
+  },
+  {
+    "title": "Handmade Hero Day 073 - Temporarily Overlapping Entities",
+    "url": "/watch?v=e0yjNipizK0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=86"
+  },
+  {
+    "title": "Handmade Hero Day 074 - Moving Entities Up and Down Stairwells",
+    "url": "/watch?v=Hm_CTQwV13U&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=87"
+  },
+  {
+    "title": "Handmade Hero Day 075 - Conditional Movement Based on Step Heights",
+    "url": "/watch?v=bZxa4fdtI2Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=88"
+  },
+  {
+    "title": "Handmade Hero Day 076 - Entity Heights and Collision Detection",
+    "url": "/watch?v=0mGWYcE6yG8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=89"
+  },
+  {
+    "title": "Handmade Hero Day 077 - Entity Ground Points",
+    "url": "/watch?v=9IGZGfVvc0s&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=90"
+  },
+  {
+    "title": "Handmade Hero Day 078 - Multiple Collision Volumes Per Entity",
+    "url": "/watch?v=o1DO5sjUhi0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=91"
+  },
+  {
+    "title": "Handmade Hero Day 079 - Defining the Ground",
+    "url": "/watch?v=HMW1fsXzW-o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=92"
+  },
+  {
+    "title": "Handmade Hero Day 080 - Handling Traversables in the Collision Loop",
+    "url": "/watch?v=QxxVwnE8V1c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=93"
+  },
+  {
+    "title": "Handmade Hero Day 081 - Creating Ground with Overlapping Bitmaps",
+    "url": "/watch?v=EGOrMZwQVEk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=94"
+  },
+  {
+    "title": "Handmade Hero Day 082 - Caching Composited Bitmaps",
+    "url": "/watch?v=09bUpNbRzzc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=95"
+  },
+  {
+    "title": "Handmade Hero Day 083 - Premultiplied Alpha",
+    "url": "/watch?v=bidrZj1YosA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=96"
+  },
+  {
+    "title": "Handmade Hero Day 084 - Scrolling Ground Buffer",
+    "url": "/watch?v=U5AAAaiMlYQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=97"
+  },
+  {
+    "title": "Handmade Hero Day 085 - Transient Ground Buffers",
+    "url": "/watch?v=QhjuxnQyBwk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=98"
+  },
+  {
+    "title": "Handmade Hero Day 086 - Aligning Ground Buffers to World Chunks",
+    "url": "/watch?v=TxowSnU2_cQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=99"
+  },
+  {
+    "title": "Handmade Hero Day 087 - Seamless Ground Textures",
+    "url": "/watch?v=YAaqiKuSmsk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=100"
+  },
+  {
+    "title": "Handmade Hero Day 088 - Push Buffer Rendering",
+    "url": "/watch?v=zbufcZ_JBbU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=101"
+  },
+  {
+    "title": "Handmade Hero Day 089 - Renderer Push Buffer Entry Types",
+    "url": "/watch?v=lllby5vrEes&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=102"
+  },
+  {
+    "title": "Handmade Hero Day 090 - Bases Part I",
+    "url": "/watch?v=lcmjmOfWPNU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=103"
+  },
+  {
+    "title": "Handmade Hero Day 091 - Bases Part II",
+    "url": "/watch?v=2yKKcjBIaL0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=104"
+  },
+  {
+    "title": "Handmade Hero Day 092 - Filling Rotated and Scaled Rectangles",
+    "url": "/watch?v=kVU_QIxm3AA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=105"
+  },
+  {
+    "title": "Handmade Hero Day 093 - Textured Quadrilaterals",
+    "url": "/watch?v=k5wzQeWRokA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=106"
+  },
+  {
+    "title": "Handmade Hero Day 094 - Converting sRGB to Light-linear Space",
+    "url": "/watch?v=GKVMOmEGVoQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=107"
+  },
+  {
+    "title": "Handmade Hero Day 095 - Gamma-correct Premultiplied Alpha",
+    "url": "/watch?v=JTIzGsGqQaA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=108"
+  },
+  {
+    "title": "Handmade Hero Day 096 - Introduction to Lighting",
+    "url": "/watch?v=QtepVbq6_pw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=109"
+  },
+  {
+    "title": "Handmade Hero Day 097 - Adding Normal Maps to the Pipeline",
+    "url": "/watch?v=oww19zUryVg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=110"
+  },
+  {
+    "title": "Handmade Hero Day 098 - Normal Map Code Cleanup",
+    "url": "/watch?v=xWQfjqAHvxs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=111"
+  },
+  {
+    "title": "Handmade Hero Day 099 - Test Environment Maps",
+    "url": "/watch?v=07UpVTmIKdU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=112"
+  },
+  {
+    "title": "Handmade Hero Day 100 - Reflection Vectors",
+    "url": "/watch?v=PHz3ulc_mFk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=113"
+  },
+  {
+    "title": "Handmade Hero Day 101 - The Inverse and the Transpose",
+    "url": "/watch?v=PPDAqEJvUUQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=114"
+  },
+  {
+    "title": "Handmade Hero Day 102 - Transforming Normals Properly",
+    "url": "/watch?v=73u0sR4DU9E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=115"
+  },
+  {
+    "title": "Handmade Hero Day 103 - Card-like Normal Map Reflections",
+    "url": "/watch?v=-LWk-TVfGTk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=116"
+  },
+  {
+    "title": "Handmade Hero Day 104 - Switching to Y-is-up Render Targets",
+    "url": "/watch?v=CfjMu8DwOnY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=117"
+  },
+  {
+    "title": "Handmade Hero Day 105 - Cleaning Up the Renderer API",
+    "url": "/watch?v=Jklm_p_qrKU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=118"
+  },
+  {
+    "title": "Handmade Hero Day 106 - World Scaling",
+    "url": "/watch?v=UCTcu8vJ92c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=119"
+  },
+  {
+    "title": "Handmade Hero Day 107 - Fading Z Layers",
+    "url": "/watch?v=CmXCiK8dK9c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=120"
+  },
+  {
+    "title": "Handmade Hero Day 108 - Perspective Projection",
+    "url": "/watch?v=xgnEOFS8wTw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=121"
+  },
+  {
+    "title": "Handmade Hero Day 109 - Resolution-Independent Rendering",
+    "url": "/watch?v=e3d7kEtX6iw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=122"
+  },
+  {
+    "title": "Handmade Hero Day 110 - Unprojecting Screen Boundaries",
+    "url": "/watch?v=s-eL7riOnwc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=123"
+  },
+  {
+    "title": "Handmade Hero Day 111 - Resolution-Independent Ground Chunks",
+    "url": "/watch?v=qDE7_6K2pyY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=124"
+  },
+  {
+    "title": "Handmade Hero Day 112 - A Mental Model of CPU Performance",
+    "url": "/watch?v=qin-Eps3U_E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=125"
+  },
+  {
+    "title": "Handmade Hero Day 113 - Simple Performance Counters",
+    "url": "/watch?v=QdTqYhv8tL0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=126"
+  },
+  {
+    "title": "Handmade Hero Day 114 - Preparing a Function for Optimization",
+    "url": "/watch?v=_vkI9BedvKA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=127"
+  },
+  {
+    "title": "Handmade Hero Day 115 - SIMD Basics",
+    "url": "/watch?v=YnnTb0AQgYM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=128"
+  },
+  {
+    "title": "Handmade Hero Day 116 - Converting Math Operations to SIMD",
+    "url": "/watch?v=1CVmlnhgT3g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=129"
+  },
+  {
+    "title": "Handmade Hero Day 117 - Packing Pixels for the Framebuffer",
+    "url": "/watch?v=90eSF6jLzvQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=130"
+  },
+  {
+    "title": "Handmade Hero Day 118 - Wide Unpacking and Masking",
+    "url": "/watch?v=-_X0UYCGaVA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=131"
+  },
+  {
+    "title": "Handmade Hero Day 119 - Counting Intrinsics",
+    "url": "/watch?v=NPDL1OENYio&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=132"
+  },
+  {
+    "title": "Handmade Hero Day 120 - Measuring Port Usage with IACA",
+    "url": "/watch?v=-c-0s6KiPSw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=133"
+  },
+  {
+    "title": "Handmade Hero Day 121 - Rendering in Tiles (Marathon)",
+    "url": "/watch?v=kZlPYka1T0g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=134"
+  },
+  {
+    "title": "Handmade Hero Day 122 - Introduction to Multithreading",
+    "url": "/watch?v=qkugPXGeX58&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=135"
+  },
+  {
+    "title": "Handmade Hero Day 123 - Interlocked Operations",
+    "url": "/watch?v=_olNhuuRYxo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=136"
+  },
+  {
+    "title": "Handmade Hero Day 124 - Memory Barriers and Semaphores",
+    "url": "/watch?v=W_szrzjYuvs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=137"
+  },
+  {
+    "title": "Handmade Hero Day 125 - Abstracting the Work Queue",
+    "url": "/watch?v=ZAZV_PGlQ0s&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=138"
+  },
+  {
+    "title": "Handmade Hero Day 126 - Circular FIFO Work Queue",
+    "url": "/watch?v=0jfDwujUY4Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=139"
+  },
+  {
+    "title": "Handmade Hero Day 127 - Aligning Rendering Memory",
+    "url": "/watch?v=blcNbU70I9o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=140"
+  },
+  {
+    "title": "Handmade Hero Day 128 - Push-time Transforms",
+    "url": "/watch?v=8L21Tyh53BQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=141"
+  },
+  {
+    "title": "Handmade Hero Day 129 - Adding Orthographic Projection",
+    "url": "/watch?v=8DX-DPsXvy4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=142"
+  },
+  {
+    "title": "Handmade Hero Day 130 - Seamless Bilinear Tiling",
+    "url": "/watch?v=odlnqAsclFo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=143"
+  },
+  {
+    "title": "Handmade Hero Day 131 - Asynchronous Ground Chunk Composition",
+    "url": "/watch?v=6blXhvPIz5g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=144"
+  },
+  {
+    "title": "Handmade Hero Day 132 - Asset Streaming",
+    "url": "/watch?v=qyHM36RQxAI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=145"
+  },
+  {
+    "title": "Handmade Hero Day 133 - Preliminary Asset Structuring",
+    "url": "/watch?v=u0LjxqHmvkk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=146"
+  },
+  {
+    "title": "Handmade Hero Day 134 - Mapping Assets to Bitmaps",
+    "url": "/watch?v=AdscwVnyaQw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=147"
+  },
+  {
+    "title": "Handmade Hero Day 135 - Typed Asset Arrays",
+    "url": "/watch?v=meU5RI3J1wc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=148"
+  },
+  {
+    "title": "Handmade Hero Day 136 - Tag-based Asset Retrieval",
+    "url": "/watch?v=7g79J2aMTUM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=149"
+  },
+  {
+    "title": "Handmade Hero Day 137 - Matching Periodic Tags",
+    "url": "/watch?v=gVOuBzVC20g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=150"
+  },
+  {
+    "title": "Handmade Hero Day 138 - Loading WAV Files",
+    "url": "/watch?v=RSxUBaoomy0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=151"
+  },
+  {
+    "title": "Handmade Hero Day 139 - Introduction to Sound Mixing",
+    "url": "/watch?v=8KvWx4hzdUs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=152"
+  },
+  {
+    "title": "Handmade Hero Day 140 - Implementing a Sound Mixer",
+    "url": "/watch?v=UuqcgQxpfO8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=153"
+  },
+  {
+    "title": "Handmade Hero Day 141 - Streaming Large Audio in Chunks",
+    "url": "/watch?v=Yvv9nVqGC5w&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=154"
+  },
+  {
+    "title": "Handmade Hero Day 142 - Per-sample Volume Interpolation",
+    "url": "/watch?v=XxReVrByBYw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=155"
+  },
+  {
+    "title": "Handmade Hero Day 143 - Pitch Shifting in the Mixer",
+    "url": "/watch?v=OOR8A_7JwIY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=156"
+  },
+  {
+    "title": "Handmade Hero Day 144 - SSE Mixer Pre and Post Loops",
+    "url": "/watch?v=l3zbzEYRLJc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=157"
+  },
+  {
+    "title": "Handmade Hero Day 145 - SSE Mixer Main Loop",
+    "url": "/watch?v=W3rrlUEaW1E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=158"
+  },
+  {
+    "title": "Handmade Hero Day 146 - Accumulation vs. Explicit Calculation",
+    "url": "/watch?v=YlKPcSwXh54&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=159"
+  },
+  {
+    "title": "Handmade Hero Day 147 - Defining the Asset File",
+    "url": "/watch?v=n0RRz3NlHuo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=160"
+  },
+  {
+    "title": "Handmade Hero Day 148 - Writing the Asset File Header",
+    "url": "/watch?v=UNXHK8O-B_g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=161"
+  },
+  {
+    "title": "Handmade Hero Day 149 - Writing Assets to the Asset File",
+    "url": "/watch?v=CNTlpoYdKF8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=162"
+  },
+  {
+    "title": "Handmade Hero Day 150 - Loading Assets from the Asset File",
+    "url": "/watch?v=h2GoVMArDro&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=163"
+  },
+  {
+    "title": "Handmade Hero Day 151 - New Platform File API",
+    "url": "/watch?v=NFptGMDCO0k&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=164"
+  },
+  {
+    "title": "Handmade Hero Day 152 - New Win32 File API Implementation",
+    "url": "/watch?v=hRYrqGBmfOA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=165"
+  },
+  {
+    "title": "Handmade Hero Day 153 - Merging Multiple Asset Files",
+    "url": "/watch?v=9sb8mv6q7WE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=166"
+  },
+  {
+    "title": "Handmade Hero Day 154 - Finding Asset Files with Win32",
+    "url": "/watch?v=vrZkMo77BI8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=167"
+  },
+  {
+    "title": "Handmade Hero Day 155 - Introduction to Particle Systems",
+    "url": "/watch?v=G6OGKP3MaUI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=168"
+  },
+  {
+    "title": "Handmade Hero Day 155 - Introduction to Particle Systems",
+    "url": "/watch?v=G6OGKP3MaUI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=169"
+  },
+  {
+    "title": "Handmade Hero Day 156 - Lagrangian vs. Eulerian Simulation",
+    "url": "/watch?v=HH_iaJairW8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=170"
+  },
+  {
+    "title": "Handmade Hero Day 157 - Introduction to General Purpose Allocation",
+    "url": "/watch?v=MvDUe2evkHg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=171"
+  },
+  {
+    "title": "Handmade Hero Day 158 - Tracking Asset Usage",
+    "url": "/watch?v=D5JG3XGPf8Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=172"
+  },
+  {
+    "title": "Handmade Hero Day 159 - Cleaning Up the Loaded Asset Infrastructure",
+    "url": "/watch?v=ZrAoRHSTzMY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=173"
+  },
+  {
+    "title": "Handmade Hero Day 160 - Basic General Purpose Allocation",
+    "url": "/watch?v=MyGsWY6dezE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=174"
+  },
+  {
+    "title": "Handmade Hero Day 161 - Finishing the General Purpose Allocator",
+    "url": "/watch?v=1LyHQVYlClw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=175"
+  },
+  {
+    "title": "Handmade Hero Day 162 - Introduction to Fonts",
+    "url": "/watch?v=ZK7PezR1KgU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=176"
+  },
+  {
+    "title": "Handmade Hero Day 163 - Asset Processing with STB TrueType",
+    "url": "/watch?v=lOLRQ01QY48&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=177"
+  },
+  {
+    "title": "Handmade Hero Day 164 - Asset Processing with Windows Fonts",
+    "url": "/watch?v=KF0jRm89bRM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=178"
+  },
+  {
+    "title": "Handmade Hero Day 165 - Fixing an Asset System Thread Bug",
+    "url": "/watch?v=9_jVu7RfP88&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=179"
+  },
+  {
+    "title": "Handmade Hero Day 166 - Adding Locks to the Asset Operations",
+    "url": "/watch?v=jIWa0AZz2Sk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=180"
+  },
+  {
+    "title": "Handmade Hero Day 167 - Finishing Win32 Font Glyph Extraction",
+    "url": "/watch?v=Hc33CNhmAg8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=181"
+  },
+  {
+    "title": "Handmade Hero Day 168 - Rendering Lines of Text",
+    "url": "/watch?v=jG9qVQ450GA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=182"
+  },
+  {
+    "title": "Handmade Hero Day 169 - Aligning Text to a Baseline",
+    "url": "/watch?v=fVyzTKCfchw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=183"
+  },
+  {
+    "title": "Handmade Hero Day 170 - Defining Font Metadata",
+    "url": "/watch?v=eIi2OYFWfdQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=184"
+  },
+  {
+    "title": "Handmade Hero Day 171 - Adding Font Metadata to the Asset Builder",
+    "url": "/watch?v=tJMvJaM-BtY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=185"
+  },
+  {
+    "title": "Handmade Hero Day 172 - Extracting Kerning Tables from Windows",
+    "url": "/watch?v=xUQRWBpYcsk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=186"
+  },
+  {
+    "title": "Handmade Hero Day 173 - Precise Font Alignment",
+    "url": "/watch?v=xSDhhfcwt4E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=187"
+  },
+  {
+    "title": "Handmade Hero Day 175 - Finishing Sparse Unicode Support",
+    "url": "/watch?v=kXQMyg4Prfo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=188"
+  },
+  {
+    "title": "Handmade Hero Day 176 - Introduction to Debug Infrastructure",
+    "url": "/watch?v=vhSIwxAWDIY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=189"
+  },
+  {
+    "title": "Handmade Hero Day 177 - Automatic Performance Counters",
+    "url": "/watch?v=uHSLHvWFkto&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=190"
+  },
+  {
+    "title": "Handmade Hero Day 178 - Thread-safe Performance Counters",
+    "url": "/watch?v=oDZ-sh0cKoY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=191"
+  },
+  {
+    "title": "Handmade Hero Day 179 - Tracking Debug Information Over Time",
+    "url": "/watch?v=k_1FzhI3kv4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=192"
+  },
+  {
+    "title": "Handmade Hero Day 180 - Adding Debug Graphs",
+    "url": "/watch?v=U2RnqT6xSFk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=193"
+  },
+  {
+    "title": "Handmade Hero Day 181 - Log-based Performance Counters",
+    "url": "/watch?v=s_qSvBp6nFw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=194"
+  },
+  {
+    "title": "Handmade Hero Day 182 - Fast Thread ID Retrieval",
+    "url": "/watch?v=fNufyLQacDw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=195"
+  },
+  {
+    "title": "Handmade Hero Day 183 - Platform Layer Debug Events",
+    "url": "/watch?v=tdrTk9Ba3VM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=196"
+  },
+  {
+    "title": "Handmade Hero Day 184 - Collating Debug Events",
+    "url": "/watch?v=YP9oNMb_VIg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=197"
+  },
+  {
+    "title": "Handmade Hero Day 185 - Finishing Basic Debug Collation",
+    "url": "/watch?v=kkoiLQO5JGo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=198"
+  },
+  {
+    "title": "Handmade Hero Day 186 - Starting to Debug Event Recording",
+    "url": "/watch?v=BbfFZLUre3s&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=199"
+  },
+  {
+    "title": "Handmade Hero Day 187 - Fixing an Event Recording Bug",
+    "url": "/watch?v=VsWgUTH45F8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=200"
+  },
+  {
+    "title": "Handmade Hero Day 188 - Adding Hover to the Debug Graphs",
+    "url": "/watch?v=1llPa4I7gYk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=201"
+  },
+  {
+    "title": "Handmade Hero Day 189 - Incremental Debug Frame Processing",
+    "url": "/watch?v=87V4GNfqTpY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=202"
+  },
+  {
+    "title": "Handmade Hero Day 190 - Cleaning Up Debug Globals",
+    "url": "/watch?v=7jmDV_Hk42U&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=203"
+  },
+  {
+    "title": "Handmade Hero Day 191 - Implementing a Radial Menu",
+    "url": "/watch?v=ftZIujU3Udw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=204"
+  },
+  {
+    "title": "Handmade Hero Day 192 - Implementing Self-Recompilation",
+    "url": "/watch?v=RQuVq1v2PkE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=205"
+  },
+  {
+    "title": "Handmade Hero Day 193 - Run-time Setting of Compile-time Variables",
+    "url": "/watch?v=9ND-2a_hP0g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=206"
+  },
+  {
+    "title": "Handmade Hero Day 194 - Organizing Debug Variables into a Hierarchy",
+    "url": "/watch?v=00bRntapIAk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=207"
+  },
+  {
+    "title": "Handmade Hero Day 195 - Implementing an Interactive Tree View",
+    "url": "/watch?v=WwDytuTI5C8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=208"
+  },
+  {
+    "title": "Handmade Hero Day 196 - Introduction to UI Interactions",
+    "url": "/watch?v=FvWcZ9Tti2k&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=209"
+  },
+  {
+    "title": "Handmade Hero Day 197 - Integrating Multiple Debug Views",
+    "url": "/watch?v=ovXGlv7Y9wo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=210"
+  },
+  {
+    "title": "Handmade Hero Day 198 - Run-time Editing of Debug Hierarchies",
+    "url": "/watch?v=wyN_xzqz5dk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=211"
+  },
+  {
+    "title": "Handmade Hero Day 199 - Reusing Debug Interactions",
+    "url": "/watch?v=Pn8JLm3hQfs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=212"
+  },
+  {
+    "title": "Handmade Hero Day 200 - Debug Element Layout",
+    "url": "/watch?v=L81ZcBDnQx4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=213"
+  },
+  {
+    "title": "Handmade Hero Day 201 - Isolating the Debug Code",
+    "url": "/watch?v=Nb9ObiFvw3I&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=214"
+  },
+  {
+    "title": "Handmade Hero Day 202 - Multiply Appearing Debug Values",
+    "url": "/watch?v=JTwMFtyuL6M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=215"
+  },
+  {
+    "title": "Handmade Hero Day 203 - Debug UI State Caching",
+    "url": "/watch?v=6gBJ9f5tUV4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=216"
+  },
+  {
+    "title": "Handmade Hero Day 204 - Unprojecting the Mouse Cursor",
+    "url": "/watch?v=FkDJL8zmVFY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=217"
+  },
+  {
+    "title": "Handmade Hero Day 205 - Picking Entities with the Mouse",
+    "url": "/watch?v=3RPdhDditMY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=218"
+  },
+  {
+    "title": "Handmade Hero Day 206 - Implementing Introspection",
+    "url": "/watch?v=1IwYEJsvdcs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=219"
+  },
+  {
+    "title": "Handmade Hero Day 207 - Using Introspection Data",
+    "url": "/watch?v=3_7IMU6l6Pc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=220"
+  },
+  {
+    "title": "Handmade Hero Day 208 - Adding Data Blocks to the Debug Log",
+    "url": "/watch?v=SWXxlrjDKW0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=221"
+  },
+  {
+    "title": "Handmade Hero Day 209 - Displaying Buffered Debug Data",
+    "url": "/watch?v=2bQ6mL3yNh0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=222"
+  },
+  {
+    "title": "Handmade Hero Day 210 - Consolidating Debug Data Storage",
+    "url": "/watch?v=r2l0atxoA4M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=223"
+  },
+  {
+    "title": "Handmade Hero Day 211 - Removing Records and Translation Units from the Debug Code",
+    "url": "/watch?v=hwLSZuxK6aU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=224"
+  },
+  {
+    "title": "Handmade Hero Day 212 - Integrating Debug UI into Game Code",
+    "url": "/watch?v=fbsZW4BzW6k&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=225"
+  },
+  {
+    "title": "Handmade Hero Day 213 - Turning Debug Switches into Events",
+    "url": "/watch?v=nc6WawdkDnI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=226"
+  },
+  {
+    "title": "Handmade Hero Day 214 - Collating Permanent Debug Values",
+    "url": "/watch?v=4aeT9T-i3Qs&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=227"
+  },
+  {
+    "title": "Handmade Hero Day 215 - Cleaning Up Debug Event Collation",
+    "url": "/watch?v=VAKkuva8St4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=228"
+  },
+  {
+    "title": "Handmade Hero Day 216 - On-demand Deallocation",
+    "url": "/watch?v=lPnPNaC-KJg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=229"
+  },
+  {
+    "title": "Handmade Hero Day 217 - Per-element Debug Event Storage",
+    "url": "/watch?v=m2Y7UmUU_xo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=230"
+  },
+  {
+    "title": "Handmade Hero Day 218 - Hashing Debug Elements",
+    "url": "/watch?v=66DXTnHDesc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=231"
+  },
+  {
+    "title": "Handmade Hero Day 219 - Automatically Constructed Debug Hierarchies",
+    "url": "/watch?v=FQzGVuWDHcg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=232"
+  },
+  {
+    "title": "Handmade Hero Day 220 - Displaying Data Blocks in the Hierarchy",
+    "url": "/watch?v=k1h-0MEtcGg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=233"
+  },
+  {
+    "title": "Handmade Hero Day 221 - Implementing Multi-layer Cutscenes",
+    "url": "/watch?v=JOoqeKB9lx4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=234"
+  },
+  {
+    "title": "Handmade Hero Day 222 - Laying Out Cutscenes",
+    "url": "/watch?v=UHQSoeR6c_Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=235"
+  },
+  {
+    "title": "Handmade Hero Day 223 - Playing Multiple Cutscenes",
+    "url": "/watch?v=btGVLs4NSOM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=236"
+  },
+  {
+    "title": "Handmade Hero Day 225 - Fading In and Out from the Windows Desktop",
+    "url": "/watch?v=hsKMH89VmR8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=237"
+  },
+  {
+    "title": "Handmade Hero Day 226 - Handling Multiple Metagame Modes",
+    "url": "/watch?v=2X6A70ONyO0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=238"
+  },
+  {
+    "title": "Handmade Hero Day 227 - Switching Between Metagame Modes",
+    "url": "/watch?v=a1j15jWJLoc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=239"
+  },
+  {
+    "title": "Handmade Hero Day 229 - Sorting Render Elements",
+    "url": "/watch?v=b6qZaqL7fxM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=240"
+  },
+  {
+    "title": "Handmade Hero Day 230 - Refining Renderer Sort Keys",
+    "url": "/watch?v=9-jltZmDMHI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=241"
+  },
+  {
+    "title": "Handmade Hero Day 231 - Order Notation",
+    "url": "/watch?v=jo9rfWct1OI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=242"
+  },
+  {
+    "title": "Handmade Hero Day 232 - Examples of Sorting Algorithms",
+    "url": "/watch?v=cq_PVCgyS5k&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=243"
+  },
+  {
+    "title": "Handmade Hero Day 233 - Can We Merge Sort In Place?",
+    "url": "/watch?v=A59NnNt9hRo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=244"
+  },
+  {
+    "title": "Handmade Hero Day 234 - Implementing Radix Sort",
+    "url": "/watch?v=jhGDPoSLJMo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=245"
+  },
+  {
+    "title": "Handmade Hero Day 235 - Initializing OpenGL on Windows",
+    "url": "/watch?v=5Klc9RZPG7M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=246"
+  },
+  {
+    "title": "Handmade Hero Day 236 - GPU Conceptual Overview",
+    "url": "/watch?v=vbnozKJM0Oo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=247"
+  },
+  {
+    "title": "Handmade Hero Day 237 - Displaying an Image with OpenGL",
+    "url": "/watch?v=YIOpZ9M5pc4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=248"
+  },
+  {
+    "title": "Handmade Hero Day 238 - Making OpenGL Use Our Screen Coordinates",
+    "url": "/watch?v=kBuaCqaCYwE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=249"
+  },
+  {
+    "title": "Handmade Hero Day 239 - Rendering the Game Through OpenGL",
+    "url": "/watch?v=jH7i0YXN9FU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=250"
+  },
+  {
+    "title": "Handmade Hero Day 240 - Moving the Renderer into a Third Tier",
+    "url": "/watch?v=s1S76SBWxcg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=251"
+  },
+  {
+    "title": "Handmade Hero Day 241 - OpenGL VSync and sRGB Extensions",
+    "url": "/watch?v=1OMTFa09lHM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=252"
+  },
+  {
+    "title": "Handmade Hero Day 242 - OpenGL Context Escalation",
+    "url": "/watch?v=99kIYIEzbpc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=253"
+  },
+  {
+    "title": "Handmade Hero Day 243 - Asynchronous Texture Downloads",
+    "url": "/watch?v=onEloWtN91Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=254"
+  },
+  {
+    "title": "Handmade Hero Day 244 - Finishing Asynchronous Texture Downloads",
+    "url": "/watch?v=SWtV8B3rssw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=255"
+  },
+  {
+    "title": "Handmade Hero Day 245 - Using wglChoosePixelFormatARB",
+    "url": "/watch?v=SvlirEF-R-4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=256"
+  },
+  {
+    "title": "Handmade Hero Day 246 - Moving Worker Context Creation to the Main Thread",
+    "url": "/watch?v=ml5E9-tzEns&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=257"
+  },
+  {
+    "title": "Handmade Hero Day 247 - Simplifying Debug Values",
+    "url": "/watch?v=JqcphfRybd4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=258"
+  },
+  {
+    "title": "Handmade Hero Day 248 - Cleaning Up Data Block Display",
+    "url": "/watch?v=Thr10pFx984&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=259"
+  },
+  {
+    "title": "Handmade Hero Day 249 - Cleaning Up Debug Macros",
+    "url": "/watch?v=NVnlQ7KMGa8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=260"
+  },
+  {
+    "title": "Handmade Hero Day 250 - Cleaning Up Debug GUIDs",
+    "url": "/watch?v=ceMQT1DZkpo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=261"
+  },
+  {
+    "title": "Handmade Hero Day 251 - Finishing the Debug Hierarchy",
+    "url": "/watch?v=LTTaqnFBtwk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=262"
+  },
+  {
+    "title": "Handmade Hero Day 252 - Allowing Debug Value Edits",
+    "url": "/watch?v=OsJJizXWN_A&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=263"
+  },
+  {
+    "title": "Handmade Hero Day 253 - Reenabling More Debug UI",
+    "url": "/watch?v=aK-E-D-jvds&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=264"
+  },
+  {
+    "title": "Handmade Hero Day 254 - Reenabling Profiling",
+    "url": "/watch?v=b48NmnVEvu8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=265"
+  },
+  {
+    "title": "Handmade Hero Day 255 - Building a Profile Tree",
+    "url": "/watch?v=6Ym-Nq1g7-s&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=266"
+  },
+  {
+    "title": "Handmade Hero Day 256 - XBox Controller Stalls and Fixing GL Blit Gamma",
+    "url": "/watch?v=FRzg9eYHnTw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=267"
+  },
+  {
+    "title": "Handmade Hero Day 257 - Cleaning Up Some Win32 Issues",
+    "url": "/watch?v=HOZQmCXJjmE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=268"
+  },
+  {
+    "title": "Handmade Hero Day 258 - Fixing Profiling Across Code Reloads",
+    "url": "/watch?v=UxV5GFeCEAc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=269"
+  },
+  {
+    "title": "Handmade Hero Day 259 - OpenGL and Software Renderer Cleanup",
+    "url": "/watch?v=wUbe27tz8Gg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=270"
+  },
+  {
+    "title": "Handmade Hero Day 260 - Implementing Drill-down in the Profiler",
+    "url": "/watch?v=wklr6ogongg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=271"
+  },
+  {
+    "title": "Handmade Hero Day 261 - Changing to Static Frame Arrays",
+    "url": "/watch?v=esRhxNS0Ee8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=272"
+  },
+  {
+    "title": "Handmade Hero Day 262 - Drawing Multi-frame Profile Graphs",
+    "url": "/watch?v=I9W5TVj4BT0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=273"
+  },
+  {
+    "title": "Handmade Hero Day 263 - Adding a Debug Frame Slider",
+    "url": "/watch?v=NgWclbqkXJg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=274"
+  },
+  {
+    "title": "Handmade Hero Day 264 - Adding Buttons to the Profiler",
+    "url": "/watch?v=y7-phAHpweU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=275"
+  },
+  {
+    "title": "Handmade Hero Day 265 - Cleaning Up the UI Layout Code",
+    "url": "/watch?v=BHEJh9Yvsxc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=276"
+  },
+  {
+    "title": "Handmade Hero Day 266 - Adding a Top Clocks Profile View",
+    "url": "/watch?v=qYGNxUu6tjI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=277"
+  },
+  {
+    "title": "Handmade Hero Day 267 - Adding Per-Element Clipping Rectangles",
+    "url": "/watch?v=WX6r6S5Fm0I&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=278"
+  },
+  {
+    "title": "Handmade Hero Day 268 - Consolidating Debug Links and Groups",
+    "url": "/watch?v=r5Lld9FderU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=279"
+  },
+  {
+    "title": "Handmade Hero Day 269 - Cleaning Up Menu Drawing",
+    "url": "/watch?v=tITcs17P-lU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=280"
+  },
+  {
+    "title": "Handmade Hero Day 270 - Making Traversable Points",
+    "url": "/watch?v=xNijkdjXhjg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=281"
+  },
+  {
+    "title": "Handmade Hero Day 271 - Hybrid Tile-based Movement",
+    "url": "/watch?v=S5VtscjLjnk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=282"
+  },
+  {
+    "title": "Handmade Hero Day 272 - Explicit Movement Transitions",
+    "url": "/watch?v=4fJTdIkFwIE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=283"
+  },
+  {
+    "title": "Handmade Hero Day 273 - Animation Overview",
+    "url": "/watch?v=ytZbsYjtD_w&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=284"
+  },
+  {
+    "title": "Handmade Hero Day 274 - Dynamic Animation with Springs",
+    "url": "/watch?v=0MWGM4pte-I&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=285"
+  },
+  {
+    "title": "Handmade Hero Day 275 - Passing Rotation and Shear to the Renderer",
+    "url": "/watch?v=kizKx0bdr3Q&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=286"
+  },
+  {
+    "title": "Handmade Hero Day 276 - Tuning the Body Animation",
+    "url": "/watch?v=xdtQ9fFru0g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=287"
+  },
+  {
+    "title": "Handmade Hero Day 277 - The Sparse Entity System",
+    "url": "/watch?v=wqpxe-s9xyw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=288"
+  },
+  {
+    "title": "Handmade Hero Day 278 - Moving Entity Storage into World Chunks",
+    "url": "/watch?v=JqflfK5i8qk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=289"
+  },
+  {
+    "title": "Handmade Hero Day 279 - Finishing World Chunk Entity Storage",
+    "url": "/watch?v=yJjVBh7r9-s&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=290"
+  },
+  {
+    "title": "Overview of the CTime Utility",
+    "url": "/watch?v=LdMHyGxfg6U&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=291"
+  },
+  {
+    "title": "Handmade Hero Day 280 - Cleaned Up Streaming Entity Simulation",
+    "url": "/watch?v=jdknM4bPUcc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=292"
+  },
+  {
+    "title": "Handmade Hero Day 281 - Animating the Camera Between Rooms",
+    "url": "/watch?v=TFBo2ziKOW0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=293"
+  },
+  {
+    "title": "Handmade Hero Day 282 - Z Movement and Camera Motion",
+    "url": "/watch?v=8f9ggBzjUBE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=294"
+  },
+  {
+    "title": "Handmade Hero 283 - Making Standing-on a More Rigorous Concept",
+    "url": "/watch?v=tZSwGCgo-uE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=295"
+  },
+  {
+    "title": "Handmade Hero Day 284 - Reorganizing the Head and Body Code",
+    "url": "/watch?v=sEHDoJnZSKY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=296"
+  },
+  {
+    "title": "Handmade Hero Day 285 - Transactional Occupation of Traversables",
+    "url": "/watch?v=HXLr8tSGIX0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=297"
+  },
+  {
+    "title": "Handmade Hero Day 286 - Starting to Decouple Entity Behavior",
+    "url": "/watch?v=rGwAhNAYCKg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=298"
+  },
+  {
+    "title": "Handmade Hero Day 287 - Adding Brains",
+    "url": "/watch?v=gwtSqvoxU14&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=299"
+  },
+  {
+    "title": "Handmade Hero Day 288 - Finishing Brains",
+    "url": "/watch?v=aY2Lujojmg0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=300"
+  },
+  {
+    "title": "Handmade Hero Day 289 - Decoupling Visuals from Entity Types",
+    "url": "/watch?v=9J-ZOWPLYM4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=301"
+  },
+  {
+    "title": "Handmade Hero Day 290 - Finishing Separated Rendering",
+    "url": "/watch?v=DCd-abDxftc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=302"
+  },
+  {
+    "title": "Handmade Hero Day 291 - Hopping Monstar and Occupying Trees",
+    "url": "/watch?v=wAqPNROQZas&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=303"
+  },
+  {
+    "title": "Handmade Hero Day 292 - Implementing Snakes",
+    "url": "/watch?v=NarF07FefqQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=304"
+  },
+  {
+    "title": "Handmade Hero Day 293 - Moving Familiars",
+    "url": "/watch?v=DIssBI1JBz8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=305"
+  },
+  {
+    "title": "Handmade Hero Day 294 - Adding the Glove",
+    "url": "/watch?v=kOHHWPmo1D0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=306"
+  },
+  {
+    "title": "Handmade Hero Day 295 - Stacking Rooms for Z Layer Debugging",
+    "url": "/watch?v=N0K0eHnVc1Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=307"
+  },
+  {
+    "title": "Handmade Hero Day 296 - Fog and Alpha for Layers",
+    "url": "/watch?v=kAHKTNjaD-Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=308"
+  },
+  {
+    "title": "Handmade Hero Day 297 - Separating Entities into Z Layers",
+    "url": "/watch?v=hpoNQhVY634&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=309"
+  },
+  {
+    "title": "Handmade Hero Day 298 - Improving Sort Keys Part 1",
+    "url": "/watch?v=3KsEO5-sYBQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=310"
+  },
+  {
+    "title": "Handmade Hero Day 299 - Improving Sort Keys Part 2",
+    "url": "/watch?v=EbaM2XwuscQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=311"
+  },
+  {
+    "title": "Handmade Hero Day 300 - Changing from Sort Keys to Sort Rules",
+    "url": "/watch?v=jrKVyIfv1ek&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=312"
+  },
+  {
+    "title": "Handmade Hero Day 301 - Sorting with Sprite Bounds",
+    "url": "/watch?v=SSgo0UdesQg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=313"
+  },
+  {
+    "title": "Handmade Hero Day 302 - Confirming No Total Ordering",
+    "url": "/watch?v=DH_QepPBeaI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=314"
+  },
+  {
+    "title": "Handmade Hero Day 303 - Trying Separate Y and Z Sorts",
+    "url": "/watch?v=93NKevv-n6k&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=315"
+  },
+  {
+    "title": "Handmade Hero Day 304 - Building and Traversing Graphs",
+    "url": "/watch?v=4GmDwulUkPA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=316"
+  },
+  {
+    "title": "Handmade Hero Day 305 - Using Memory Arenas in the Platform Layer",
+    "url": "/watch?v=ImWSMzMe1kI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=317"
+  },
+  {
+    "title": "Handmade Hero Day 306 - Debugging Graph-based Sort",
+    "url": "/watch?v=bMjnXBR98UY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=318"
+  },
+  {
+    "title": "Handmade Hero Day 307 - Visualizing Sort Groups",
+    "url": "/watch?v=PDg_4lBhTUI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=319"
+  },
+  {
+    "title": "Handmade Hero Day 308 - Debugging the Cycle Check",
+    "url": "/watch?v=trtrBITgktg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=320"
+  },
+  {
+    "title": "Handmade Hero Day 309 - Grid Partitioning for Overlap Testing",
+    "url": "/watch?v=BCiQcL_6ceM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=321"
+  },
+  {
+    "title": "Handmade Hero Day 310 - Finishing Sort Acceleration via Gridding",
+    "url": "/watch?v=maQL_OmS-kM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=322"
+  },
+  {
+    "title": "Handmade Hero Day 311 - Allowing Manual Sorting",
+    "url": "/watch?v=SkTRPn7pjfw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=323"
+  },
+  {
+    "title": "Handmade Hero Day 312 - Cross-entity Manual Sorting",
+    "url": "/watch?v=8ke6OKMFeAI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=324"
+  },
+  {
+    "title": "Handmade Hero Day 313 - Returning to Work on Z Layers",
+    "url": "/watch?v=PYdOZ_r9RLw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=325"
+  },
+  {
+    "title": "Handmade Hero Day 314 - Breaking Sprites into Layers",
+    "url": "/watch?v=I3pW6bQcxWE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=326"
+  },
+  {
+    "title": "Handmade Hero Day 315 - Un-reversing Sort Key Order",
+    "url": "/watch?v=jr55zspbhGc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=327"
+  },
+  {
+    "title": "Handmade Hero Day 316 - Multiple Software Render Targets",
+    "url": "/watch?v=NROKpZtyj_o&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=328"
+  },
+  {
+    "title": "Handmade Hero Day 317 - Alpha Blending Multiple Render Targets",
+    "url": "/watch?v=Wv2IAKs7W0A&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=329"
+  },
+  {
+    "title": "Handmade Hero Day 318 - Optimizing Render Target Blends and Clears",
+    "url": "/watch?v=HB4Dl8NyE2Q&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=330"
+  },
+  {
+    "title": "Handmade Hero Day 319 - Inverse and Transpose Matrices",
+    "url": "/watch?v=9KaIB7PFWeE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=331"
+  },
+  {
+    "title": "Handmade Hero Day 320 - Inverting a 2x2 Matrix by Hand",
+    "url": "/watch?v=kvSbiHrFKNk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=332"
+  },
+  {
+    "title": "Handmade Hero Day 321 - Multiple OpenGL Render Targets",
+    "url": "/watch?v=kKj3wzpVrMo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=333"
+  },
+  {
+    "title": "Handmade Hero Day 322 - Handling Multiple Display Aspect Ratios",
+    "url": "/watch?v=EKxPnlQ2ipI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=334"
+  },
+  {
+    "title": "Handmade Hero Day 323 - Fixing Miscellaneous Bugs",
+    "url": "/watch?v=YssqJ7eDnv0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=335"
+  },
+  {
+    "title": "Handmade Hero Day 324 - Moving Away from Multiple OpenGL Contexts",
+    "url": "/watch?v=B5LcmXI1O6w&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=336"
+  },
+  {
+    "title": "Handmade Hero Day 325 - Ticket Mutexes",
+    "url": "/watch?v=A2kCmouscjM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=337"
+  },
+  {
+    "title": "Handmade Hero Day 326 - Vararg Functions",
+    "url": "/watch?v=WoakE93Lj_w&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=338"
+  },
+  {
+    "title": "Handmade Hero Day 327 - Parsing Printf Format Strings",
+    "url": "/watch?v=vpB9hFX_L2Y&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=339"
+  },
+  {
+    "title": "Handmade Hero Day 328 - Integer and String Support in Printf",
+    "url": "/watch?v=kxHN6ICgjgQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=340"
+  },
+  {
+    "title": "Handmade Hero Day 329 - Printing Out Floats Poorly",
+    "url": "/watch?v=Qqp-O4cujVM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=341"
+  },
+  {
+    "title": "Handmade Hero Day 330 - Fixings Bugs from the Issue List",
+    "url": "/watch?v=a346y2H9JcU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=342"
+  },
+  {
+    "title": "Handmade Hero Day 331 - Activating Entities by Brain",
+    "url": "/watch?v=aHv4iYdRZNM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=343"
+  },
+  {
+    "title": "Handmade Hero Day 332 - Disabling Sort for Debug Overlays",
+    "url": "/watch?v=9ZUndaaFNzg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=344"
+  },
+  {
+    "title": "Handmade Hero Day 333 - Floor-relative Perspective Transforms",
+    "url": "/watch?v=MplLlRJQ6tQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=345"
+  },
+  {
+    "title": "Handmade Hero Day 334 - Adding Boost Pads",
+    "url": "/watch?v=6GY-9Uia_2g&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=346"
+  },
+  {
+    "title": "Handmade Hero Day 335 - Moving Entities on Boost Squares",
+    "url": "/watch?v=Ed13_ISgrU8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=347"
+  },
+  {
+    "title": "Handmade Hero Day 336 - Adding a Particle System Cache",
+    "url": "/watch?v=RBNjzGeaB_M&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=348"
+  },
+  {
+    "title": "Handmade Hero Day 337 - Convenient SIMD for Particles",
+    "url": "/watch?v=ucZLbYLTmd0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=349"
+  },
+  {
+    "title": "Handmade Hero Day 338 - Simulation-space Particles",
+    "url": "/watch?v=lG3j32DTo1E&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=350"
+  },
+  {
+    "title": "Handmade Hero Day 339 - Debugging Particle Camera Offset Motion",
+    "url": "/watch?v=76TSb_HiKus&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=351"
+  },
+  {
+    "title": "Handmade Hero Day 340 - Cleaning Up World / Sim-Region Interactions",
+    "url": "/watch?v=WvM38blp5QI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=352"
+  },
+  {
+    "title": "Handmade Hero Day 341 - Dynamically Growing Arenas",
+    "url": "/watch?v=lzdKgeovBN0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=353"
+  },
+  {
+    "title": "Handmade Hero Day 342 - Supporting Temporary Memory in Dynamic Arenas",
+    "url": "/watch?v=7COUJ8eef6A&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=354"
+  },
+  {
+    "title": "Handmade Hero Day 343 - Saving and Restoring Dynamically Allocated Memory Pages",
+    "url": "/watch?v=MSDl5-akNLE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=355"
+  },
+  {
+    "title": "Handmade Hero Day 344 - Selective Memory Restoration",
+    "url": "/watch?v=7oXRggHaP60&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=356"
+  },
+  {
+    "title": "Handmade Hero Day 345 - Protecting Memory Pages for Underflow Detection",
+    "url": "/watch?v=imxqyPgUIcM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=357"
+  },
+  {
+    "title": "Handmade Hero Day 346 - Consolidating Memory Block Headers",
+    "url": "/watch?v=XBft9E6NBDU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=358"
+  },
+  {
+    "title": "Handmade Hero Day 347 - Debugging Win32 Memory List Corruption",
+    "url": "/watch?v=wuYRpxnE9R8&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=359"
+  },
+  {
+    "title": "Handmade Hero Day 348 - Debugging Cutscene Z and Traversable Creation",
+    "url": "/watch?v=KAO3f4oaqWM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=360"
+  },
+  {
+    "title": "Handmade Hero Day 349 - Running Multiple Sim Regions",
+    "url": "/watch?v=Q3DtXQGTles&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=361"
+  },
+  {
+    "title": "Handmade Hero Day 350 - Multithreaded World Simulation",
+    "url": "/watch?v=tWzslFE9Qvg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=362"
+  },
+  {
+    "title": "Handmade Hero Day 351 - Optimizing Multithreaded Simulation Regions",
+    "url": "/watch?v=6mTkcOlaUUc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=363"
+  },
+  {
+    "title": "Handmade Hero Day 352 - Isolating the Camera Update Code",
+    "url": "/watch?v=m6yAMBpk7Bg&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=364"
+  },
+  {
+    "title": "Handmade Hero Day 353 - Simple RLE Compression",
+    "url": "/watch?v=kikLEdc3C1c&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=365"
+  },
+  {
+    "title": "Handmade Hero Day 354 - Simple LZ Compression",
+    "url": "/watch?v=l8WUqmHD1PU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=366"
+  },
+  {
+    "title": "Handmade Hero Day 355 - Clearing Out Pending GitHub Bugs",
+    "url": "/watch?v=pqOlYhlfxSE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=367"
+  },
+  {
+    "title": "Handmade Hero Day 356 - Making the Debug System CLANG Compatible",
+    "url": "/watch?v=q_FIMxta6zo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=368"
+  },
+  {
+    "title": "Handmade Hero Day 357 - Room-based Camera Zoom",
+    "url": "/watch?v=ASewPs1n-GA&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=369"
+  },
+  {
+    "title": "Handmade Hero Day 358 - Introduction to Depth Buffers",
+    "url": "/watch?v=7EiCGEgb_No&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=370"
+  },
+  {
+    "title": "Handmade Hero Day 359 - OpenGL Projection Matrices Revisited",
+    "url": "/watch?v=ykOBtVPjzq4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=371"
+  },
+  {
+    "title": "Handmade Hero Day 360 - Moving the Perspective Divide to OpenGL",
+    "url": "/watch?v=EDfb-13wgk0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=372"
+  },
+  {
+    "title": "Handmade Hero Day 361 - Introduction to 3D Rotation Matrices",
+    "url": "/watch?v=zU5Yyls5uwM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=373"
+  },
+  {
+    "title": "Handmade Hero Day 362 - Matrix Multiplication and Transform Order",
+    "url": "/watch?v=5tKiQd73rPk&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=374"
+  },
+  {
+    "title": "Handmade Hero Day 363 - Making an Orbiting Debug Camera",
+    "url": "/watch?v=CTTCf79MgDY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=375"
+  },
+  {
+    "title": "Handmade Hero Day 364 - Enabling the OpenGL Depth Buffer",
+    "url": "/watch?v=m8trVjY2WgI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=376"
+  },
+  {
+    "title": "Handmade Hero Day 365 - Adjusting Sprite Cards to Counter Projection",
+    "url": "/watch?v=0h916hXePbw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=377"
+  },
+  {
+    "title": "Handmade Hero Day 366 - Adding Cubes to the Renderer",
+    "url": "/watch?v=W5tnnhe8TK4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=378"
+  },
+  {
+    "title": "Handmade Hero Day 367 - Enabling OpenGL Multisampling",
+    "url": "/watch?v=imW4sX3vVwY&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=379"
+  },
+  {
+    "title": "Handmade Hero Day 368 - Compiling and Linking Shaders in OpenGL",
+    "url": "/watch?v=37KXLsjTRBo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=380"
+  },
+  {
+    "title": "Handmade Hero Day 369 - Introduction to Vertex and Fragment Shaders",
+    "url": "/watch?v=GtNvxxl3AK4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=381"
+  },
+  {
+    "title": "Handmade Hero Day 370 - Shader Fallback sRGB",
+    "url": "/watch?v=PGNH3SKmgEo&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=382"
+  },
+  {
+    "title": "Handmade Hero Day 371 - OpenGL Vertex Arrays",
+    "url": "/watch?v=Bn97Txqu9No&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=383"
+  },
+  {
+    "title": "Handmade Hero Day 372 - Using Strictly OpenGL Core Profile",
+    "url": "/watch?v=9PkR8pdDOtw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=384"
+  },
+  {
+    "title": "Handmade Hero Day 373 - Inverting the Full 3D Transform",
+    "url": "/watch?v=rMMFFDbh2XU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=385"
+  },
+  {
+    "title": "Handmade Hero Day 374 - Debugging Z Transform and Bias",
+    "url": "/watch?v=G4e70hz3pC0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=386"
+  },
+  {
+    "title": "Handmade Hero Day 375 - Adding Distance-based Fog",
+    "url": "/watch?v=RvEOtCTDWf0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=387"
+  },
+  {
+    "title": "Handmade Hero Day 376 - Drawing Debug Volumes",
+    "url": "/watch?v=L68VR5VuwnI&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=388"
+  },
+  {
+    "title": "Handmade Hero Day 377 - Improving Collision Volumes and the Camera",
+    "url": "/watch?v=Ll55Vdtf9NU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=389"
+  },
+  {
+    "title": "Handmade Hero Day 378 - Adding More Camera Behaviors",
+    "url": "/watch?v=4hDRp2VDeEU&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=390"
+  },
+  {
+    "title": "Handmade Hero Day 379 - Debug Overlay Cleanup and Render Group Performance Investigation",
+    "url": "/watch?v=Y2fxi_lFwE0&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=391"
+  },
+  {
+    "title": "Handmade Hero Day 380 - Attempting (and Failing) to Fix the Clock",
+    "url": "/watch?v=fxNhmGJ1OLQ&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=392"
+  },
+  {
+    "title": "Handmade Hero Day 381 - Two-pass Depth Peeling",
+    "url": "/watch?v=JZIQHygH2cc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=393"
+  },
+  {
+    "title": "Handmade Hero Day 382 - Depth Peel Compositing",
+    "url": "/watch?v=up8hb_TrKTE&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=394"
+  },
+  {
+    "title": "Handmade Hero Day 383 - Fixing Depth Peel Artifacts",
+    "url": "/watch?v=AHB5J_FPaW4&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=395"
+  },
+  {
+    "title": "Handmade Hero Day 384 - Dynamically Responding to Render Settings",
+    "url": "/watch?v=0QNmoZYaTkM&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=396"
+  },
+  {
+    "title": "Handmade Hero Day 385 - Trying Multisampled Depth Peels",
+    "url": "/watch?v=vOre9E5hJzc&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=397"
+  },
+  {
+    "title": "Handmade Hero Day 386 - Implementing a Custom Multisample Resolve",
+    "url": "/watch?v=RtOLz8xU2tw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=398"
+  },
+  {
+    "title": "Handmade Hero Day 387 - Further Attempts at Multisampled Depth Peeling",
+    "url": "/watch?v=SJRwEVr4HSw&list=PLnuhp3Xd9PYTt6svyQPyRO_AAuMWGxPzU&index=399"
+  }
+]

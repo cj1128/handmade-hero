@@ -249,6 +249,75 @@ union v4 {
 };
 
 //
+// misc
+//
+
+inline real32
+SafeRatioN(real32 numerator, real32 divider, real32 n)
+{
+  real32 result = n;
+
+  if(divider != 0) {
+    result = numerator / divider;
+  }
+
+  return result;
+}
+
+inline real32
+SafeRatio0(real32 numerator, real32 divider)
+{
+  real32 result = SafeRatioN(numerator, divider, 0);
+  return result;
+}
+
+inline real32
+Clamp(real32 v, real32 min, real32 max)
+{
+  real32 result = v;
+  if(result < min) {
+    result = min;
+  }
+  if(result > max) {
+    result = max;
+  }
+  return result;
+}
+
+inline real32
+Clamp01(real32 v)
+{
+  real32 result = Clamp(v, 0, 1);
+  return result;
+}
+
+inline v2
+Clamp01(v2 v)
+{
+  v2 result;
+  result.x = Clamp01(v.x);
+  result.y = Clamp01(v.y);
+  return result;
+}
+
+inline v3
+Clamp01(v3 v)
+{
+  v3 result;
+  result.x = Clamp01(v.x);
+  result.y = Clamp01(v.y);
+  result.z = Clamp01(v.z);
+  return result;
+}
+
+inline real32
+Lerp(real32 t, real32 a, real32 b)
+{
+  real32 result = (1 - t) * a + t * b;
+  return result;
+}
+
+//
 // rectangle2
 //
 
@@ -293,8 +362,23 @@ AddRadius(rectangle2 rect, v2 radius)
 inline bool32
 IsInRectangle(rectangle2 rect, v2 test)
 {
-  bool32 result = (test.x >= rect.min.x) && (test.x <= rect.max.x)
-    && (test.y >= rect.min.y) && (test.y <= rect.max.y);
+  // clang-format off
+  bool32 result = (test.x >= rect.min.x) &&
+                  (test.x <= rect.max.x) &&
+                  (test.y >= rect.min.y) &&
+                  (test.y <= rect.max.y);
+  // clang-format on
+  return result;
+}
+
+inline v2
+GetBarycentric(rectangle2 rect, v2 p)
+{
+  v2 result;
+
+  result.x = SafeRatio0(p.x - rect.min.x, rect.max.x - rect.min.x);
+  result.y = SafeRatio0(p.y - rect.min.y, rect.max.y - rect.min.y);
+
   return result;
 }
 
@@ -342,70 +426,29 @@ AddRadius(rectangle3 rect, v3 radius)
 inline bool32
 IsInRectangle(rectangle3 rect, v3 test)
 {
-  bool32 result = (test.x >= rect.min.x) && (test.x <= rect.max.x)
-    && (test.y >= rect.min.y) && (test.y <= rect.max.y)
-    && (test.z >= rect.min.z) && (test.z <= rect.max.z);
+  // clang-format off
+  bool32 result = (test.x >= rect.min.x) &&
+                  (test.x <= rect.max.x) &&
+                  (test.y >= rect.min.y) &&
+                  (test.y <= rect.max.y) &&
+                  (test.z >= rect.min.z) &&
+                  (test.z <= rect.max.z);
+  // clang-format on
   return result;
 }
 
 inline bool32
 RectanglesIntersect(rectangle3 a, rectangle3 b)
 {
+  // clang-format off
   bool32 result
-    = !((a.min.x >= b.max.x) || (a.max.x <= b.min.x) || (a.min.y >= b.max.y)
-      || (a.max.y <= b.min.y) || (a.min.z >= b.max.z) || (a.max.z <= b.min.z));
-  return result;
-}
-
-//
-// other
-//
-inline real32
-SafeRatioN(real32 numerator, real32 divider, real32 n)
-{
-  real32 result = n;
-
-  if(divider != 0) {
-    result = numerator / divider;
-  }
-
-  return result;
-}
-
-inline real32
-SafeRatio0(real32 numerator, real32 divider)
-{
-  real32 result = SafeRatioN(numerator, divider, 0);
-  return result;
-}
-
-inline real32
-Clamp(real32 v, real32 min, real32 max)
-{
-  real32 result = v;
-  if(result < min) {
-    result = min;
-  }
-  if(result > max) {
-    result = max;
-  }
-  return result;
-}
-
-inline real32
-Clamp01(real32 v)
-{
-  real32 result = Clamp(v, 0, 1);
-  return result;
-}
-
-inline v3
-Clamp01(v3 v)
-{
-  v3 result;
-  result.x = Clamp01(v.x);
-  result.y = Clamp01(v.y);
-  result.z = Clamp01(v.z);
+    = !((a.min.x >= b.max.x) ||
+        (a.max.x <= b.min.x) ||
+        (a.min.y >= b.max.y) ||
+        (a.max.y <= b.min.y) ||
+        (a.min.z >= b.max.z) ||
+        (a.max.z <= b.min.z));
+  // clang-format on
   return result;
 }
 
@@ -418,13 +461,6 @@ GetBarycentric(rectangle3 rect, v3 p)
   result.y = SafeRatio0(p.y - rect.min.y, rect.max.y - rect.min.y);
   result.z = SafeRatio0(p.z - rect.min.z, rect.max.z - rect.min.z);
 
-  return result;
-}
-
-inline real32
-Lerp(real32 t, real32 a, real32 b)
-{
-  real32 result = (1 - t) * a + t * b;
   return result;
 }
 

@@ -36,6 +36,19 @@ union entity_reference {
   stored_entity *stored;
 };
 
+struct sim_entity_collision_volume {
+  v3 offset;
+  v3 dim;
+};
+
+struct sim_entity_collision_volume_group {
+  sim_entity_collision_volume totalVolume;
+
+  // NOTE: currently volumeCount must > 0 if entity is collidable
+  uint32 volumeCount;
+  sim_entity_collision_volume *volumes;
+};
+
 struct sim_entity {
   stored_entity *stored;
   bool32 updatable;
@@ -44,13 +57,13 @@ struct sim_entity {
 
   uint32 flags;
 
-  v3 p;
+  v3 p; // ground point
   v3 dP;
 
   // 0: right, 1: up, 2: left, 3: down
   uint32 facingDirection;
 
-  v3 dim;
+  sim_entity_collision_volume_group *collision;
 
   uint32 hitPointCount;
   hit_point hitPoints[16];
@@ -62,6 +75,7 @@ struct sim_entity {
 
   // only for stairwell
   real32 walkableHeight;
+  v2 walkableDim;
 };
 
 struct stored_entity {
@@ -106,7 +120,7 @@ MakeEntitySpatial(sim_entity *entity, v3 p, v3 dP)
 internal v3
 GetEntityGroundPoint(sim_entity *entity)
 {
-  v3 result = entity->p + v3{ 0, 0, -0.5f * entity->dim.z };
+  v3 result = entity->p;
   return result;
 }
 
@@ -115,9 +129,9 @@ GetStairwellGround(sim_entity *entity, v3 moverGround)
 {
   Assert(entity->type == EntityType_Stairwell);
 
-  rectangle3 entityRect = RectCenterDim(entity->p, entity->dim);
-  v3 bary = Clamp01(GetBarycentric(entityRect, moverGround));
-  real32 ground = entityRect.min.z + bary.y * entity->walkableHeight;
+  rectangle2 entityRect = RectCenterDim(entity->p.xy, entity->walkableDim);
+  v2 bary = Clamp01(GetBarycentric(entityRect, moverGround.xy));
+  real32 ground = entity->p.z + bary.y * entity->walkableHeight;
 
   return ground;
 }

@@ -4,6 +4,36 @@
 #include "handmade_entity.cpp"
 #include "handmade_sim_region.cpp"
 
+internal sim_entity_collision_volume_group *
+MakeSimpleCollision(game_state *state, real32 dimX, real32 dimY, real32 dimZ)
+{
+  memory_arena *arena = &state->worldArena;
+  // TODO: Change to using types arena
+  sim_entity_collision_volume_group *group
+    = PushStruct(arena, sim_entity_collision_volume_group);
+  group->volumeCount = 1;
+  group->volumes
+    = PushArray(arena, group->volumeCount, sim_entity_collision_volume);
+  group->totalVolume.offset = v3{ 0, 0, 0.5f * dimZ };
+  group->totalVolume.dim = v3{ dimX, dimY, dimZ };
+  group->volumes[0] = group->totalVolume;
+
+  return group;
+}
+
+internal sim_entity_collision_volume_group *
+MakeNullCollision(game_state *state)
+{
+  memory_arena *arena = &state->worldArena;
+  sim_entity_collision_volume_group *group
+    = PushStruct(arena, sim_entity_collision_volume_group);
+  group->volumeCount = 0;
+  group->volumes = 0;
+  group->totalVolume.offset = v3{ 0, 0, 0 };
+  group->totalVolume.dim = v3{ 0, 0, 0 };
+  return group;
+}
+
 internal stored_entity *
 AddStoredEntity(game_state *state, entity_type type, world_position p)
 {
@@ -11,6 +41,7 @@ AddStoredEntity(game_state *state, entity_type type, world_position p)
   stored_entity *stored = state->entities + state->entityCount++;
   stored->p = NullPosition();
   stored->sim.type = type;
+  stored->sim.collision = state->nullCollision;
 
   ChangeEntityLocation(&state->worldArena, &state->world, stored, p);
 
@@ -31,12 +62,13 @@ AddStoredEntity(game_state *state,
 }
 
 internal stored_entity *
-AddGroundedEntity(game_state *state, entity_type type, world_position p, v3 dim)
+AddGroundedEntity(game_state *state,
+  entity_type type,
+  world_position p,
+  sim_entity_collision_volume_group *collision)
 {
-  world_position newP
-    = MapIntoWorldSpace(&state->world, p, v3{ 0, 0, 0.5f * dim.z });
-  stored_entity *entity = AddStoredEntity(state, type, newP);
-  entity->sim.dim = dim;
+  stored_entity *entity = AddStoredEntity(state, type, p);
+  entity->sim.collision = collision;
   return entity;
 }
 
@@ -55,10 +87,8 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
-  v3 dim = { state->world.tileSizeInMeters,
-    state->world.tileSizeInMeters,
-    state->world.tileDepthInMeters };
-  stored_entity *stored = AddGroundedEntity(state, EntityType_Wall, p, dim);
+  stored_entity *stored
+    = AddGroundedEntity(state, EntityType_Wall, p, state->wallCollision);
 
   if(stored->p.chunkX == 0 && stored->p.chunkY == 0 && stored->p.chunkZ != 0) {
     int breakHere = 0;
@@ -70,9 +100,10 @@ AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 internal stored_entity *
 AddSword(game_state *state)
 {
-  v3 dim = { 1.0f, 0.5f, 0.1f };
-  stored_entity *sword
-    = AddGroundedEntity(state, EntityType_Sword, NullPosition(), dim);
+  stored_entity *sword = AddGroundedEntity(state,
+    EntityType_Sword,
+    NullPosition(),
+    state->swordCollision);
 
   AddFlags(&sword->sim, EntityFlag_Moveable);
 
@@ -82,9 +113,10 @@ AddSword(game_state *state)
 internal stored_entity *
 AddHero(game_state *state)
 {
-  v3 dim = { 1.0f, 0.5f, 1.2f };
-  stored_entity *hero
-    = AddGroundedEntity(state, EntityType_Hero, state->cameraP, dim);
+  stored_entity *hero = AddGroundedEntity(state,
+    EntityType_Hero,
+    state->cameraP,
+    state->heroCollision);
 
   AddFlags(&hero->sim, EntityFlag_Moveable);
 
@@ -99,10 +131,10 @@ AddHero(game_state *state)
 internal void
 AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  v3 dim = { 1.0f, 0.5f, 0.5f };
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
-  stored_entity *monster = AddGroundedEntity(state, EntityType_Monster, p, dim);
+  stored_entity *monster
+    = AddGroundedEntity(state, EntityType_Monster, p, state->monsterCollision);
 
   AddFlags(&monster->sim, EntityFlag_Moveable);
 
@@ -114,22 +146,21 @@ AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
-  v3 dim = { state->world.tileSizeInMeters,
-    2.0f * state->world.tileSizeInMeters,
-    1.1f * state->world.tileDepthInMeters };
   stored_entity *stored
-    = AddGroundedEntity(state, EntityType_Stairwell, p, dim);
+    = AddGroundedEntity(state, EntityType_Stairwell, p, state->stairCollision);
+  stored->sim.walkableDim = stored->sim.collision->totalVolume.dim.xy;
   stored->sim.walkableHeight = state->world.tileDepthInMeters;
 }
 
 internal void
 AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
-  v3 dim = { 1.0f, 0.5f, 0.5f };
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
-  stored_entity *familiar
-    = AddGroundedEntity(state, EntityType_Familiar, p, dim);
+  stored_entity *familiar = AddGroundedEntity(state,
+    EntityType_Familiar,
+    p,
+    state->familiarCollision);
 
   AddFlags(&familiar->sim, EntityFlag_Moveable);
 }
@@ -372,7 +403,7 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup)
     v2 halfDim = { 0.1f, 0.08f };
     real32 spanX = 1.5f * 2 * halfDim.x;
     real32 startX = -0.5f * (entity->hitPointCount - 1) * spanX;
-    real32 startY = -0.75f * entity->dim.y;
+    real32 startY = -0.75f * entity->collision->totalVolume.dim.y;
     for(uint32 hitPointIndex = 0; hitPointIndex < entity->hitPointCount;
         hitPointIndex++) {
       hit_point *hitPoint = entity->hitPoints + hitPointIndex;
@@ -482,6 +513,20 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       (uint8 *)memory->permanentStorage + sizeof(game_state));
 
     InitializeWorld(world, 1.4f, 3.0f);
+
+    state->wallCollision = MakeSimpleCollision(state,
+      state->world.tileSizeInMeters,
+      state->world.tileSizeInMeters,
+      state->world.tileDepthInMeters);
+    state->heroCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 1.2f);
+    state->familiarCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.5f);
+    state->swordCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.1f);
+    state->monsterCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.5f);
+    state->stairCollision = MakeSimpleCollision(state,
+      state->world.tileSizeInMeters,
+      2.0f * state->world.tileSizeInMeters,
+      1.1f * state->world.tileDepthInMeters);
+    state->nullCollision = MakeNullCollision(state);
 
     int32 screenBaseX = 0;
     int32 screenBaseY = 0;
@@ -795,7 +840,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       case EntityType_Stairwell: {
         PushRectangle(&pieceGroup,
           v2{},
-          0.5f * entity->dim.xy,
+          0.5f * entity->walkableDim,
           v3{ 1.0f, 0, 0 });
       } break;
 
@@ -833,15 +878,16 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
-    real32 entityZ = entity->p.z - 0.5f * entity->dim.z;
+    real32 entityZ = entity->p.z;
     real32 zFudge = 1.0f + 0.1f * entityZ;
     v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
 
     if(state->debugDrawBoundary) {
       v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
+      v2 xy = entity->collision->totalVolume.dim.xy;
       DrawRectangle(buffer,
-        entityOrigin - 0.5f * entity->dim.xy * metersToPixels,
-        entityOrigin + 0.5f * entity->dim.xy * metersToPixels,
+        entityOrigin - 0.5f * xy * metersToPixels,
+        entityOrigin + 0.5f * xy * metersToPixels,
         v3{ 1.0f, 1.0f, 0.0f });
     }
 

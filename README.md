@@ -145,6 +145,7 @@ My preferred code style for C is different from Casey's.
 - [Day 75: Conditional Movements Based on Step Heights](#day-75-conditional-movements-based-on-step-heights)
 - [Day 76: Entity Heights and Collision Detection](#day-76-entity-heights-and-collision-detection)
 - [Day 77: Entity Ground Points](#day-77-entity-ground-points)
+- [Day 78: Multiple Collision Volumes Per Entity](#day-78-multiple-collision-volumes-per-entity)
 
 <!-- /MarkdownTOC -->
 
@@ -797,3 +798,13 @@ To-do list:
 - Define `GetEntityGroundPoint` and fix `SpeculativeCollide`
 - Add `walkableHeight` to entity which is used only for stairwell, and modify `SpeculativeCollide`
 - Define `GetStairwellGround` and fix `HandleOverlap`. It should use the same method to calculate the stairwell ground as `SpeculativeCollide`.
+
+### Day 78: Multiple Collision Volumes Per Entity
+
+- The position point doesn't necessarily have to be the collision point
+- Define `sim_entity_collision_volume` and `sim_entity_collision_volumn_group`
+- Remove `dim` in entity and add `collision`
+- Define `walkableDim` for stairwell
+- Initialize collision groups when initialize memory
+- Always initialize collistion to null collision
+- Set z drag to 0

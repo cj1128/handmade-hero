@@ -106,6 +106,14 @@ struct game_state {
   // NOTE: need to be power of two
   pairwise_collision_rule *collisionRuleHash[4096];
   pairwise_collision_rule *firstFreeCollisionRule;
+
+  sim_entity_collision_volume_group *wallCollision;
+  sim_entity_collision_volume_group *swordCollision;
+  sim_entity_collision_volume_group *heroCollision;
+  sim_entity_collision_volume_group *familiarCollision;
+  sim_entity_collision_volume_group *monsterCollision;
+  sim_entity_collision_volume_group *stairCollision;
+  sim_entity_collision_volume_group *nullCollision;
 };
 
 #endif
