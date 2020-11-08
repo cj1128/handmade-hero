@@ -81,13 +81,9 @@ AddEntityToSimRegion(sim_region *simRegion, stored_entity *stored, v3 p)
   {
     Assert(stored);
     sim_entity_collision_volume total = stored->sim.collision->totalVolume;
-    Assert(total.dim.x <= 2 * simRegion->maxEntityRadius);
-    Assert(total.dim.y <= 2 * simRegion->maxEntityRadius);
-    Assert(total.dim.z <= 2 * simRegion->maxEntityRadius);
-  }
-
-  if(stored->p.chunkZ != 0 && stored->p.chunkX == 0 && stored->p.chunkY == 0) {
-    int breakHere = 0;
+    // Assert(total.dim.x <= 2 * simRegion->maxEntityRadius);
+    // Assert(total.dim.y <= 2 * simRegion->maxEntityRadius);
+    // Assert(total.dim.z <= 2 * simRegion->maxEntityRadius);
   }
 
   sim_entity *result = NULL;
@@ -282,6 +278,10 @@ internal bool32
 CanCollide(game_state *state, sim_entity *a, sim_entity *b)
 {
   bool32 result = false;
+
+  if(a->type == EntityType_Space || b->type == EntityType_Space) {
+    return false;
+  }
 
   if(a != b) {
     if(!HasFlag(a, EntityFlag_NonSpatial)
@@ -560,10 +560,6 @@ MoveEntity(game_state *state,
     }
   }
 
-  if(entity->type == EntityType_Hero) {
-    int breakHere = 0;
-  }
-
   ground += entity->p.z - GetEntityGroundPoint(entity).z;
 
   if(entity->p.z <= ground
@@ -600,10 +596,6 @@ EndSim(sim_region *simRegion, game_state *state)
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
     stored_entity *stored = entity->stored;
-
-    if(entity->type == EntityType_Hero) {
-      int breakHere = 0;
-    }
 
     Assert(HasFlag(&stored->sim, EntityFlag_Simming));
     stored->sim = *entity;

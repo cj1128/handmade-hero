@@ -49,7 +49,7 @@ My preferred code style for C is different from Casey's.
 - `RESOURCE`: External valuable resource
 - `DIFF`: Something I have done it differently from Casey
 - `FUN`: Something interesting to know, like Windows can't correctly handle file formats they invented
-- `OPINION`: Casey's opinion about programming
+- `CASEY`: Casey's opinion about programming
 
 ## Windows Programming
 
@@ -146,6 +146,7 @@ My preferred code style for C is different from Casey's.
 - [Day 76: Entity Heights and Collision Detection](#day-76-entity-heights-and-collision-detection)
 - [Day 77: Entity Ground Points](#day-77-entity-ground-points)
 - [Day 78: Multiple Collision Volumes Per Entity](#day-78-multiple-collision-volumes-per-entity)
+- [Day 79: Defining the Ground](#day-79-defining-the-ground)
 
 <!-- /MarkdownTOC -->
 
@@ -544,7 +545,7 @@ Math we are gonna need:
 
 ### Day 45: Geometric vs. Temporal Movement Search
 
-- OPINION: Search in p (position) is way better than searing in t (time)
+- CASEY: Search in p (position) is way better than searing in t (time)
 - Part of new collision detection algorithm
 - There is no code today. I will write the new collision detection algorithm when it's complete.
 
@@ -644,7 +645,7 @@ Math we are gonna need:
 
 ### Day 61: Adding a Simple Attack
 
-- OPINION: Always write the usage code first. It will prepare you necessary context for writing real stuff.
+- CASEY: Always write the usage code first. It will prepare you necessary context for writing real stuff.
 - Add `EntityType_Sword` entity type
 - Define `DrawHitPoints()` and `InitHitPoints()` and add hitpoints for our monster
 - Load *rock03.bmp* as sword and render it when some key is pressed
@@ -672,12 +673,12 @@ This is a big change but it defeinitely worth it.
 - `LoadEntityReference` should get position from reference entity
 - `UpdateSword` doesn't have to check NonSpatial flag
 - Move update logic back to our main function
-- OPINION: Avoid callbacks, plain switch statements are just better on every aspect.
+- CASEY: Avoid callbacks, plain switch statements are just better on every aspect.
 
 ### Day 68: Exact Enforcement of Maximum Movement Distances
 
 - Consider `distanceLimit` in moveEntity function
-- OPINION: Fight the double dispatch problem with a property system.
+- CASEY: Fight the double dispatch problem with a property system.
 - Define a simple `HandleCollision` function to make sword hurt monster when they collides
 
 ### Day 69: Pairwise Collision Rules
@@ -808,3 +809,11 @@ To-do list:
 - Initialize collision groups when initialize memory
 - Always initialize collistion to null collision
 - Set z drag to 0
+
+### Day 79: Defining the Ground
+
+- Casey talks about difference between "filled and carve" (Quake way) vs "empty and fill" (Unreal way) model
+- CASEY: Robustness > efficiency!
+- Introduce the concept of "room"
+- Define `AddStandardRoom`
+- Define `PushRectOutline` to draw the room

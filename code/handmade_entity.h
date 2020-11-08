@@ -12,6 +12,7 @@ struct hit_point {
 enum entity_type {
   EntityType_Null,
 
+  EntityType_Space,
   EntityType_Hero,
   EntityType_Wall,
   EntityType_Monster,
@@ -24,6 +25,7 @@ enum entity_flag {
   EntityFlag_NonSpatial = (1 << 0),
   EntityFlag_Moveable = (1 << 1),
   EntityFlag_ZSupported = (1 << 2),
+  EntityFlag_Traversable = (1 << 3),
 
   // debug flags
   EntityFlag_Simming = (1 << 30),

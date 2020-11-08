@@ -83,16 +83,27 @@ InitHitPoints(stored_entity *stored, int value)
 }
 
 internal stored_entity *
+AddStandardRoom(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+{
+  world_position p
+    = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
+  stored_entity *stored = AddGroundedEntity(state,
+    EntityType_Space,
+    p,
+    state->standardRoomCollision);
+
+  AddFlags(&stored->sim, EntityFlag_Traversable);
+
+  return stored;
+}
+
+internal stored_entity *
 AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
   stored_entity *stored
     = AddGroundedEntity(state, EntityType_Wall, p, state->wallCollision);
-
-  if(stored->p.chunkX == 0 && stored->p.chunkY == 0 && stored->p.chunkZ != 0) {
-    int breakHere = 0;
-  }
 
   return stored;
 }
@@ -386,7 +397,7 @@ PushPiece(render_piece_group *group,
 }
 
 internal void
-PushRectangle(render_piece_group *group, v2 offset, v2 halfDim, v3 color)
+PushRect(render_piece_group *group, v2 offset, v2 halfDim, v3 color)
 {
   Assert(group->pieceCount < ArrayCount(group->pieces));
   render_piece piece = {};
@@ -394,6 +405,31 @@ PushRectangle(render_piece_group *group, v2 offset, v2 halfDim, v3 color)
   piece.color = color;
   piece.halfDim = halfDim;
   group->pieces[group->pieceCount++] = piece;
+}
+
+internal void
+PushRectOutline(render_piece_group *group, v2 offset, v2 halfDim, v3 color)
+{
+  real32 thickness = 0.1f;
+  // Top and bottom
+  PushRect(group,
+    v2{ offset.x, offset.y - halfDim.y },
+    v2{ halfDim.x, thickness },
+    v3{ 0.0f, 0, 1.0f });
+  PushRect(group,
+    v2{ offset.x, offset.y + halfDim.y },
+    v2{ halfDim.x, thickness },
+    v3{ 0.0f, 0, 1.0f });
+
+  // Left and right
+  PushRect(group,
+    v2{ offset.x - halfDim.x, offset.y },
+    v2{ thickness, halfDim.y },
+    v3{ 0.0f, 0, 1.0f });
+  PushRect(group,
+    v2{ offset.x + halfDim.x, offset.y },
+    v2{ thickness, halfDim.y },
+    v3{ 0.0f, 0, 1.0f });
 }
 
 internal void
@@ -411,7 +447,7 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup)
       if(hitPoint->amount > 0) {
         color = v3{ 1.0f, 0.0f, 0.0f };
       }
-      PushRectangle(pieceGroup,
+      PushRect(pieceGroup,
         v2{ startX + spanX * hitPointIndex, startY },
         halfDim,
         color);
@@ -518,6 +554,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       state->world.tileSizeInMeters,
       state->world.tileSizeInMeters,
       state->world.tileDepthInMeters);
+    state->standardRoomCollision = MakeSimpleCollision(state,
+      tilesPerWidth * state->world.tileSizeInMeters,
+      tilesPerHeight * state->world.tileSizeInMeters,
+      0.9f * state->world.tileDepthInMeters);
     state->heroCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 1.2f);
     state->familiarCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.5f);
     state->swordCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.1f);
@@ -578,6 +618,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           }
         } break;
       }
+
+      AddStandardRoom(state,
+        screenX * tilesPerWidth + tilesPerWidth / 2,
+        screenY * tilesPerHeight + tilesPerHeight / 2,
+        absTileZ);
 
       // 1: empty
       // 2: wall
@@ -824,11 +869,20 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Wall: {
-        if(entity->stored->p.chunkZ != 0) {
-          int breakHere = 0;
-        }
-
         PushPiece(&pieceGroup, &state->tree, v2{ 40, 40 }, 1);
+      } break;
+
+      case EntityType_Space: {
+        for(uint32 volumeIndex = 0;
+            volumeIndex < entity->collision->volumeCount;
+            volumeIndex++) {
+          sim_entity_collision_volume *volume
+            = entity->collision->volumes + volumeIndex;
+          PushRectOutline(&pieceGroup,
+            v2{},
+            0.5f * volume->dim.xy,
+            v3{ 0.0f, 0, 1.0f });
+        }
       } break;
 
       case EntityType_Monster: {
@@ -838,7 +892,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Stairwell: {
-        PushRectangle(&pieceGroup,
+        PushRect(&pieceGroup,
           v2{},
           0.5f * entity->walkableDim,
           v3{ 1.0f, 0, 0 });
@@ -915,7 +969,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // Debug: show current floors
   for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
     v2 start = { 10 + (real32)i * 15, (real32)buffer->height - 20 };
-
     DrawRectangle(buffer, start, start + v2{ 10, 10 }, v3{ 0.0f, 1.0f, 0.0f });
   }
 

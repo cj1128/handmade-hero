@@ -108,6 +108,7 @@ struct game_state {
   pairwise_collision_rule *firstFreeCollisionRule;
 
   sim_entity_collision_volume_group *wallCollision;
+  sim_entity_collision_volume_group *standardRoomCollision;
   sim_entity_collision_volume_group *swordCollision;
   sim_entity_collision_volume_group *heroCollision;
   sim_entity_collision_volume_group *familiarCollision;
