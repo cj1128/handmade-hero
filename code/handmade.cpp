@@ -630,35 +630,37 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         for(int32 tileX = 0; tileX < tilesPerWidth; tileX++) {
           int32 absTileX = screenX * tilesPerWidth + tileX;
           int32 absTileY = screenY * tilesPerHeight + tileY;
-          int32 TileValue = 1;
+          int32 tileValue = 1;
 
           if(tileX == 0) {
-            TileValue = 2;
+            tileValue = 2;
             if(doorLeft && tileY == (tilesPerHeight / 2)) {
-              TileValue = 1;
+              tileValue = 1;
             }
           }
           if(tileX == (tilesPerWidth - 1)) {
-            TileValue = 2;
+            tileValue = 2;
             if(doorRight && tileY == (tilesPerHeight / 2)) {
-              TileValue = 1;
+              tileValue = 1;
             }
           }
           if(tileY == 0) {
-            TileValue = 2;
+            tileValue = 2;
             if(doorBottom && tileX == (tilesPerWidth / 2)) {
-              TileValue = 1;
+              tileValue = 1;
             }
           }
           if(tileY == (tilesPerHeight - 1)) {
-            TileValue = 2;
+            tileValue = 2;
             if(doorTop && tileX == (tilesPerWidth / 2)) {
-              TileValue = 1;
+              tileValue = 1;
             }
           }
 
-          if(TileValue == 2) {
-            AddWall(state, absTileX, absTileY, absTileZ);
+          if(tileValue == 2) {
+            if(screenIndex == 0) {
+              AddWall(state, absTileX, absTileY, absTileZ);
+            }
           }
 
           if(tileX == 10 && tileY == 4 && (doorUp || doorDown)) {
@@ -936,7 +938,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     real32 zFudge = 1.0f + 0.1f * entityZ;
     v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
 
-    if(state->debugDrawBoundary) {
+    if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
       v2 xy = entity->collision->totalVolume.dim.xy;
       DrawRectangle(buffer,

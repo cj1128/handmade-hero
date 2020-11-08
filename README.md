@@ -147,6 +147,7 @@ My preferred code style for C is different from Casey's.
 - [Day 77: Entity Ground Points](#day-77-entity-ground-points)
 - [Day 78: Multiple Collision Volumes Per Entity](#day-78-multiple-collision-volumes-per-entity)
 - [Day 79: Defining the Ground](#day-79-defining-the-ground)
+- [Day 80: Handling Traversables in the Collision Loop](#day-80-handling-traversables-in-the-collision-loop)
 
 <!-- /MarkdownTOC -->
 
@@ -817,3 +818,12 @@ To-do list:
 - Introduce the concept of "room"
 - Define `AddStandardRoom`
 - Define `PushRectOutline` to draw the room
+
+### Day 80: Handling Traversables in the Collision Loop
+
+- Define `test_wall` and make wall testing data driven
+- Inline `TestWall` function
+- Test overlap using all volumes and extract code into `EntitiesOverlap`
+- Add `epsilon` to `EntitiesOverlap`
+- Add test for `tMax`, mostly the same as `tMin`
+- Test our new code that prevents hero from ever getting outside

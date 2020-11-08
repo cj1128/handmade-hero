@@ -1,6 +1,16 @@
 #include <stdio.h>
 #include <windows.h>
 
+struct test_wall {
+  real32 x;
+  real32 deltaX;
+  real32 deltaY;
+  real32 relX;
+  real32 relY;
+  real32 radiusY;
+  v3 normal;
+};
+
 internal bool32
 TestWall(real32 wallX,
   real32 deltaX,
@@ -71,6 +81,35 @@ EntityOverlapsRectangle(v3 p,
 {
   rectangle3 grown = AddRadius(rect, 0.5f * volume.dim);
   bool32 result = IsInRectangle(grown, p + volume.offset);
+  return result;
+}
+
+internal bool32
+EntitiesOverlap(sim_entity *entity,
+  sim_entity *testEntity,
+  v3 epsilon = { 0, 0, 0 })
+{
+  bool32 result = false;
+
+  for(uint32 volumeIndex = 0;
+      !result && (volumeIndex < entity->collision->volumeCount);
+      volumeIndex++) {
+    sim_entity_collision_volume *volume
+      = entity->collision->volumes + volumeIndex;
+    rectangle3 entityRect
+      = RectCenterDim(entity->p + volume->offset, volume->dim + epsilon);
+
+    for(uint32 testVolumeIndex = 0;
+        !result && (testVolumeIndex < testEntity->collision->volumeCount);
+        testVolumeIndex++) {
+      sim_entity_collision_volume *testVolume
+        = testEntity->collision->volumes + testVolumeIndex;
+      rectangle3 testEntityRect
+        = RectCenterDim(testEntity->p + testVolume->offset, testVolume->dim);
+      result = RectanglesIntersect(entityRect, testEntityRect);
+    }
+  }
+
   return result;
 }
 
@@ -267,8 +306,10 @@ CanOverlap(sim_entity *mover, sim_entity *region)
 {
   bool32 result = false;
 
-  if(region->type == EntityType_Stairwell) {
-    result = true;
+  if(mover->type != region->type) {
+    if(region->type == EntityType_Stairwell) {
+      result = true;
+    }
   }
 
   return result;
@@ -406,6 +447,11 @@ MoveEntity(game_state *state,
 
   for(int32 iteration = 0; iteration < 4; iteration++) {
     real32 tMin = 1.0f;
+    real32 tMax = 0.0f;
+    v3 wallNormalMin = {};
+    v3 wallNormalMax = {};
+    sim_entity *hitEntityMin = NULL;
+    sim_entity *hitEntityMax = NULL;
 
     real32 entityDeltaLength = Length(entityDelta);
 
@@ -417,14 +463,18 @@ MoveEntity(game_state *state,
       tMin = distanceRemaining / entityDeltaLength;
     }
 
-    sim_entity *hitEntity = NULL;
-    v3 wallNormal = {};
     v3 targetEntityP = entity->p + entityDelta;
 
     for(uint32 testEntityIndex = 0; testEntityIndex < simRegion->entityCount;
         testEntityIndex++) {
       sim_entity *testEntity = simRegion->entities + testEntityIndex;
-      if(CanCollide(state, entity, testEntity)) {
+
+      real32 overlapEpsilon = 0.1f;
+      if((HasFlag(testEntity, EntityFlag_Traversable)
+           && EntitiesOverlap(entity,
+             testEntity,
+             overlapEpsilon * v3{ 1, 1, 1 }))
+        || CanCollide(state, entity, testEntity)) {
         for(uint32 volumeIndex = 0;
             volumeIndex < entity->collision->volumeCount;
             volumeIndex++) {
@@ -452,63 +502,101 @@ MoveEntity(game_state *state,
             real32 radiusH = 0.5f * minkowskiDiameter.y;
 
             if(rel.z >= minCorner.z && rel.z < maxCorner.z) {
-              v3 testWallNormal = {};
-              real32 tMinTest = tMin;
-              bool32 hitThis = false;
+              test_wall testWalls[] = {
+                // left
+                {
+                  minCorner.x,
+                  entityDelta.x,
+                  entityDelta.y,
+                  rel.x,
+                  rel.y,
+                  radiusH,
+                  { 1, 0, 0 },
+                },
+                // right
+                { maxCorner.x,
+                  entityDelta.x,
+                  entityDelta.y,
+                  rel.x,
+                  rel.y,
+                  radiusH,
+                  { -1, 0, 0 } },
+                // bottom
+                { minCorner.y,
+                  entityDelta.y,
+                  entityDelta.x,
+                  rel.y,
+                  rel.x,
+                  radiusW,
+                  { 0, 1, 0 } },
+                // top
+                {
+                  maxCorner.y,
+                  entityDelta.y,
+                  entityDelta.x,
+                  rel.y,
+                  rel.x,
+                  radiusW,
+                  { 0, -1, 0 },
+                },
+              };
 
-              // left
-              if(TestWall(minCorner.x,
-                   entityDelta.x,
-                   entityDelta.y,
-                   rel.x,
-                   rel.y,
-                   radiusH,
-                   &tMinTest)) {
-                testWallNormal = { 1, 0, 0 };
-                hitThis = true;
-              }
+              if(HasFlag(testEntity, EntityFlag_Traversable)) {
+                v3 testWallNormal = {};
+                real32 tMaxTest = tMax;
+                bool32 hitThis = false;
+                real32 tEpsilon = 0.001f;
 
-              // right
-              if(TestWall(maxCorner.x,
-                   entityDelta.x,
-                   entityDelta.y,
-                   rel.x,
-                   rel.y,
-                   radiusH,
-                   &tMinTest)) {
-                testWallNormal = { -1, 0, 0 };
-                hitThis = true;
-              }
+                for(uint32 wallIndex = 0; wallIndex < ArrayCount(testWalls);
+                    wallIndex++) {
+                  test_wall *wall = testWalls + wallIndex;
+                  if(wall->deltaX != 0.0f) {
+                    real32 tResult = (wall->x - wall->relX) / wall->deltaX;
+                    real32 y = wall->relY + tResult * wall->deltaY;
+                    if(y >= -wall->radiusY && y <= wall->radiusY) {
+                      if(tResult > 0.0f && tResult > tMaxTest) {
+                        hitThis = true;
+                        testWallNormal = wall->normal;
+                        tMaxTest = Maximum(0.0f, tResult - tEpsilon);
+                      }
+                    }
+                  }
+                }
 
-              // bottom
-              if(TestWall(minCorner.y,
-                   entityDelta.y,
-                   entityDelta.x,
-                   rel.y,
-                   rel.x,
-                   radiusW,
-                   &tMinTest)) {
-                testWallNormal = { 0, 1, 0 };
-                hitThis = true;
-              }
+                if(hitThis) {
+                  tMax = tMaxTest;
+                  wallNormalMax = testWallNormal;
+                  hitEntityMax = testEntity;
+                }
+              } else {
+                v3 testWallNormal = {};
+                real32 tMinTest = tMin;
+                bool32 hitThis = false;
+                real32 tEpsilon = 0.001f;
 
-              // top
-              if(TestWall(maxCorner.y,
-                   entityDelta.y,
-                   entityDelta.x,
-                   rel.y,
-                   rel.x,
-                   radiusW,
-                   &tMinTest)) {
-                testWallNormal = { 0, -1, 0 };
-                hitThis = true;
-              }
+                for(uint32 wallIndex = 0; wallIndex < ArrayCount(testWalls);
+                    wallIndex++) {
+                  test_wall *wall = testWalls + wallIndex;
 
-              if(hitThis) {
-                if(SpeculativeCollide(entity, testEntity)) {
-                  tMin = tMinTest;
-                  wallNormal = testWallNormal;
-                  hitEntity = testEntity;
+                  if(wall->deltaX != 0.0f) {
+                    real32 tResult = (wall->x - wall->relX) / wall->deltaX;
+                    real32 y = wall->relY + tResult * wall->deltaY;
+                    if(y >= -wall->radiusY && y <= wall->radiusY) {
+                      if(tResult > 0.0f && tResult < tMinTest) {
+                        hitThis = true;
+                        testWallNormal = wall->normal;
+                        tMinTest = Maximum(0.0f, tResult - tEpsilon);
+                      }
+                    }
+                  }
+                }
+
+                if(hitThis) {
+                  if(SpeculativeCollide(entity, testEntity)) {
+                    tMin = tMinTest;
+                    wallNormalMin = testWallNormal;
+                    hitEntityMin = testEntity;
+                  }
                 }
               }
             }
@@ -517,8 +605,22 @@ MoveEntity(game_state *state,
       }
     }
 
-    entity->p += tMin * entityDelta;
-    distanceRemaining -= tMin * entityDeltaLength;
+    real32 tStop = 0.0f;
+    v3 wallNormal = {};
+    sim_entity *hitEntity = NULL;
+    if(tMin < tMax) {
+      tStop = tMin;
+      wallNormal = wallNormalMin;
+      hitEntity = hitEntityMin;
+    } else {
+      tStop = tMax;
+      Assert(tMax <= 1.0f);
+      wallNormal = wallNormalMax;
+      hitEntity = hitEntityMax;
+    }
+
+    entity->p += tStop * entityDelta;
+    distanceRemaining -= tStop * entityDeltaLength;
 
     if(hitEntity) {
       entityDelta = targetEntityP - entity->p;
@@ -538,25 +640,11 @@ MoveEntity(game_state *state,
   real32 ground = 0;
 
   // Check overlapping
-  {
-    rectangle3 entityRect
-      = RectCenterDim(entity->p + entity->collision->totalVolume.offset,
-        entity->collision->totalVolume.dim);
-    for(uint32 testIndex = 0; testIndex < simRegion->entityCount; testIndex++) {
-      sim_entity *testEntity = simRegion->entities + testIndex;
+  for(uint32 testIndex = 0; testIndex < simRegion->entityCount; testIndex++) {
+    sim_entity *testEntity = simRegion->entities + testIndex;
 
-      if(testEntity == entity) {
-        continue;
-      }
-
-      if(CanOverlap(entity, testEntity)) {
-        rectangle3 testEntityRect = RectCenterDim(
-          testEntity->p + testEntity->collision->totalVolume.offset,
-          testEntity->collision->totalVolume.dim);
-        if(RectanglesIntersect(entityRect, testEntityRect)) {
-          HandleOverlap(entity, testEntity, &ground, dt);
-        }
-      }
+    if(CanOverlap(entity, testEntity) && EntitiesOverlap(entity, testEntity)) {
+      HandleOverlap(entity, testEntity, &ground, dt);
     }
   }
 
