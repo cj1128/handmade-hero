@@ -379,6 +379,58 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
   }
 }
 
+internal void
+DrawTest(game_state *state,
+  game_offscreen_buffer *buffer,
+  real32 metersToPixels)
+{
+  uint32 randomIndex = 0;
+
+  v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
+
+  real32 radius = 5.0f;
+
+  for(int i = 0; i < 100; i++) {
+    loaded_bitmap *stamp;
+
+    if(randomNumberTable[randomIndex++] % 2 == 0) {
+      stamp = state->ground
+        + randomNumberTable[randomIndex++] % ArrayCount(state->ground);
+    } else {
+      stamp = state->grass
+        + randomNumberTable[randomIndex++] % ArrayCount(state->grass);
+    }
+
+    v2 offset = {
+      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
+        - 1,
+      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
+        - 1,
+    };
+
+    v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
+
+    v2 p = screenCenter + offset * metersToPixels * radius - bitmapCenter;
+    DrawBitmap(buffer, stamp, p);
+  }
+
+  for(int i = 0; i < 100; i++) {
+    loaded_bitmap *stamp = state->tuft
+      + randomNumberTable[randomIndex++] % ArrayCount(state->tuft);
+
+    v2 offset = {
+      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
+        - 1,
+      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
+        - 1,
+    };
+
+    v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
+    v2 p = screenCenter + offset * metersToPixels * radius - bitmapCenter;
+    DrawBitmap(buffer, stamp, p);
+  }
+}
+
 // `offset` is from the bottom-left
 inline void
 PushPiece(render_piece_group *group,
@@ -495,6 +547,27 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tree00.bmp");
     state->sword
       = LoadBMP(thread, memory->debugPlatformReadFile, "test2/rock03.bmp");
+
+    state->grass[0]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/grass00.bmp");
+    state->grass[1]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/grass01.bmp");
+
+    state->ground[0]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/ground00.bmp");
+    state->ground[1]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/ground01.bmp");
+    state->ground[2]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/ground02.bmp");
+    state->ground[3]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/ground03.bmp");
+
+    state->tuft[0]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tuft00.bmp");
+    state->tuft[1]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tuft01.bmp");
+    state->tuft[2]
+      = LoadBMP(thread, memory->debugPlatformReadFile, "test2/tuft02.bmp");
 
     hero_bitmaps *heroBitmaps = state->heroBitmaps;
     heroBitmaps->offset = v2{ 72, 35 };
@@ -798,6 +871,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // Render
   //
 
+  v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
+
   // Background
   DrawRectangle(buffer,
     v2{ 0, 0 },
@@ -805,7 +880,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     v3{ 0.5f, 0.5f, 0.5f });
   // DrawBitmap(buffer, state->background, 0, 0);
 
-  v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
+  DrawTest(state, buffer, metersToPixels);
 
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
@@ -938,6 +1013,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     real32 zFudge = 1.0f + 0.1f * entityZ;
     v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
 
+    // Debug: draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
       v2 xy = entity->collision->totalVolume.dim.xy;

@@ -148,6 +148,7 @@ My preferred code style for C is different from Casey's.
 - [Day 78: Multiple Collision Volumes Per Entity](#day-78-multiple-collision-volumes-per-entity)
 - [Day 79: Defining the Ground](#day-79-defining-the-ground)
 - [Day 80: Handling Traversables in the Collision Loop](#day-80-handling-traversables-in-the-collision-loop)
+- [Day 81: Creating Ground with Overlapping Bitmaps](#day-81-creating-ground-with-overlapping-bitmaps)
 
 <!-- /MarkdownTOC -->
 
@@ -827,3 +828,9 @@ To-do list:
 - Add `epsilon` to `EntitiesOverlap`
 - Add test for `tMax`, mostly the same as `tMin`
 - Test our new code that prevents hero from ever getting outside
+
+### Day 81: Creating Ground with Overlapping Bitmaps
+
+- Load grass, ground and tuft bitmaps
+- Define `DrawTest` and randomly draw some grasses, grounds and tufts
+- Casey talks about megatexture

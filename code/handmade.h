@@ -97,6 +97,10 @@ struct game_state {
 
   stored_entity *cameraFollowingEntity;
 
+  loaded_bitmap grass[2];
+  loaded_bitmap ground[4];
+  loaded_bitmap tuft[3];
+
   loaded_bitmap background;
   loaded_bitmap tree;
   loaded_bitmap sword;

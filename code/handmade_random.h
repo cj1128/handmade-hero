@@ -1,6 +1,10 @@
 #ifndef HANDMADE_RANDOM_H
 #define HANDMADE_RANDOM_H
 
+#define MAX_RANDOM_NUM 100
+#define MIN_RANDOM_NUM 1
+
+// clang-format off
 global_variable uint32 randomNumberTable[] = {
   6, 86, 98, 44, 22,
   97, 5, 69, 7, 93,

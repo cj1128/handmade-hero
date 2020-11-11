@@ -13,6 +13,27 @@ union v2 {
 };
 
 inline v2
+V2(real32 x, real32 y)
+{
+  v2 result = { x, y };
+  return result;
+}
+
+inline v2
+V2(int32 x, int32 y)
+{
+  v2 result = { (real32)x, (real32)y };
+  return result;
+}
+
+inline v2
+V2(uint32 x, uint32 y)
+{
+  v2 result = { (real32)x, (real32)y };
+  return result;
+}
+
+inline v2
 operator+(v2 a, v2 b)
 {
   v2 result;
