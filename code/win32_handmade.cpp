@@ -1272,10 +1272,9 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
           {
             game_offscreen_buffer buffer = {};
             buffer.memory = globalBackBuffer.memory;
-            buffer.bytesPerPixel = globalBackBuffer.bytesPerPixel;
             buffer.width = globalBackBuffer.width;
             buffer.height = globalBackBuffer.height;
-            buffer.pitch = buffer.width * buffer.bytesPerPixel;
+            buffer.pitch = buffer.width * BYTES_PER_PIXEL;
 
             if(win32State.inputRecordingIndex != 0) {
               Win32RecordInput(&win32State, newInput);

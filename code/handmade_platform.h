@@ -71,13 +71,16 @@ struct thread_context {
   int placeholder;
 };
 
+#define BYTES_PER_PIXEL 4
+
+// pixels from bottom to top
 struct game_offscreen_buffer {
   // Byte order: BB GG RR AA, 0xAARRGGBB
   void *memory;
-  int bytesPerPixel;
+
   int width;
-  int pitch;
   int height;
+  int pitch;
 };
 
 struct game_sound_buffer {

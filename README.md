@@ -149,6 +149,7 @@ My preferred code style for C is different from Casey's.
 - [Day 79: Defining the Ground](#day-79-defining-the-ground)
 - [Day 80: Handling Traversables in the Collision Loop](#day-80-handling-traversables-in-the-collision-loop)
 - [Day 81: Creating Ground with Overlapping Bitmaps](#day-81-creating-ground-with-overlapping-bitmaps)
+- [Day 82: Caching Composited Bitmaps](#day-82-caching-composited-bitmaps)
 
 <!-- /MarkdownTOC -->
 
@@ -834,3 +835,13 @@ To-do list:
 - Load grass, ground and tuft bitmaps
 - Define `DrawTest` and randomly draw some grasses, grounds and tufts
 - Casey talks about megatexture
+
+### Day 82: Caching Composited Bitmaps
+
+- Make random number more systemic
+  - define `random_series`
+  - define `Seed`, `RandomChoice`, `RandomUnilateral`, `RandomBilateral`, `RandomBetween`
+  - replace old random code with above new functions
+- Make `loaded_bitmap` has the same structure as `game_offscreen_buffer` and all drawing functions previously taking game_offscreen_buffer now take loaded_bitmap
+- Define `MakeEmptyBitmap`, remember to clear the data to zero!
+- Draw ground bitmap once and cache it in game state

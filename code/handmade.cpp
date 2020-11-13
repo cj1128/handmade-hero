@@ -4,6 +4,21 @@
 #include "handmade_entity.cpp"
 #include "handmade_sim_region.cpp"
 
+internal loaded_bitmap
+MakeEmptyBitmap(memory_arena *arena, int32 width, int32 height)
+{
+  loaded_bitmap result = {};
+  result.width = width;
+  result.height = height;
+  result.pitch = width * BYTES_PER_PIXEL;
+  int32 totalMemorySize = width * height * BYTES_PER_PIXEL;
+  result.memory = PushSize(arena, totalMemorySize);
+
+  ZeroSize(result.memory, totalMemorySize);
+
+  return result;
+}
+
 internal sim_entity_collision_volume_group *
 MakeSimpleCollision(game_state *state, real32 dimX, real32 dimY, real32 dimZ)
 {
@@ -226,11 +241,11 @@ LoadBMP(thread_context *thread,
     result.height = header->height;
     Assert(header->compression == 3);
 
-    result.pixel = (uint32 *)((uint8 *)ReadResult.memory + header->dataOffset);
+    result.memory = (uint32 *)((uint8 *)ReadResult.memory + header->dataOffset);
 
     // we have to restructure pixels
     // expected byte order: BB GG RR AA, 0xAARRGGBB
-    uint32 *pixel = result.pixel;
+    uint32 *pixel = (uint32 *)result.memory;
     for(int y = 0; y < header->height; y++) {
       for(int x = 0; x < header->width; x++) {
 #if 0
@@ -267,6 +282,8 @@ LoadBMP(thread_context *thread,
     }
   }
 
+  result.pitch = result.width * BYTES_PER_PIXEL;
+
   return result;
 }
 
@@ -279,7 +296,7 @@ InitializeArena(memory_arena *arena, size_t size, void *base)
 }
 
 internal void
-DrawBitmap(game_offscreen_buffer *buffer,
+DrawBitmap(loaded_bitmap *buffer,
   loaded_bitmap *bitmap,
   v2 minCorner,
   real32 cAlpha = 1.0f)
@@ -306,37 +323,41 @@ DrawBitmap(game_offscreen_buffer *buffer,
     maxY = buffer->height;
   }
 
-  uint32 *sourceRow = bitmap->pixel + clipY * bitmap->width + clipX;
-  uint32 *destRow = (uint32 *)buffer->memory + minY * buffer->width + minX;
+  uint8 *sourceRow
+    = (uint8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
+  uint8 *destRow
+    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
 
   for(int y = minY; y < maxY; y++) {
-    uint32 *source = sourceRow;
-    uint32 *dest = destRow;
+    uint32 *source = (uint32 *)sourceRow;
+    uint32 *dest = (uint32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      real32 alpha = (real32)((*source >> 24) & 0xff) / 255.0f;
-      alpha *= cAlpha;
+      real32 sA = (real32)((*source >> 24) & 0xff) / 255.0f;
+      sA *= cAlpha;
 
       real32 sR = (real32)((*source >> 16) & 0xff);
       real32 sG = (real32)((*source >> 8) & 0xff);
       real32 sB = (real32)((*source >> 0) & 0xff);
 
+      real32 dA = (real32)((*dest >> 24) & 0xff);
       real32 dR = (real32)((*dest >> 16) & 0xff);
       real32 dG = (real32)((*dest >> 8) & 0xff);
       real32 dB = (real32)((*dest >> 0) & 0xff);
 
-      real32 r = (1 - alpha) * dR + alpha * sR;
-      real32 g = (1 - alpha) * dG + alpha * sG;
-      real32 b = (1 - alpha) * dB + alpha * sB;
-      *dest = ((uint32)(r + 0.5f) << 16) | ((uint32)(g + 0.5f) << 8)
-        | ((uint32)(b + 0.5f));
+      real32 a = Maximum(255.0f * sA, dA);
+      real32 r = (1 - sA) * dR + sA * sR;
+      real32 g = (1 - sA) * dG + sA * sG;
+      real32 b = (1 - sA) * dB + sA * sB;
+      *dest = ((uint32)(a + 0.5f) << 24) | ((uint32)(r + 0.5f) << 16)
+        | ((uint32)(g + 0.5f) << 8) | ((uint32)(b + 0.5f));
 
       dest++;
       source++;
     }
 
-    sourceRow += bitmap->width;
-    destRow += buffer->width;
+    sourceRow += bitmap->pitch;
+    destRow += buffer->pitch;
   }
 }
 
@@ -366,8 +387,8 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
     | (RoundReal32ToUint32(color.g * 255.0f) << 8)
     | RoundReal32ToUint32(color.b * 255.0f);
 
-  uint8 *row = (uint8 *)buffer->memory + minY * buffer->pitch
-    + minX * buffer->bytesPerPixel;
+  uint8 *row
+    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
 
   for(int y = minY; y < maxY; y++) {
     uint32 *Pixel = (uint32 *)row;
@@ -380,11 +401,9 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
 }
 
 internal void
-DrawTest(game_state *state,
-  game_offscreen_buffer *buffer,
-  real32 metersToPixels)
+DrawTest(game_state *state, loaded_bitmap *buffer, real32 metersToPixels)
 {
-  uint32 randomIndex = 0;
+  random_series series = RandomSeed(1234);
 
   v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
 
@@ -393,19 +412,15 @@ DrawTest(game_state *state,
   for(int i = 0; i < 100; i++) {
     loaded_bitmap *stamp;
 
-    if(randomNumberTable[randomIndex++] % 2 == 0) {
-      stamp = state->ground
-        + randomNumberTable[randomIndex++] % ArrayCount(state->ground);
+    if(RandomChoice(&series, 2)) {
+      stamp = state->ground + RandomChoice(&series, ArrayCount(state->ground));
     } else {
-      stamp = state->grass
-        + randomNumberTable[randomIndex++] % ArrayCount(state->grass);
+      stamp = state->grass + RandomChoice(&series, ArrayCount(state->grass));
     }
 
     v2 offset = {
-      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
-        - 1,
-      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
-        - 1,
+      RandomBilateral(&series),
+      RandomBilateral(&series),
     };
 
     v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
@@ -415,14 +430,12 @@ DrawTest(game_state *state,
   }
 
   for(int i = 0; i < 100; i++) {
-    loaded_bitmap *stamp = state->tuft
-      + randomNumberTable[randomIndex++] % ArrayCount(state->tuft);
+    loaded_bitmap *stamp
+      = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
     v2 offset = {
-      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
-        - 1,
-      2.0f * (real32)randomNumberTable[randomIndex++] / (real32)MAX_RANDOM_NUM
-        - 1,
+      RandomBilateral(&series),
+      RandomBilateral(&series),
     };
 
     v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
@@ -534,6 +547,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   int32 tilesPerWidth = 17;
   int32 tilesPerHeight = 9;
 
+  real32 TileSizeInPixels = 60.0f;
+  real32 tileSizeInMeters = 1.4f;
+  real32 tileDepthInMeters = 3.0f;
+  real32 metersToPixels = TileSizeInPixels / tileSizeInMeters;
+
   if(!memory->isInitialized) {
     memory->isInitialized = true;
 
@@ -621,7 +639,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       memory->permanentStorageSize - sizeof(game_state),
       (uint8 *)memory->permanentStorage + sizeof(game_state));
 
-    InitializeWorld(world, 1.4f, 3.0f);
+    InitializeWorld(world, tileSizeInMeters, tileDepthInMeters);
+
+    state->groundBuffer = MakeEmptyBitmap(worldArena, 512, 512);
+    DrawTest(state, &state->groundBuffer, metersToPixels);
 
     state->wallCollision = MakeSimpleCollision(state,
       state->world.tileSizeInMeters,
@@ -656,18 +677,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     bool32 doorDown = false;
     int32 absTileZ = 0;
 
+    random_series series = RandomSeed(0x100);
     for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
-      Assert(randomIndex < ArrayCount(randomNumberTable));
-      int randomValue;
-
       // 0: left
       // 1: bottom
       // 2: up/down
-      if(doorUp || doorDown) {
-        randomValue = randomNumberTable[randomIndex++] % 2;
-      } else {
-        randomValue = randomNumberTable[randomIndex++] % 3;
-      }
+      int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
 
       // Make a stairwell in first screen
       if(screenIndex == 0) {
@@ -785,9 +800,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     // AddFamiliar(state, cameraTileX - 2, cameraTileY - 2, cameraTileZ);
   }
 
-  real32 TileSizeInPixels = 60.0f;
-  real32 metersToPixels = TileSizeInPixels / world->tileSizeInMeters;
-
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);
       controllerIndex++) {
     game_controller_input *controller = &input->controllers[controllerIndex];
@@ -867,6 +879,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   sim_region *simRegion
     = BeginSim(&simArena, state, state->cameraP, cameraBounds, input->dt);
 
+  loaded_bitmap _drawBuffer = {};
+  loaded_bitmap *drawBuffer = &_drawBuffer;
+  drawBuffer->memory = buffer->memory;
+  drawBuffer->width = buffer->width;
+  drawBuffer->height = buffer->height;
+  drawBuffer->pitch = buffer->pitch;
+
   //
   // Render
   //
@@ -878,9 +897,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     v2{ 0, 0 },
     v2{ (real32)buffer->width, (real32)buffer->height },
     v3{ 0.5f, 0.5f, 0.5f });
-  // DrawBitmap(buffer, state->background, 0, 0);
 
-  DrawTest(state, buffer, metersToPixels);
+  DrawBitmap(drawBuffer, &state->groundBuffer, V2(0, 0));
 
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
@@ -955,10 +973,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             volumeIndex++) {
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
-          PushRectOutline(&pieceGroup,
-            v2{},
-            0.5f * volume->dim.xy,
-            v3{ 0.0f, 0, 1.0f });
+          // PushRectOutline(&pieceGroup,
+          //   v2{},
+          //   0.5f * volume->dim.xy,
+          //   v3{ 0.0f, 0, 1.0f });
         }
       } break;
 
@@ -1032,7 +1050,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           entityCenter.y - piece->offset.y
             + entityZ * (piece->entityZC) * metersToPixels,
         };
-        DrawBitmap(buffer, piece->bitmap, minCorner, piece->alpha);
+        DrawBitmap(drawBuffer, piece->bitmap, minCorner, piece->alpha);
       } else {
         DrawRectangle(buffer,
           entityCenter + metersToPixels * piece->offset
