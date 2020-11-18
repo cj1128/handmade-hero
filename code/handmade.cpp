@@ -248,13 +248,6 @@ LoadBMP(thread_context *thread,
     uint32 *pixel = (uint32 *)result.memory;
     for(int y = 0; y < header->height; y++) {
       for(int x = 0; x < header->width; x++) {
-#if 0
-        uint8 A = ProcessPixelWithMask(*Pixel, header->alphaMask);
-        uint8 r = ProcessPixelWithMask(*Pixel, header->redMask);
-        uint8 g = ProcessPixelWithMask(*Pixel, header->greenMask);
-        uint8 b = ProcessPixelWithMask(*Pixel, header->blueMask);
-        *Pixel++ = (A << 24 | r << 16 | g << 8 | b);
-#else
         bit_scan_result redScan = FindLeastSignificantSetBit(header->redMask);
         bit_scan_result greenScan
           = FindLeastSignificantSetBit(header->greenMask);
@@ -267,17 +260,26 @@ LoadBMP(thread_context *thread,
         Assert(blueScan.found);
         Assert(alphaScan.found);
 
-        int32 redShift = 16 - (int32)redScan.index;
-        int32 greenShift = 8 - (int32)greenScan.index;
-        int32 blueShift = 0 - (int32)blueScan.index;
-        int32 alphaShift = 24 - (int32)alphaScan.index;
+        int32 redShift = (int32)redScan.index;
+        int32 greenShift = (int32)greenScan.index;
+        int32 blueShift = (int32)blueScan.index;
+        int32 alphaShift = (int32)alphaScan.index;
 
         uint32 c = *pixel;
-        *pixel++ = RotateLeft(c & header->redMask, redShift)
-          | RotateLeft(c & header->greenMask, greenShift)
-          | RotateLeft(c & header->blueMask, blueShift)
-          | RotateLeft(c & header->alphaMask, alphaShift);
-#endif
+
+        real32 a = (real32)((c & header->alphaMask) >> alphaShift);
+        real32 ra = a / 255.0f;
+
+        real32 r = ra * (real32)((c & header->redMask) >> redShift);
+        real32 g = ra * (real32)((c & header->greenMask) >> greenShift);
+        real32 b = ra * (real32)((c & header->blueMask) >> blueShift);
+
+        // clang-format off
+        *pixel++ = ((uint32)(a + 0.5f) << 24) |
+          ((uint32)(r + 0.5f) << 16) |
+          ((uint32)(g + 0.5f) << 8) |
+          ((uint32)(b + 0.5f));
+        // clang-format on
       }
     }
   }
@@ -333,24 +335,31 @@ DrawBitmap(loaded_bitmap *buffer,
     uint32 *dest = (uint32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      real32 sA = (real32)((*source >> 24) & 0xff) / 255.0f;
-      sA *= cAlpha;
+      real32 sA = (real32)((*source >> 24) & 0xff);
+      real32 sR = cAlpha * (real32)((*source >> 16) & 0xff);
+      real32 sG = cAlpha * (real32)((*source >> 8) & 0xff);
+      real32 sB = cAlpha * (real32)((*source >> 0) & 0xff);
 
-      real32 sR = (real32)((*source >> 16) & 0xff);
-      real32 sG = (real32)((*source >> 8) & 0xff);
-      real32 sB = (real32)((*source >> 0) & 0xff);
+      real32 rSA = sA / 255.0f * cAlpha;
 
       real32 dA = (real32)((*dest >> 24) & 0xff);
       real32 dR = (real32)((*dest >> 16) & 0xff);
       real32 dG = (real32)((*dest >> 8) & 0xff);
       real32 dB = (real32)((*dest >> 0) & 0xff);
 
-      real32 a = Maximum(255.0f * sA, dA);
-      real32 r = (1 - sA) * dR + sA * sR;
-      real32 g = (1 - sA) * dG + sA * sG;
-      real32 b = (1 - sA) * dB + sA * sB;
-      *dest = ((uint32)(a + 0.5f) << 24) | ((uint32)(r + 0.5f) << 16)
-        | ((uint32)(g + 0.5f) << 8) | ((uint32)(b + 0.5f));
+      real32 rDA = dA / 255.0f;
+
+      real32 a = 255.0f * (rSA + rDA - rSA * rDA);
+      real32 r = sR + (1 - rSA) * dR;
+      real32 g = sG + (1 - rSA) * dG;
+      real32 b = sB + (1 - rSA) * dB;
+
+      // clang-format off
+      *dest = ((uint32)(a + 0.5f) << 24) |
+        ((uint32)(r + 0.5f) << 16) |
+        ((uint32)(g + 0.5f) << 8) |
+        ((uint32)(b + 0.5f));
+      // clang-format on
 
       dest++;
       source++;
@@ -407,7 +416,7 @@ DrawTest(game_state *state, loaded_bitmap *buffer, real32 metersToPixels)
 
   v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
 
-  real32 radius = 5.0f;
+  real32 radius = 4.0f;
 
   for(int i = 0; i < 100; i++) {
     loaded_bitmap *stamp;

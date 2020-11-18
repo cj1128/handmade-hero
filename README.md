@@ -150,6 +150,7 @@ My preferred code style for C is different from Casey's.
 - [Day 80: Handling Traversables in the Collision Loop](#day-80-handling-traversables-in-the-collision-loop)
 - [Day 81: Creating Ground with Overlapping Bitmaps](#day-81-creating-ground-with-overlapping-bitmaps)
 - [Day 82: Caching Composited Bitmaps](#day-82-caching-composited-bitmaps)
+- [Day 83: Premultiplied Alpha](#day-83-premultiplied-alpha)
 
 <!-- /MarkdownTOC -->
 
@@ -845,3 +846,9 @@ To-do list:
 - Make `loaded_bitmap` has the same structure as `game_offscreen_buffer` and all drawing functions previously taking game_offscreen_buffer now take loaded_bitmap
 - Define `MakeEmptyBitmap`, remember to clear the data to zero!
 - Draw ground bitmap once and cache it in game state
+
+### Day 83: Premultiplied Alpha
+
+- Casey explains what premultiplied alpha is
+- Change `LoadBMP` and `DrawBitmap` function to use premultiplied alpha
+- Handle `cAlpha` in `DrawBitmap`

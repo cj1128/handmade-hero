@@ -93,16 +93,16 @@ Abs(real32 value)
 }
 
 inline uint32
-RotateLeft(uint32 value, int32 Shift)
+RotateLeft(uint32 value, int32 shift)
 {
-  uint32 result = _rotl(value, Shift);
+  uint32 result = _rotl(value, shift);
   return result;
 }
 
 inline uint32
-RotateRight(uint32 value, int32 Shift)
+RotateRight(uint32 value, int32 shift)
 {
-  uint32 result = _rotr(value, Shift);
+  uint32 result = _rotr(value, shift);
   return result;
 }
 
