@@ -85,6 +85,7 @@ struct pairwise_collision_rule {
 };
 
 struct game_state {
+  real32 metersToPixels;
   memory_arena worldArena;
   game_world world;
   world_position cameraP;
@@ -109,6 +110,7 @@ struct game_state {
   hero_bitmaps heroBitmaps[4];
 
   loaded_bitmap groundBuffer;
+  world_position groundBufferP;
 
   // NOTE: need to be power of two
   pairwise_collision_rule *collisionRuleHash[4096];

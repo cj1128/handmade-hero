@@ -151,6 +151,7 @@ My preferred code style for C is different from Casey's.
 - [Day 81: Creating Ground with Overlapping Bitmaps](#day-81-creating-ground-with-overlapping-bitmaps)
 - [Day 82: Caching Composited Bitmaps](#day-82-caching-composited-bitmaps)
 - [Day 83: Premultiplied Alpha](#day-83-premultiplied-alpha)
+- [Day 84: Scrolling Ground Buffer](#day-84-scrolling-ground-buffer)
 
 <!-- /MarkdownTOC -->
 
@@ -852,3 +853,8 @@ To-do list:
 - Casey explains what premultiplied alpha is
 - Change `LoadBMP` and `DrawBitmap` function to use premultiplied alpha
 - Handle `cAlpha` in `DrawBitmap`
+
+### Day 84: Scrolling Ground Buffer
+
+- Add `groundBufferP` and draw ground based on this position
+- Rename `DrawTest` to `DrawGroundChunk` and fill the whole buffer

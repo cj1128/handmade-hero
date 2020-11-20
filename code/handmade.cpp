@@ -410,15 +410,15 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
 }
 
 internal void
-DrawTest(game_state *state, loaded_bitmap *buffer, real32 metersToPixels)
+DrawGroundChunk(game_state *state, loaded_bitmap *buffer, world_position chunkP)
 {
-  random_series series = RandomSeed(1234);
+  random_series series
+    = RandomSeed(7 * chunkP.chunkX + 3 * chunkP.chunkY + chunkP.chunkZ);
 
-  v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
+  real32 width = (real32)buffer->width;
+  real32 height = (real32)buffer->height;
 
-  real32 radius = 4.0f;
-
-  for(int i = 0; i < 100; i++) {
+  for(int i = 0; i < 200; i++) {
     loaded_bitmap *stamp;
 
     if(RandomChoice(&series, 2)) {
@@ -428,27 +428,23 @@ DrawTest(game_state *state, loaded_bitmap *buffer, real32 metersToPixels)
     }
 
     v2 offset = {
-      RandomBilateral(&series),
-      RandomBilateral(&series),
+      RandomUnilateral(&series),
+      RandomUnilateral(&series),
     };
 
-    v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
-
-    v2 p = screenCenter + offset * metersToPixels * radius - bitmapCenter;
+    v2 p = Hadamard(offset, V2(width, height));
     DrawBitmap(buffer, stamp, p);
   }
 
-  for(int i = 0; i < 100; i++) {
+  for(int i = 0; i < 200; i++) {
     loaded_bitmap *stamp
       = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
     v2 offset = {
-      RandomBilateral(&series),
-      RandomBilateral(&series),
+      RandomUnilateral(&series),
+      RandomUnilateral(&series),
     };
-
-    v2 bitmapCenter = 0.5f * V2(stamp->width, stamp->height);
-    v2 p = screenCenter + offset * metersToPixels * radius - bitmapCenter;
+    v2 p = Hadamard(offset, V2(width, height));
     DrawBitmap(buffer, stamp, p);
   }
 }
@@ -560,6 +556,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   real32 tileSizeInMeters = 1.4f;
   real32 tileDepthInMeters = 3.0f;
   real32 metersToPixels = TileSizeInPixels / tileSizeInMeters;
+  state->metersToPixels = metersToPixels;
 
   if(!memory->isInitialized) {
     memory->isInitialized = true;
@@ -650,8 +647,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     InitializeWorld(world, tileSizeInMeters, tileDepthInMeters);
 
-    state->groundBuffer = MakeEmptyBitmap(worldArena, 512, 512);
-    DrawTest(state, &state->groundBuffer, metersToPixels);
+    state->groundBuffer = MakeEmptyBitmap(worldArena, 1024, 1024);
+
+    DrawGroundChunk(state, &state->groundBuffer, state->groundBufferP);
 
     state->wallCollision = MakeSimpleCollision(state,
       state->world.tileSizeInMeters,
@@ -691,12 +689,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       // 0: left
       // 1: bottom
       // 2: up/down
-      int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
+      // int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
+      int randomValue = RandomChoice(&series, 2);
 
       // Make a stairwell in first screen
-      if(screenIndex == 0) {
-        randomValue = 2;
-      }
+      // if(screenIndex == 0) {
+      //   randomValue = 2;
+      // }
 
       switch(randomValue) {
         case 0: {
@@ -755,9 +754,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           }
 
           if(tileValue == 2) {
-            if(screenIndex == 0) {
-              AddWall(state, absTileX, absTileY, absTileZ);
-            }
+            // if(screenIndex == 0) {
+            AddWall(state, absTileX, absTileY, absTileZ);
+            // }
           }
 
           if(tileX == 10 && tileY == 4 && (doorUp || doorDown)) {
@@ -803,6 +802,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       cameraTileY,
       cameraTileZ);
     state->cameraP = newCameraP;
+    state->groundBufferP = state->cameraP;
 
     AddMonster(state, cameraTileX - 2, cameraTileY + 2, cameraTileZ);
 
@@ -907,7 +907,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     v2{ (real32)buffer->width, (real32)buffer->height },
     v3{ 0.5f, 0.5f, 0.5f });
 
-  DrawBitmap(drawBuffer, &state->groundBuffer, V2(0, 0));
+  {
+    v3 delta
+      = SubtractPosition(&state->world, state->groundBufferP, state->cameraP);
+    v2 groundP = screenCenter + delta.xy * metersToPixels
+      - 0.5f * V2(state->groundBuffer.width, state->groundBuffer.height);
+    DrawBitmap(drawBuffer, &state->groundBuffer, groundP);
+  }
 
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
