@@ -560,6 +560,8 @@ MoveEntity(game_state *state,
                         tMaxTest = Maximum(0.0f, tResult - tEpsilon);
                       }
                     }
+                  } else {
+                    tMax = 1.0f;
                   }
                 }
 

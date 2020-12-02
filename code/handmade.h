@@ -11,7 +11,29 @@ struct memory_arena {
   size_t size;
   uint8 *base;
   size_t used;
+  uint32 _savedCount;
+  size_t _saved[8];
 };
+
+internal void
+SaveArena(memory_arena *arena)
+{
+  Assert(arena->_savedCount < ArrayCount(arena->_saved));
+  arena->_saved[arena->_savedCount++] = arena->used;
+}
+
+internal void
+RestoreArena(memory_arena *arena)
+{
+  Assert(arena->_savedCount > 0);
+  arena->used = arena->_saved[--arena->_savedCount];
+}
+
+internal void
+CheckArena(memory_arena *arena)
+{
+  Assert(arena->_savedCount == 0);
+}
 
 internal void *
 PushSize(memory_arena *arena, size_t size)
@@ -84,6 +106,21 @@ struct pairwise_collision_rule {
   pairwise_collision_rule *nextInHash;
 };
 
+struct ground_buffer {
+  world_position p; // center of the bitmap
+  void *memory;
+};
+
+struct transient_state {
+  bool32 isInitialized;
+  memory_arena tranArena;
+  int32 groundWidth;
+  int32 groundHeight;
+  int32 groundPitch;
+  uint32 groundBufferCount;
+  ground_buffer *groundBuffers;
+};
+
 struct game_state {
   real32 metersToPixels;
   memory_arena worldArena;
@@ -108,9 +145,6 @@ struct game_state {
   loaded_bitmap sword;
   loaded_bitmap shadow;
   hero_bitmaps heroBitmaps[4];
-
-  loaded_bitmap groundBuffer;
-  world_position groundBufferP;
 
   // NOTE: need to be power of two
   pairwise_collision_rule *collisionRuleHash[4096];

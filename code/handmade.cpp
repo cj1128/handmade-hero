@@ -5,16 +5,29 @@
 #include "handmade_sim_region.cpp"
 
 internal loaded_bitmap
-MakeEmptyBitmap(memory_arena *arena, int32 width, int32 height)
+MakeEmptyBitmap(int32 width, int32 height, void *memory)
 {
   loaded_bitmap result = {};
   result.width = width;
   result.height = height;
   result.pitch = width * BYTES_PER_PIXEL;
+  result.memory = memory;
+  return result;
+}
+
+internal loaded_bitmap
+MakeEmptyBitmap(memory_arena *arena,
+  int32 width,
+  int32 height,
+  bool32 clearToZero)
+{
+  loaded_bitmap result = MakeEmptyBitmap(width, height, NULL);
   int32 totalMemorySize = width * height * BYTES_PER_PIXEL;
   result.memory = PushSize(arena, totalMemorySize);
 
-  ZeroSize(result.memory, totalMemorySize);
+  if(clearToZero) {
+    ZeroSize(result.memory, totalMemorySize);
+  }
 
   return result;
 }
@@ -372,7 +385,7 @@ DrawBitmap(loaded_bitmap *buffer,
 
 // exclusive
 internal void
-DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
+DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v3 color)
 {
   int32 minX = RoundReal32ToInt32(min.x);
   int32 minY = RoundReal32ToInt32(min.y);
@@ -410,13 +423,21 @@ DrawRectangle(game_offscreen_buffer *buffer, v2 min, v2 max, v3 color)
 }
 
 internal void
-DrawGroundChunk(game_state *state, loaded_bitmap *buffer, world_position chunkP)
+FillGroundChunk(game_state *state,
+  transient_state *tranState,
+  ground_buffer *groundBuffer,
+  world_position chunkP)
 {
+  loaded_bitmap buffer = MakeEmptyBitmap(tranState->groundWidth,
+    tranState->groundHeight,
+    groundBuffer->memory);
+  groundBuffer->p = chunkP;
+
   random_series series
     = RandomSeed(7 * chunkP.chunkX + 3 * chunkP.chunkY + chunkP.chunkZ);
 
-  real32 width = (real32)buffer->width;
-  real32 height = (real32)buffer->height;
+  real32 width = (real32)buffer.width;
+  real32 height = (real32)buffer.height;
 
   for(int i = 0; i < 200; i++) {
     loaded_bitmap *stamp;
@@ -433,7 +454,7 @@ DrawGroundChunk(game_state *state, loaded_bitmap *buffer, world_position chunkP)
     };
 
     v2 p = Hadamard(offset, V2(width, height));
-    DrawBitmap(buffer, stamp, p);
+    DrawBitmap(&buffer, stamp, p);
   }
 
   for(int i = 0; i < 200; i++) {
@@ -445,7 +466,7 @@ DrawGroundChunk(game_state *state, loaded_bitmap *buffer, world_position chunkP)
       RandomUnilateral(&series),
     };
     v2 p = Hadamard(offset, V2(width, height));
-    DrawBitmap(buffer, stamp, p);
+    DrawBitmap(&buffer, stamp, p);
   }
 }
 
@@ -647,10 +668,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     InitializeWorld(world, tileSizeInMeters, tileDepthInMeters);
 
-    state->groundBuffer = MakeEmptyBitmap(worldArena, 1024, 1024);
-
-    DrawGroundChunk(state, &state->groundBuffer, state->groundBufferP);
-
     state->wallCollision = MakeSimpleCollision(state,
       state->world.tileSizeInMeters,
       state->world.tileSizeInMeters,
@@ -802,11 +819,39 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       cameraTileY,
       cameraTileZ);
     state->cameraP = newCameraP;
-    state->groundBufferP = state->cameraP;
 
     AddMonster(state, cameraTileX - 2, cameraTileY + 2, cameraTileZ);
 
     // AddFamiliar(state, cameraTileX - 2, cameraTileY - 2, cameraTileZ);
+  }
+
+  transient_state *tranState = (transient_state *)(memory->transientStorage);
+  if(!tranState->isInitialized) {
+    tranState->isInitialized = true;
+    InitializeArena(&tranState->tranArena,
+      memory->transientStorageSize - sizeof(transient_state),
+      (uint8 *)memory->transientStorage + sizeof(transient_state));
+
+    int32 groundWidth = 256;
+    int32 groundHeight = 256;
+    int32 totalMemorySize = groundWidth * groundHeight * BYTES_PER_PIXEL;
+    tranState->groundWidth = groundWidth;
+    tranState->groundHeight = groundHeight;
+    tranState->groundPitch = groundWidth * BYTES_PER_PIXEL;
+    tranState->groundBufferCount = 128;
+    tranState->groundBuffers = PushArray(&tranState->tranArena,
+      tranState->groundBufferCount,
+      ground_buffer);
+
+    for(uint32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
+        groundIndex++) {
+      ground_buffer *groundBuffer = tranState->groundBuffers + groundIndex;
+      groundBuffer->p = NullPosition();
+      groundBuffer->memory = PushSize(&tranState->tranArena, totalMemorySize);
+    }
+
+    // this is a test fill
+    FillGroundChunk(state, tranState, tranState->groundBuffers, state->cameraP);
   }
 
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);
@@ -881,12 +926,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       world->tileDepthInMeters * (real32)cameraSpanZ,
     });
 
-  memory_arena simArena;
-  InitializeArena(&simArena,
-    memory->transientStorageSize,
-    memory->transientStorage);
-  sim_region *simRegion
-    = BeginSim(&simArena, state, state->cameraP, cameraBounds, input->dt);
+  SaveArena(&tranState->tranArena);
+  sim_region *simRegion = BeginSim(&tranState->tranArena,
+    state,
+    state->cameraP,
+    cameraBounds,
+    input->dt);
 
   loaded_bitmap _drawBuffer = {};
   loaded_bitmap *drawBuffer = &_drawBuffer;
@@ -902,17 +947,26 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
 
   // Background
-  DrawRectangle(buffer,
+  DrawRectangle(drawBuffer,
     v2{ 0, 0 },
     v2{ (real32)buffer->width, (real32)buffer->height },
     v3{ 0.5f, 0.5f, 0.5f });
 
+  // ground buffer
   {
-    v3 delta
-      = SubtractPosition(&state->world, state->groundBufferP, state->cameraP);
-    v2 groundP = screenCenter + delta.xy * metersToPixels
-      - 0.5f * V2(state->groundBuffer.width, state->groundBuffer.height);
-    DrawBitmap(drawBuffer, &state->groundBuffer, groundP);
+    loaded_bitmap groundTemplate
+      = MakeEmptyBitmap(tranState->groundWidth, tranState->groundHeight, NULL);
+    for(uint32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
+        groundIndex++) {
+      ground_buffer *buffer = tranState->groundBuffers + groundIndex;
+      if(IsValid(&buffer->p)) {
+        v3 delta = SubtractPosition(&state->world, buffer->p, state->cameraP);
+        v2 groundP = screenCenter + delta.xy * metersToPixels
+          - 0.5f * V2(groundTemplate.width, groundTemplate.height);
+        groundTemplate.memory = buffer->memory;
+        DrawBitmap(drawBuffer, &groundTemplate, groundP);
+      }
+    }
   }
 
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
@@ -988,10 +1042,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             volumeIndex++) {
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
-          // PushRectOutline(&pieceGroup,
-          //   v2{},
-          //   0.5f * volume->dim.xy,
-          //   v3{ 0.0f, 0, 1.0f });
+          PushRectOutline(&pieceGroup,
+            v2{},
+            0.5f * volume->dim.xy,
+            v3{ 0.0f, 0, 1.0f });
         }
       } break;
 
@@ -1050,7 +1104,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
       v2 xy = entity->collision->totalVolume.dim.xy;
-      DrawRectangle(buffer,
+      DrawRectangle(drawBuffer,
         entityOrigin - 0.5f * xy * metersToPixels,
         entityOrigin + 0.5f * xy * metersToPixels,
         v3{ 1.0f, 1.0f, 0.0f });
@@ -1067,7 +1121,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         };
         DrawBitmap(drawBuffer, piece->bitmap, minCorner, piece->alpha);
       } else {
-        DrawRectangle(buffer,
+        DrawRectangle(drawBuffer,
           entityCenter + metersToPixels * piece->offset
             - metersToPixels * piece->halfDim,
           entityCenter + metersToPixels * piece->offset
@@ -1080,10 +1134,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // Debug: show current floors
   for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
     v2 start = { 10 + (real32)i * 15, (real32)buffer->height - 20 };
-    DrawRectangle(buffer, start, start + v2{ 10, 10 }, v3{ 0.0f, 1.0f, 0.0f });
+    DrawRectangle(drawBuffer,
+      start,
+      start + v2{ 10, 10 },
+      v3{ 0.0f, 1.0f, 0.0f });
   }
 
   EndSim(simRegion, state);
+  RestoreArena(&tranState->tranArena);
+  CheckArena(&tranState->tranArena);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {}

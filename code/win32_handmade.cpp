@@ -1052,7 +1052,7 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
       memory.debugPlatformWriteFile = DebugPlatformWriteFile;
       memory.debugPlatformFreeFileMemory = DebugPlatformFreeFileMemory;
       memory.permanentStorageSize = Megabytes(64);
-      memory.transientStorageSize = Megabytes(100);
+      memory.transientStorageSize = Megabytes(200);
 #ifdef HANDMADE_INTERNAL
       LPVOID baseAddress = (LPVOID)Terabytes(2);
 #else

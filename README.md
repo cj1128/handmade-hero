@@ -152,6 +152,7 @@ My preferred code style for C is different from Casey's.
 - [Day 82: Caching Composited Bitmaps](#day-82-caching-composited-bitmaps)
 - [Day 83: Premultiplied Alpha](#day-83-premultiplied-alpha)
 - [Day 84: Scrolling Ground Buffer](#day-84-scrolling-ground-buffer)
+- [Day 85: Transient Ground Buffers](#day-85-transient-ground-buffers)
 
 <!-- /MarkdownTOC -->
 
@@ -858,3 +859,11 @@ To-do list:
 
 - Add `groundBufferP` and draw ground based on this position
 - Rename `DrawTest` to `DrawGroundChunk` and fill the whole buffer
+
+### Day 85: Transient Ground Buffers
+
+- Introduce `transient_state` to help manage transient memory
+- Define `transientArena` and store multiple ground buffers in transient memory
+- Use `groundBitmapTemplate` to store repeated info (width, height) about the ground buffer
+- DIFF: Casey uses `beginTemporaryMemory` and `endTemporaryMemory` calls to restore memory space used only in one frame. I think the api is not easy to use, I implement `save` and `restore` just like in the `CanvasRenderingContext2D`.
+- Draw ground buffers
