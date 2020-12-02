@@ -3,16 +3,28 @@
     <a href="https://handmadehero.org/">Handmade Hero</a>
   </h1>
 
-  <img src="./home.png">
+
 </div>
 
 ## Intro
 
-This is my personal study notes of [Handmade Hero](https://handmadehero.org).
+This is my personal study notes of the awesome project [Handmade Hero](https://handmadehero.org).
 
-If you think __writing a professional-quality game from scratch on your own (no engine no library)__ is interesting and challenging, I highly recommend this project. In my opinion, it's the best I can find.
+If you think __writing a professional-quality game from scratch on your own (no engine no library)__ is interesting and challenging, I highly recommend this project.
 
-Deepest thanks to _Casey Muratori_ for this excellent project. It's really awesome.
+In my opinion, it's **the best** I can find.
+
+## Current
+
+![](./day85.gif)
+
+Recorded from day 85:
+
+- We can jump 😉
+- We can shoot 🔫
+- We can go upstair and downstair 🏃‍♀️
+- We have a big world and many rooms 🗺
+- We have a basic procedure generated ground 🌿
 
 ## Env
 
@@ -32,6 +44,14 @@ Build system for Sublime Text 3:
   ]
 }
 ```
+
+## Setup
+
+- Create a `w` drive using subst: `subst w: /c/whatever_directory_you_choose`
+- Clone this repo into the root of `w`
+- Install Visual Studio 2019 community version
+- cd into `w` and init cl: `.\handmade-hero\misc\shell.bat`
+- Build and enjoy! `build`
 
 ## Code Style
 
