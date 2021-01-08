@@ -1,7 +1,7 @@
 #ifndef HANDMADE_WORLD_H
 #define HANDMADE_WORLD_H
 
-#define TILES_PER_CHUNK 16
+#define TILES_PER_CHUNK 8
 
 struct stored_entity;
 struct entity_block {
@@ -25,18 +25,18 @@ struct world_position {
   int32 chunkY;
   int32 chunkZ;
 
-  // relative to the min corner
-  v3 _offset;
+  // relative to the center
+  v3 offset;
 };
 
 struct game_world {
-  real32 tileSizeInMeters;
-  real32 tileDepthInMeters;
+  // real32 tileSizeInMeters;
+  real32 typicalFloorHeight;
   v3 chunkDimInMeters;
 
   entity_block *firstFree;
 
-  // NOTE: Size has to be power of 2
+  // NOTE(cj): size needs to be power of 2
   world_chunk *chunkHash[4096];
 };
 

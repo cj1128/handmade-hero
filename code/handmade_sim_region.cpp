@@ -205,9 +205,9 @@ BeginSim(memory_arena *arena,
     v3{ updateSafetyMargin, updateSafetyMargin, updateSafetyMarginZ });
 
   world_position minChunk
-    = MapIntoWorldSpace(simRegion->world, origin, bounds.min);
+    = MapIntoWorldSpace(simRegion->world, origin, GetMinCorner(bounds));
   world_position maxChunk
-    = MapIntoWorldSpace(simRegion->world, origin, bounds.max);
+    = MapIntoWorldSpace(simRegion->world, origin, GetMaxCorner(bounds));
 
   for(int32 chunkZ = minChunk.chunkZ; chunkZ <= maxChunk.chunkZ; chunkZ++) {
     for(int32 chunkY = minChunk.chunkY; chunkY <= maxChunk.chunkY; chunkY++) {
@@ -699,9 +699,9 @@ EndSim(sim_region *simRegion, game_state *state)
     ChangeEntityLocation(&state->worldArena, simRegion->world, stored, newP);
 
     if(stored == state->cameraFollowingEntity) {
-      real32 oldZ = state->cameraP._offset.z;
+      real32 oldZ = state->cameraP.offset.z;
       state->cameraP = newP;
-      state->cameraP._offset.z = oldZ;
+      state->cameraP.offset.z = oldZ;
     }
   }
 }

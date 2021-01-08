@@ -149,6 +149,13 @@ union v3 {
 };
 
 inline v3
+V3(real32 x, real32 y, real32 z)
+{
+  v3 result = { x, y, z };
+  return result;
+}
+
+inline v3
 V3(v2 xy, real32 z)
 {
   v3 result = { xy.x, xy.y, z };
@@ -410,6 +417,20 @@ struct rectangle3 {
   v3 min;
   v3 max;
 };
+
+inline v3
+GetMinCorner(rectangle3 rect)
+{
+  v3 result = rect.min;
+  return result;
+}
+
+inline v3
+GetMaxCorner(rectangle3 rect)
+{
+  v3 result = rect.max;
+  return result;
+}
 
 inline rectangle3
 RectMinMax(v3 min, v3 max)

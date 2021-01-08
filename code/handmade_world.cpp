@@ -20,6 +20,24 @@ IsValid(v3 p)
   return p.x != INVALID_P.x && p.y != INVALID_P.y && p.z != INVALID_P.z;
 }
 
+inline world_position
+CenteredChunkPoint(game_world *world, int32 chunkX, int32 chunkY, int32 chunkZ)
+{
+  world_position result = {};
+
+  result.chunkX = chunkX;
+  result.chunkY = chunkY;
+  result.chunkZ = chunkZ;
+
+  return result;
+}
+
+inline world_position
+CenteredChunkPoint(game_world *world, world_chunk *chunk)
+{
+  CenteredChunkPoint(world, chunk->chunkX, chunk->chunkY, chunk->chunkZ);
+}
+
 inline world_chunk *
 GetWorldChunk(game_world *world,
   int32 chunkX,
@@ -57,7 +75,9 @@ GetWorldChunk(game_world *world,
 inline bool32
 IsCanonicalCoord(real32 chunkDim, real32 value)
 {
-  bool32 result = (value >= 0) && (value <= chunkDim);
+  real32 epsilon = 0.01f;
+  real32 r = 0.5f * chunkDim + epsilon;
+  bool32 result = (value >= -r) && (value <= r);
   return result;
 }
 
@@ -65,17 +85,17 @@ inline bool32
 IsCanonicalPosition(game_world *world, world_position *p)
 {
   Assert(IsValid(p));
-  bool32 result = IsCanonicalCoord(world->chunkDimInMeters.x, p->_offset.x)
-    && IsCanonicalCoord(world->chunkDimInMeters.y, p->_offset.y)
-    && IsCanonicalCoord(world->chunkDimInMeters.z, p->_offset.z);
+  bool32 result = IsCanonicalCoord(world->chunkDimInMeters.x, p->offset.x)
+    && IsCanonicalCoord(world->chunkDimInMeters.y, p->offset.y)
+    && IsCanonicalCoord(world->chunkDimInMeters.z, p->offset.z);
   return result;
 }
 
 inline bool32
 AreInSameChunk(game_world *world, world_position *p1, world_position *p2)
 {
-  Assert(IsCanonicalPosition(world, p1));
-  Assert(IsCanonicalPosition(world, p2));
+  // Assert(IsCanonicalCoord(world, p1));
+  // Assert(IsCanonicalPosition(world, p2));
 
   bool32 result = ((p1->chunkX == p2->chunkX) && (p1->chunkY == p2->chunkY)
     && (p1->chunkZ == p2->chunkZ));
@@ -86,13 +106,13 @@ AreInSameChunk(game_world *world, world_position *p1, world_position *p2)
 internal inline void
 RecanonicalizeCoord(real32 chunkDim, int32 *chunk, real32 *chunkRel)
 {
-  // NOTE: game_world is not allowd to be wrapped
-  int32 offset = FloorReal32ToInt32(*chunkRel / chunkDim);
+  // NOTE(cj): game_world is not allowd to be wrapped
+
+  int32 offset = RoundReal32ToInt32(*chunkRel / chunkDim);
   *chunk += offset;
   *chunkRel -= offset * chunkDim;
 
-  Assert(*chunkRel >= 0);
-  Assert(*chunkRel <= chunkDim);
+  Assert(IsCanonicalCoord(chunkDim, *chunkRel));
 }
 
 internal inline world_position
@@ -101,13 +121,13 @@ RecanonicalizePosition(game_world *world, world_position pos)
   world_position result = pos;
   RecanonicalizeCoord(world->chunkDimInMeters.x,
     &result.chunkX,
-    &result._offset.x);
+    &result.offset.x);
   RecanonicalizeCoord(world->chunkDimInMeters.y,
     &result.chunkY,
-    &result._offset.y);
+    &result.offset.y);
   RecanonicalizeCoord(world->chunkDimInMeters.z,
     &result.chunkZ,
-    &result._offset.z);
+    &result.offset.z);
   return result;
 }
 
@@ -120,42 +140,16 @@ SubtractPosition(game_world *world, world_position p1, world_position p2)
     (real32)p1.chunkZ - (real32)p2.chunkZ,
   };
   v3 result
-    = Hadamard(world->chunkDimInMeters, dChunk) + (p1._offset - p2._offset);
+    = Hadamard(world->chunkDimInMeters, dChunk) + (p1.offset - p2.offset);
   return result;
 }
 
 inline world_position
 MapIntoWorldSpace(game_world *world, world_position pos, v3 offset)
 {
-  pos._offset += offset;
+  pos.offset += offset;
   pos = RecanonicalizePosition(world, pos);
   return pos;
-}
-
-inline world_position
-WorldPositionFromTilePosition(game_world *world,
-  int32 tileX,
-  int32 tileY,
-  int32 tileZ,
-  v3 offset = {})
-{
-  world_position base = {};
-  v3 point = Hadamard(v3{ world->tileSizeInMeters,
-                        world->tileSizeInMeters,
-                        world->tileDepthInMeters },
-    v3{
-      (real32)tileX,
-      (real32)tileY,
-      (real32)tileZ,
-    });
-
-  point += offset;
-
-  world_position result = MapIntoWorldSpace(world, base, point);
-
-  Assert(IsCanonicalPosition(world, &result));
-
-  return result;
 }
 
 // oldP, newP may be null

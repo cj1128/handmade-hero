@@ -71,6 +71,12 @@ My preferred code style for C is different from Casey's.
 - `FUN`: Something interesting to know, like Windows can't correctly handle file formats they invented
 - `CASEY`: Casey's opinion about programming
 
+## Game Programming
+
+### Premultiplied Alpha
+
+Check day 83 for more details.
+
 ## Windows Programming
 
 ### Command Prompt
@@ -173,6 +179,8 @@ My preferred code style for C is different from Casey's.
 - [Day 83: Premultiplied Alpha](#day-83-premultiplied-alpha)
 - [Day 84: Scrolling Ground Buffer](#day-84-scrolling-ground-buffer)
 - [Day 85: Transient Ground Buffers](#day-85-transient-ground-buffers)
+- [Day 86: Aligning Ground Buffers to World Chunks](#day-86-aligning-ground-buffers-to-world-chunks)
+- [TODO](#todo)
 
 <!-- /MarkdownTOC -->
 
@@ -887,3 +895,18 @@ To-do list:
 - Use `groundBitmapTemplate` to store repeated info (width, height) about the ground buffer
 - DIFF: Casey uses `beginTemporaryMemory` and `endTemporaryMemory` calls to restore memory space used only in one frame. I think the api is not easy to use, I implement `save` and `restore` just like in the `CanvasRenderingContext2D`.
 - Draw ground buffers
+
+### Day 86: Aligning Ground Buffers to World Chunks
+
+- Make world position `_offset` relative to center point, and rename it to be `offset`. There is no need to prefix it with the underscore.
+- Draw chunks to see how big it is
+  - Define `CenteredChunkPoint`
+  - Define `DrawRectangleOutline`
+- Change `metersToPixels` to a fixed number
+- Cleanup: remove tileSideInMeters, we no longer have any tile thing.
+- Fill ground buffer for each chunk.
+
+## TODO
+
+- Fix full screen problem cased by systeml-level display scale
+- Fix `AreInSameChunk`

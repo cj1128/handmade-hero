@@ -123,6 +123,7 @@ struct transient_state {
 
 struct game_state {
   real32 metersToPixels;
+  real32 pixelsToMeters;
   memory_arena worldArena;
   game_world world;
   world_position cameraP;

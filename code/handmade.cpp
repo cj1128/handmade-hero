@@ -4,6 +4,29 @@
 #include "handmade_entity.cpp"
 #include "handmade_sim_region.cpp"
 
+inline world_position
+WorldPositionFromTilePosition(game_world *world,
+  int32 tileX,
+  int32 tileY,
+  int32 tileZ,
+  v3 offset = {})
+{
+  real32 tileSizeInMeters = 1.4f;
+
+  world_position base = {};
+  v3 point = Hadamard(
+    V3(tileSizeInMeters, tileSizeInMeters, world->typicalFloorHeight),
+    V3((real32)tileX, (real32)tileY, (real32)tileZ));
+
+  point += offset;
+
+  world_position result = MapIntoWorldSpace(world, base, point);
+
+  Assert(IsCanonicalPosition(world, &result));
+
+  return result;
+}
+
 internal loaded_bitmap
 MakeEmptyBitmap(int32 width, int32 height, void *memory)
 {
@@ -43,7 +66,7 @@ MakeSimpleCollision(game_state *state, real32 dimX, real32 dimY, real32 dimZ)
   group->volumes
     = PushArray(arena, group->volumeCount, sim_entity_collision_volume);
   group->totalVolume.offset = v3{ 0, 0, 0.5f * dimZ };
-  group->totalVolume.dim = v3{ dimX, dimY, dimZ };
+  group->totalVolume.dim = V3(dimX, dimY, dimZ);
   group->volumes[0] = group->totalVolume;
 
   return group;
@@ -188,7 +211,7 @@ AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
   stored_entity *stored
     = AddGroundedEntity(state, EntityType_Stairwell, p, state->stairCollision);
   stored->sim.walkableDim = stored->sim.collision->totalVolume.dim.xy;
-  stored->sim.walkableHeight = state->world.tileDepthInMeters;
+  stored->sim.walkableHeight = state->world.typicalFloorHeight;
 }
 
 internal void
@@ -423,7 +446,33 @@ DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v3 color)
 }
 
 internal void
-FillGroundChunk(game_state *state,
+DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v3 color)
+{
+  real32 r = 2;
+
+  // top and bottom
+  DrawRectangle(buffer,
+    V2(min.x - r, max.y - r),
+    V2(max.x + r, max.y + r),
+    color);
+  DrawRectangle(buffer,
+    V2(min.x - r, min.y - r),
+    V2(max.x + r, min.y + r),
+    color);
+
+  // left and right
+  DrawRectangle(buffer,
+    V2(min.x - r, min.y - r),
+    V2(min.x + r, max.y + r),
+    color);
+  DrawRectangle(buffer,
+    V2(max.x - r, min.y - r),
+    V2(max.x + r, max.y + r),
+    color);
+}
+
+internal void
+FillGroundBuffer(game_state *state,
   transient_state *tranState,
   ground_buffer *groundBuffer,
   world_position chunkP)
@@ -439,7 +488,7 @@ FillGroundChunk(game_state *state,
   real32 width = (real32)buffer.width;
   real32 height = (real32)buffer.height;
 
-  for(int i = 0; i < 200; i++) {
+  for(int i = 0; i < 100; i++) {
     loaded_bitmap *stamp;
 
     if(RandomChoice(&series, 2)) {
@@ -457,7 +506,7 @@ FillGroundChunk(game_state *state,
     DrawBitmap(&buffer, stamp, p);
   }
 
-  for(int i = 0; i < 200; i++) {
+  for(int i = 0; i < 100; i++) {
     loaded_bitmap *stamp
       = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
@@ -548,16 +597,11 @@ DrawHitPoints(sim_entity *entity, render_piece_group *pieceGroup)
 
 internal void
 InitializeWorld(game_world *world,
-  real32 tileSizeInMeters,
-  real32 tileDepthInMeters)
+  real32 typicalFloorHeight,
+  v3 chunkDimInMeters)
 {
-  world->tileSizeInMeters = tileSizeInMeters;
-  world->tileDepthInMeters = tileDepthInMeters;
-  world->chunkDimInMeters = {
-    (real32)TILES_PER_CHUNK * tileSizeInMeters,
-    (real32)TILES_PER_CHUNK * tileSizeInMeters,
-    tileDepthInMeters,
-  };
+  world->typicalFloorHeight = typicalFloorHeight;
+  world->chunkDimInMeters = chunkDimInMeters;
 }
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
@@ -570,14 +614,22 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   memory_arena *worldArena = &state->worldArena;
   game_world *world = &state->world;
 
-  int32 tilesPerWidth = 17;
-  int32 tilesPerHeight = 9;
+  uint32 groundBufferWidth = 256;
+  uint32 groundBufferHeight = 256;
+  real32 typicalFloorHeight = 3.0f;
 
-  real32 TileSizeInPixels = 60.0f;
-  real32 tileSizeInMeters = 1.4f;
-  real32 tileDepthInMeters = 3.0f;
-  real32 metersToPixels = TileSizeInPixels / tileSizeInMeters;
+  // real32 TileSizeInPixels = 60.0f;
+  // real32 tileSizeInMeters = 1.4f;
+  // real32 tileDepthInMeters = 3.0f;
+
+  real32 metersToPixels = 42.0f;
+  real32 pixelsToMeters = 1 / metersToPixels;
   state->metersToPixels = metersToPixels;
+  state->pixelsToMeters = pixelsToMeters;
+
+  v3 chunkDimInMeters = { pixelsToMeters * groundBufferWidth,
+    pixelsToMeters * groundBufferHeight,
+    typicalFloorHeight };
 
   if(!memory->isInitialized) {
     memory->isInitialized = true;
@@ -666,24 +718,29 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       memory->permanentStorageSize - sizeof(game_state),
       (uint8 *)memory->permanentStorage + sizeof(game_state));
 
-    InitializeWorld(world, tileSizeInMeters, tileDepthInMeters);
+    InitializeWorld(world, typicalFloorHeight, chunkDimInMeters);
+
+    real32 tileSizeInMeters = 1.4f;
+    real32 tileDepthInMeters = typicalFloorHeight;
+    int tilesPerWidth = 17;
+    int tilesPerHeight = 9;
 
     state->wallCollision = MakeSimpleCollision(state,
-      state->world.tileSizeInMeters,
-      state->world.tileSizeInMeters,
-      state->world.tileDepthInMeters);
+      tileSizeInMeters,
+      tileSizeInMeters,
+      typicalFloorHeight);
     state->standardRoomCollision = MakeSimpleCollision(state,
-      tilesPerWidth * state->world.tileSizeInMeters,
-      tilesPerHeight * state->world.tileSizeInMeters,
-      0.9f * state->world.tileDepthInMeters);
+      tilesPerWidth * tileSizeInMeters,
+      tilesPerHeight * tileSizeInMeters,
+      0.9f * tileDepthInMeters);
     state->heroCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 1.2f);
     state->familiarCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.5f);
     state->swordCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.1f);
     state->monsterCollision = MakeSimpleCollision(state, 1.0f, 0.5f, 0.5f);
     state->stairCollision = MakeSimpleCollision(state,
-      state->world.tileSizeInMeters,
-      2.0f * state->world.tileSizeInMeters,
-      1.1f * state->world.tileDepthInMeters);
+      tileSizeInMeters,
+      2.0f * tileSizeInMeters,
+      1.1f * tileDepthInMeters);
     state->nullCollision = MakeNullCollision(state);
 
     int32 screenBaseX = 0;
@@ -701,18 +758,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     bool32 doorDown = false;
     int32 absTileZ = 0;
 
+    // world generation
     random_series series = RandomSeed(0x100);
     for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
       // 0: left
       // 1: bottom
       // 2: up/down
-      // int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
-      int randomValue = RandomChoice(&series, 2);
 
-      // Make a stairwell in first screen
-      // if(screenIndex == 0) {
+      // int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
+      // if(screenIndex == 0) { // make a stairwell
       //   randomValue = 2;
       // }
+
+      int randomValue = RandomChoice(&series, 2);
 
       switch(randomValue) {
         case 0: {
@@ -851,7 +909,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
 
     // this is a test fill
-    FillGroundChunk(state, tranState, tranState->groundBuffers, state->cameraP);
+    FillGroundBuffer(state,
+      tranState,
+      tranState->groundBuffers,
+      state->cameraP);
   }
 
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);
@@ -916,23 +977,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
-  int32 cameraSpanX = tilesPerWidth * 3;
-  int32 cameraSpanY = tilesPerHeight * 3;
-  int32 cameraSpanZ = 10;
-  rectangle3 cameraBounds = RectCenterDim(v3{ 0, 0, 0 },
-    v3{
-      world->tileSizeInMeters * (real32)cameraSpanX,
-      world->tileSizeInMeters * (real32)cameraSpanY,
-      world->tileDepthInMeters * (real32)cameraSpanZ,
-    });
-
-  SaveArena(&tranState->tranArena);
-  sim_region *simRegion = BeginSim(&tranState->tranArena,
-    state,
-    state->cameraP,
-    cameraBounds,
-    input->dt);
-
   loaded_bitmap _drawBuffer = {};
   loaded_bitmap *drawBuffer = &_drawBuffer;
   drawBuffer->memory = buffer->memory;
@@ -946,13 +990,71 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
 
-  // Background
+  // background
   DrawRectangle(drawBuffer,
     v2{ 0, 0 },
     v2{ (real32)buffer->width, (real32)buffer->height },
     v3{ 0.5f, 0.5f, 0.5f });
 
-  // ground buffer
+  real32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
+  real32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
+  rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
+    V3(screenWidthInMeters, screenHeightInMeters, 0));
+
+  // chunks
+  {
+
+    world_position minChunk
+      = MapIntoWorldSpace(world, state->cameraP, GetMinCorner(cameraBounds));
+    world_position maxChunk
+      = MapIntoWorldSpace(world, state->cameraP, GetMaxCorner(cameraBounds));
+
+    for(int32 chunkZ = minChunk.chunkZ; chunkZ <= maxChunk.chunkZ; chunkZ++) {
+      for(int32 chunkY = minChunk.chunkY; chunkY <= maxChunk.chunkY; chunkY++) {
+        for(int32 chunkX = minChunk.chunkX; chunkX <= maxChunk.chunkX;
+            chunkX++) {
+          world_chunk *chunk = GetWorldChunk(world, chunkX, chunkY, chunkZ);
+
+          // if(chunk)
+          {
+            world_position chunkCenterP
+              = CenteredChunkPoint(world, chunkX, chunkY, chunkZ);
+            v3 rel = SubtractPosition(world, chunkCenterP, state->cameraP);
+
+            v2 renderCenter = screenCenter + metersToPixels * rel.xy;
+            v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
+
+            DrawRectangleOutline(drawBuffer,
+              renderCenter - 0.5f * renderDim,
+              renderCenter + 0.5f * renderDim,
+              V3(1, 1, 0));
+
+            ground_buffer *emptyBuffer = 0;
+            bool32 found = false;
+
+            for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
+              ground_buffer *buffer = tranState->groundBuffers + i;
+
+              if(AreInSameChunk(world, &chunkCenterP, &buffer->p)) {
+                found = true;
+                break;
+              }
+
+              if(!IsValid(&buffer->p)) {
+                emptyBuffer = buffer;
+              }
+            }
+
+            if(!found && emptyBuffer) {
+              FillGroundBuffer(state, tranState, emptyBuffer, chunkCenterP);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ground
   {
     loaded_bitmap groundTemplate
       = MakeEmptyBitmap(tranState->groundWidth, tranState->groundHeight, NULL);
@@ -969,6 +1071,17 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
+  v3 simExpansion = { 15.0f, 15.0f, 15.0f };
+  rectangle3 simBounds = AddRadius(cameraBounds, simExpansion);
+
+  SaveArena(&tranState->tranArena);
+  sim_region *simRegion = BeginSim(&tranState->tranArena,
+    state,
+    state->cameraP,
+    simBounds,
+    input->dt);
+
+  // entities
   for(uint32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
 
@@ -1042,10 +1155,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             volumeIndex++) {
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
-          PushRectOutline(&pieceGroup,
-            v2{},
-            0.5f * volume->dim.xy,
-            v3{ 0.0f, 0, 1.0f });
+          // PushRectOutline(&pieceGroup,
+          //   v2{},
+          //   0.5f * volume->dim.xy,
+          //   v3{ 0.0f, 0, 1.0f });
         }
       } break;
 
@@ -1100,7 +1213,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     real32 zFudge = 1.0f + 0.1f * entityZ;
     v2 entityCenter = screenCenter + zFudge * entity->p.xy * metersToPixels;
 
-    // Debug: draw boundary
+    // debug: draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 entityOrigin = screenCenter + entity->p.xy * metersToPixels;
       v2 xy = entity->collision->totalVolume.dim.xy;
@@ -1131,7 +1244,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
-  // Debug: show current floors
+  // debug: show current floors
   for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
     v2 start = { 10 + (real32)i * 15, (real32)buffer->height - 20 };
     DrawRectangle(drawBuffer,
