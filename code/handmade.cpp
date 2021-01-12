@@ -22,7 +22,7 @@ WorldPositionFromTilePosition(game_world *world,
 
   world_position result = MapIntoWorldSpace(world, base, point);
 
-  Assert(IsCanonicalPosition(world, &result));
+  Assert(IsValidCanonical(world, &result));
 
   return result;
 }
@@ -482,13 +482,13 @@ FillGroundBuffer(game_state *state,
     groundBuffer->memory);
   groundBuffer->p = chunkP;
 
-  random_series series
-    = RandomSeed(7 * chunkP.chunkX + 3 * chunkP.chunkY + chunkP.chunkZ);
+  random_series series = RandomSeed(
+    139 * chunkP.chunkX + 593 * chunkP.chunkY + 329 * chunkP.chunkZ);
 
   real32 width = (real32)buffer.width;
   real32 height = (real32)buffer.height;
 
-  for(int i = 0; i < 100; i++) {
+  for(uint32 i = 0; i < 100; i++) {
     loaded_bitmap *stamp;
 
     if(RandomChoice(&series, 2)) {
@@ -497,25 +497,20 @@ FillGroundBuffer(game_state *state,
       stamp = state->grass + RandomChoice(&series, ArrayCount(state->grass));
     }
 
-    v2 offset = {
-      RandomUnilateral(&series),
-      RandomUnilateral(&series),
-    };
-
-    v2 p = Hadamard(offset, V2(width, height));
-    DrawBitmap(&buffer, stamp, p);
+    v2 center = V2(RandomUnilateral(&series) * width,
+      RandomUnilateral(&series) * height);
+    v2 offset = 0.5f * V2(stamp->width, stamp->height);
+    DrawBitmap(&buffer, stamp, center - offset);
   }
 
-  for(int i = 0; i < 100; i++) {
+  for(uint32 i = 0; i < 100; i++) {
     loaded_bitmap *stamp
       = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
-    v2 offset = {
-      RandomUnilateral(&series),
-      RandomUnilateral(&series),
-    };
-    v2 p = Hadamard(offset, V2(width, height));
-    DrawBitmap(&buffer, stamp, p);
+    v2 center = V2(RandomUnilateral(&series) * width,
+      RandomUnilateral(&series) * height);
+    v2 offset = 0.5f * V2(stamp->width, stamp->height);
+    DrawBitmap(&buffer, stamp, center - offset);
   }
 }
 
@@ -614,8 +609,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   memory_arena *worldArena = &state->worldArena;
   game_world *world = &state->world;
 
+  // in pixels
   uint32 groundBufferWidth = 256;
   uint32 groundBufferHeight = 256;
+
   real32 typicalFloorHeight = 3.0f;
 
   // real32 TileSizeInPixels = 60.0f;
@@ -907,12 +904,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       groundBuffer->p = NullPosition();
       groundBuffer->memory = PushSize(&tranState->tranArena, totalMemorySize);
     }
-
-    // this is a test fill
-    FillGroundBuffer(state,
-      tranState,
-      tranState->groundBuffers,
-      state->cameraP);
   }
 
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);

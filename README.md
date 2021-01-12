@@ -908,5 +908,4 @@ To-do list:
 
 ## TODO
 
-- Fix full screen problem cased by systeml-level display scale
-- Fix `AreInSameChunk`
+- Fix full screen problem caused by systeml-level display scale

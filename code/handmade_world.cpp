@@ -73,7 +73,7 @@ GetWorldChunk(game_world *world,
 }
 
 inline bool32
-IsCanonicalCoord(real32 chunkDim, real32 value)
+IsCanonical(real32 chunkDim, real32 value)
 {
   real32 epsilon = 0.01f;
   real32 r = 0.5f * chunkDim + epsilon;
@@ -82,20 +82,27 @@ IsCanonicalCoord(real32 chunkDim, real32 value)
 }
 
 inline bool32
-IsCanonicalPosition(game_world *world, world_position *p)
+IsCanonical(game_world *world, world_position *p)
 {
-  Assert(IsValid(p));
-  bool32 result = IsCanonicalCoord(world->chunkDimInMeters.x, p->offset.x)
-    && IsCanonicalCoord(world->chunkDimInMeters.y, p->offset.y)
-    && IsCanonicalCoord(world->chunkDimInMeters.z, p->offset.z);
+  bool32 result = IsCanonical(world->chunkDimInMeters.x, p->offset.x)
+    && IsCanonical(world->chunkDimInMeters.y, p->offset.y)
+    && IsCanonical(world->chunkDimInMeters.z, p->offset.z);
+
+  return result;
+}
+
+inline bool32
+IsValidCanonical(game_world *world, world_position *p)
+{
+  bool32 result = IsValid(p) && IsCanonical(world, p);
   return result;
 }
 
 inline bool32
 AreInSameChunk(game_world *world, world_position *p1, world_position *p2)
 {
-  // Assert(IsCanonicalCoord(world, p1));
-  // Assert(IsCanonicalPosition(world, p2));
+  Assert(IsCanonical(world, p1));
+  Assert(IsCanonical(world, p2));
 
   bool32 result = ((p1->chunkX == p2->chunkX) && (p1->chunkY == p2->chunkY)
     && (p1->chunkZ == p2->chunkZ));
@@ -107,12 +114,11 @@ internal inline void
 RecanonicalizeCoord(real32 chunkDim, int32 *chunk, real32 *chunkRel)
 {
   // NOTE(cj): game_world is not allowd to be wrapped
-
   int32 offset = RoundReal32ToInt32(*chunkRel / chunkDim);
   *chunk += offset;
   *chunkRel -= offset * chunkDim;
 
-  Assert(IsCanonicalCoord(chunkDim, *chunkRel));
+  Assert(IsCanonical(chunkDim, *chunkRel));
 }
 
 internal inline world_position
@@ -161,8 +167,8 @@ ChangeEntityLocationRaw(memory_arena *arena,
   world_position *newP)
 {
   Assert(stored);
-  Assert(!oldP || IsCanonicalPosition(world, oldP));
-  Assert(!newP || IsCanonicalPosition(world, newP));
+  Assert(!oldP || IsValidCanonical(world, oldP));
+  Assert(!newP || IsValidCanonical(world, newP));
 
   if(oldP && newP && AreInSameChunk(world, oldP, newP)) {
     return;
