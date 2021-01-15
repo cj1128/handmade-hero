@@ -1138,13 +1138,18 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
           sprintf_s(buffer, sizeof(buffer), "PC: %d, WC: %d\n", playCursor, writeCursor);
           OutputDebugStringA(buffer);
 #endif
+
+          newInput->executableReloaded = false;
           FILETIME newDLLWriteTime = Win32GetFileLastWriteTime(gameDLLPath);
           if(CompareFileTime(&newDLLWriteTime, &game.gameDLLLastWriteTime)
             != 0) {
             Win32UnloadGameCode(&game);
+
             game = Win32LoadGameCode(gameDLLPath,
               gameTempDLLPath,
               gameLockFilePath);
+
+            newInput->executableReloaded = true;
           }
 
           newInput->dt = targetSecondsPerFrame;

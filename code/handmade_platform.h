@@ -14,6 +14,9 @@ typedef int32 bool32;
 typedef float real32;
 typedef double real64;
 
+#include <float.h>
+#define REAL32_MAX FLT_MAX
+
 /*
   HANDMADE_INTERNAL:
     0: public build
@@ -132,6 +135,7 @@ struct game_input {
   real32 dt;
   int32 mouseX, mouseY;
   game_button_state mouseButtons[5];
+  bool32 executableReloaded;
 
   game_controller_input controllers[5];
 };

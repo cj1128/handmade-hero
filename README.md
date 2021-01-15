@@ -180,6 +180,7 @@ Check day 83 for more details.
 - [Day 84: Scrolling Ground Buffer](#day-84-scrolling-ground-buffer)
 - [Day 85: Transient Ground Buffers](#day-85-transient-ground-buffers)
 - [Day 86: Aligning Ground Buffers to World Chunks](#day-86-aligning-ground-buffers-to-world-chunks)
+- [Day 87: Seamless Ground Textures](#day-87-seamless-ground-textures)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -906,6 +907,18 @@ To-do list:
 - Cleanup: remove tileSideInMeters, we no longer have any tile thing.
 - Fill ground buffer for each chunk.
 
+### Day 87: Seamless Ground Textures
+
+- Modify `FillGroundBuffer` to generate seamless grounds by iterating nine chunks each time
+- Select the furthest buffer and fill it if we have run out of buffers
+- Decrease `groundBufferCount` to test our eviction code
+- Regenerate ground when game reloading
+  - Add a field `executableReloaded` in game_input to tell us whether game has reloaded
+- Why the trees are wiggling around?
+  - Our bliting is not pixel perfect now, entities' float coordinates may round to different integers and cause their distance to change a little bit.
+  - We will solve this problem when we have a real renderer!
+
 ## TODO
 
 - Fix full screen problem caused by systeml-level display scale
+- Fix long running freeze bug: let the game run for a while and it will freeze

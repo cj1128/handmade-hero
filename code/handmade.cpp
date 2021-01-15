@@ -482,35 +482,63 @@ FillGroundBuffer(game_state *state,
     groundBuffer->memory);
   groundBuffer->p = chunkP;
 
-  random_series series = RandomSeed(
-    139 * chunkP.chunkX + 593 * chunkP.chunkY + 329 * chunkP.chunkZ);
+  for(int offsetY = -1; offsetY <= 1; offsetY++) {
+    for(int offsetX = -1; offsetX <= 1; offsetX++) {
+      int chunkX = chunkP.chunkX + offsetX;
+      int chunkY = chunkP.chunkY + offsetY;
+      int chunkZ = chunkP.chunkZ;
 
-  real32 width = (real32)buffer.width;
-  real32 height = (real32)buffer.height;
+      random_series series
+        = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
 
-  for(uint32 i = 0; i < 100; i++) {
-    loaded_bitmap *stamp;
+      real32 width = (real32)buffer.width;
+      real32 height = (real32)buffer.height;
+      v2 chunkOffset = { width * offsetX, height * offsetY };
 
-    if(RandomChoice(&series, 2)) {
-      stamp = state->ground + RandomChoice(&series, ArrayCount(state->ground));
-    } else {
-      stamp = state->grass + RandomChoice(&series, ArrayCount(state->grass));
+      for(uint32 i = 0; i < 100; i++) {
+        loaded_bitmap *stamp;
+
+        if(RandomChoice(&series, 2)) {
+          stamp
+            = state->ground + RandomChoice(&series, ArrayCount(state->ground));
+        } else {
+          stamp
+            = state->grass + RandomChoice(&series, ArrayCount(state->grass));
+        }
+
+        v2 center = V2(RandomUnilateral(&series) * width,
+          RandomUnilateral(&series) * height);
+        v2 offset = 0.5f * V2(stamp->width, stamp->height);
+        v2 p = chunkOffset + center - offset;
+        DrawBitmap(&buffer, stamp, p);
+      }
     }
-
-    v2 center = V2(RandomUnilateral(&series) * width,
-      RandomUnilateral(&series) * height);
-    v2 offset = 0.5f * V2(stamp->width, stamp->height);
-    DrawBitmap(&buffer, stamp, center - offset);
   }
 
-  for(uint32 i = 0; i < 100; i++) {
-    loaded_bitmap *stamp
-      = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
+  for(int offsetY = -1; offsetY <= 1; offsetY++) {
+    for(int offsetX = -1; offsetX <= 1; offsetX++) {
+      int chunkX = chunkP.chunkX + offsetX;
+      int chunkY = chunkP.chunkY + offsetY;
+      int chunkZ = chunkP.chunkZ;
 
-    v2 center = V2(RandomUnilateral(&series) * width,
-      RandomUnilateral(&series) * height);
-    v2 offset = 0.5f * V2(stamp->width, stamp->height);
-    DrawBitmap(&buffer, stamp, center - offset);
+      random_series series
+        = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
+
+      real32 width = (real32)buffer.width;
+      real32 height = (real32)buffer.height;
+      v2 chunkOffset = { width * offsetX, height * offsetY };
+
+      for(uint32 i = 0; i < 100; i++) {
+        loaded_bitmap *stamp
+          = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
+
+        v2 center = V2(RandomUnilateral(&series) * width,
+          RandomUnilateral(&series) * height);
+        v2 offset = 0.5f * V2(stamp->width, stamp->height);
+        v2 p = chunkOffset + center - offset;
+        DrawBitmap(&buffer, stamp, p);
+      }
+    }
   }
 }
 
@@ -893,7 +921,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     tranState->groundWidth = groundWidth;
     tranState->groundHeight = groundHeight;
     tranState->groundPitch = groundWidth * BYTES_PER_PIXEL;
-    tranState->groundBufferCount = 128;
+    tranState->groundBufferCount = 32;
     tranState->groundBuffers = PushArray(&tranState->tranArena,
       tranState->groundBufferCount,
       ground_buffer);
@@ -992,7 +1020,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
     V3(screenWidthInMeters, screenHeightInMeters, 0));
 
-  // chunks
+  // clear ground buffers when reloaded
+  if(input->executableReloaded) {
+    for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
+      ground_buffer *buffer = tranState->groundBuffers + i;
+      buffer->p = NullPosition();
+    }
+  }
+
+  // fill ground buffers
   {
 
     world_position minChunk
@@ -1006,13 +1042,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             chunkX++) {
           world_chunk *chunk = GetWorldChunk(world, chunkX, chunkY, chunkZ);
 
-          // if(chunk)
           {
             world_position chunkCenterP
               = CenteredChunkPoint(world, chunkX, chunkY, chunkZ);
-            v3 rel = SubtractPosition(world, chunkCenterP, state->cameraP);
+            v3 chunkRel = SubtractPosition(world, chunkCenterP, state->cameraP);
 
-            v2 renderCenter = screenCenter + metersToPixels * rel.xy;
+            v2 renderCenter = screenCenter + metersToPixels * chunkRel.xy;
             v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
 
             DrawRectangleOutline(drawBuffer,
@@ -1020,24 +1055,33 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
               renderCenter + 0.5f * renderDim,
               V3(1, 1, 0));
 
-            ground_buffer *emptyBuffer = 0;
-            bool32 found = false;
+            ground_buffer *furthestBuffer = 0;
+            real32 furthestLengthSq = 0.0f;
 
             for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
               ground_buffer *buffer = tranState->groundBuffers + i;
 
               if(AreInSameChunk(world, &chunkCenterP, &buffer->p)) {
-                found = true;
+                furthestBuffer = 0;
                 break;
               }
 
               if(!IsValid(&buffer->p)) {
-                emptyBuffer = buffer;
+                furthestBuffer = buffer;
+                break;
+              } else {
+                v3 bufferRel
+                  = SubtractPosition(world, buffer->p, state->cameraP);
+                real32 lengthSq = LengthSq(bufferRel.xy);
+                if(lengthSq > furthestLengthSq) {
+                  furthestBuffer = buffer;
+                  furthestLengthSq = lengthSq;
+                }
               }
             }
 
-            if(!found && emptyBuffer) {
-              FillGroundBuffer(state, tranState, emptyBuffer, chunkCenterP);
+            if(furthestBuffer != 0) {
+              FillGroundBuffer(state, tranState, furthestBuffer, chunkCenterP);
             }
           }
         }
@@ -1045,7 +1089,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
-  // ground
+  // render ground buffers
   {
     loaded_bitmap groundTemplate
       = MakeEmptyBitmap(tranState->groundWidth, tranState->groundHeight, NULL);
