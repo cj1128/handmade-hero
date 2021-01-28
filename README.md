@@ -73,6 +73,8 @@ My preferred code style for C is different from Casey's.
 
 ## Game Programming
 
+- Every memory allocation should go through a macro, it will make the debugging much easier.
+
 ### Premultiplied Alpha
 
 Check day 83 for more details.
@@ -181,6 +183,7 @@ Check day 83 for more details.
 - [Day 85: Transient Ground Buffers](#day-85-transient-ground-buffers)
 - [Day 86: Aligning Ground Buffers to World Chunks](#day-86-aligning-ground-buffers-to-world-chunks)
 - [Day 87: Seamless Ground Textures](#day-87-seamless-ground-textures)
+- [Day 88: Push Buffer Rendering](#day-88-push-buffer-rendering)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -918,7 +921,22 @@ To-do list:
   - Our bliting is not pixel perfect now, entities' float coordinates may round to different integers and cause their distance to change a little bit.
   - We will solve this problem when we have a real renderer!
 
+### Day 88: Push Buffer Rendering
+
+- Clean up rendering stuff
+  - Create `handmade_render_group.h` and `handmade_render_group.cpp` file
+  - Put `render_piece` and `render_piece_group` to our newly created file
+  - Increase piece count in piece group and use transient arena to alloc our piece group
+  - Define `render_basis`
+  - Delayed rendering: render pieces after we have pushed them all
+- Use delayed rendering for ground buffers
+- Rename `render_piece_group` to `render_group`
+- Implement push buffer
+  - Add `pushBufferBase`, `pushBufferSize` and `maxPushBufferSize` to render_group
+  - Define `AllocateRenderGroup` and `PushRenderElement`
+
 ## TODO
 
 - Fix full screen problem caused by systeml-level display scale
 - Fix long running freeze bug: let the game run for a while and it will freeze
+- Slow speed when moving across rooms

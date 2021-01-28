@@ -36,7 +36,7 @@ CheckArena(memory_arena *arena)
 }
 
 internal void *
-PushSize(memory_arena *arena, size_t size)
+_PushSize(memory_arena *arena, size_t size)
 {
   Assert((arena->used + size) <= arena->size);
   uint8 *result = arena->base + arena->used;
@@ -56,6 +56,7 @@ ZeroSize(void *ptr, size_t size)
 #define PushArray(arena, count, type)                                          \
   (type *)PushSize(arena, (count) * sizeof(type))
 #define PushStruct(arena, type) (type *)PushSize((arena), sizeof(type))
+#define PushSize(arena, size) _PushSize((arena), (size))
 
 #define ZeroStruct(instance) ZeroSize(&(instance), sizeof(instance))
 
@@ -66,22 +67,8 @@ struct loaded_bitmap {
   int32 pitch;
 };
 
-struct render_piece {
-  loaded_bitmap *bitmap;
-  v2 halfDim;
-  v3 color;
-  real32 alpha;
-  v2 offset;
-  real32 entityZC;
-};
-
-struct render_piece_group {
-  uint32 pieceCount;
-  render_piece pieces[16];
-};
-
 struct hero_bitmaps {
-  v2 offset;
+  v2 align;
   loaded_bitmap head;
   loaded_bitmap cape;
   loaded_bitmap torso;
@@ -108,7 +95,8 @@ struct pairwise_collision_rule {
 
 struct ground_buffer {
   world_position p; // center of the bitmap
-  void *memory;
+  loaded_bitmap bitmap;
+  // void *memory;
 };
 
 struct transient_state {
