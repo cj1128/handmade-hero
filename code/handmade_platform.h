@@ -62,6 +62,10 @@ typedef double real64;
 #endif
 
 #define InvalidCodePath Assert(!"InvalidCodePath")
+#define InvalidDefaultCase                                                     \
+  default: {                                                                   \
+    InvalidCodePath                                                            \
+  } break
 
 inline uint32
 SafeTruncateUInt64(uint64 value)

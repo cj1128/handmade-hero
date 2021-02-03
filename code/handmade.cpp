@@ -67,7 +67,7 @@ MakeSimpleCollision(game_state *state, real32 dimX, real32 dimY, real32 dimZ)
   group->volumeCount = 1;
   group->volumes
     = PushArray(arena, group->volumeCount, sim_entity_collision_volume);
-  group->totalVolume.offset = v3{ 0, 0, 0.5f * dimZ };
+  group->totalVolume.offset = V3(0, 0, 0.5f * dimZ);
   group->totalVolume.dim = V3(dimX, dimY, dimZ);
   group->volumes[0] = group->totalVolume;
 
@@ -336,219 +336,6 @@ InitializeArena(memory_arena *arena, size_t size, void *base)
 }
 
 internal void
-DrawBitmap(loaded_bitmap *buffer,
-  loaded_bitmap *bitmap,
-  v2 minCorner,
-  real32 cAlpha = 1.0f)
-{
-  int32 minX = RoundReal32ToInt32(minCorner.x);
-  int32 minY = RoundReal32ToInt32(minCorner.y);
-  int32 maxX = minX + bitmap->width;
-  int32 maxY = minY + bitmap->height;
-
-  int32 clipX = 0;
-  if(minX < 0) {
-    clipX = -minX;
-    minX = 0;
-  }
-  int32 clipY = 0;
-  if(minY < 0) {
-    clipY = -minY;
-    minY = 0;
-  }
-  if(maxX > buffer->width) {
-    maxX = buffer->width;
-  }
-  if(maxY > buffer->height) {
-    maxY = buffer->height;
-  }
-
-  uint8 *sourceRow
-    = (uint8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
-  uint8 *destRow
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
-
-  for(int y = minY; y < maxY; y++) {
-    uint32 *source = (uint32 *)sourceRow;
-    uint32 *dest = (uint32 *)destRow;
-
-    for(int x = minX; x < maxX; x++) {
-      real32 sA = (real32)((*source >> 24) & 0xff);
-      real32 sR = cAlpha * (real32)((*source >> 16) & 0xff);
-      real32 sG = cAlpha * (real32)((*source >> 8) & 0xff);
-      real32 sB = cAlpha * (real32)((*source >> 0) & 0xff);
-
-      real32 rSA = sA / 255.0f * cAlpha;
-
-      real32 dA = (real32)((*dest >> 24) & 0xff);
-      real32 dR = (real32)((*dest >> 16) & 0xff);
-      real32 dG = (real32)((*dest >> 8) & 0xff);
-      real32 dB = (real32)((*dest >> 0) & 0xff);
-
-      real32 rDA = dA / 255.0f;
-
-      real32 a = 255.0f * (rSA + rDA - rSA * rDA);
-      real32 r = sR + (1 - rSA) * dR;
-      real32 g = sG + (1 - rSA) * dG;
-      real32 b = sB + (1 - rSA) * dB;
-
-      // clang-format off
-      *dest = ((uint32)(a + 0.5f) << 24) |
-        ((uint32)(r + 0.5f) << 16) |
-        ((uint32)(g + 0.5f) << 8) |
-        ((uint32)(b + 0.5f));
-      // clang-format on
-
-      dest++;
-      source++;
-    }
-
-    sourceRow += bitmap->pitch;
-    destRow += buffer->pitch;
-  }
-}
-
-internal void
-DrawMatte(loaded_bitmap *buffer,
-  loaded_bitmap *bitmap,
-  v2 minCorner,
-  real32 cAlpha = 1.0f)
-{
-  int32 minX = RoundReal32ToInt32(minCorner.x);
-  int32 minY = RoundReal32ToInt32(minCorner.y);
-  int32 maxX = minX + bitmap->width;
-  int32 maxY = minY + bitmap->height;
-
-  int32 clipX = 0;
-  if(minX < 0) {
-    clipX = -minX;
-    minX = 0;
-  }
-  int32 clipY = 0;
-  if(minY < 0) {
-    clipY = -minY;
-    minY = 0;
-  }
-  if(maxX > buffer->width) {
-    maxX = buffer->width;
-  }
-  if(maxY > buffer->height) {
-    maxY = buffer->height;
-  }
-
-  uint8 *sourceRow
-    = (uint8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
-  uint8 *destRow
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
-
-  for(int y = minY; y < maxY; y++) {
-    uint32 *source = (uint32 *)sourceRow;
-    uint32 *dest = (uint32 *)destRow;
-
-    for(int x = minX; x < maxX; x++) {
-      real32 sA = (real32)((*source >> 24) & 0xff);
-      real32 sR = cAlpha * (real32)((*source >> 16) & 0xff);
-      real32 sG = cAlpha * (real32)((*source >> 8) & 0xff);
-      real32 sB = cAlpha * (real32)((*source >> 0) & 0xff);
-
-      real32 rSA = sA / 255.0f * cAlpha;
-
-      real32 dA = (real32)((*dest >> 24) & 0xff);
-      real32 dR = (real32)((*dest >> 16) & 0xff);
-      real32 dG = (real32)((*dest >> 8) & 0xff);
-      real32 dB = (real32)((*dest >> 0) & 0xff);
-
-      real32 rDA = dA / 255.0f;
-
-      real32 invRSA = 1 - rSA;
-
-      real32 a = invRSA * dA;
-      real32 r = invRSA * dR;
-      real32 g = invRSA * dG;
-      real32 b = invRSA * dB;
-
-      // clang-format off
-      *dest = ((uint32)(a + 0.5f) << 24) |
-        ((uint32)(r + 0.5f) << 16) |
-        ((uint32)(g + 0.5f) << 8) |
-        ((uint32)(b + 0.5f));
-      // clang-format on
-
-      dest++;
-      source++;
-    }
-
-    sourceRow += bitmap->pitch;
-    destRow += buffer->pitch;
-  }
-}
-
-// exclusive
-internal void
-DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v3 color)
-{
-  int32 minX = RoundReal32ToInt32(min.x);
-  int32 minY = RoundReal32ToInt32(min.y);
-  int32 maxX = RoundReal32ToInt32(max.x);
-  int32 maxY = RoundReal32ToInt32(max.y);
-
-  if(minX < 0) {
-    minX = 0;
-  }
-  if(minY < 0) {
-    minY = 0;
-  }
-  if(maxX > buffer->width) {
-    maxX = buffer->width;
-  }
-  if(maxY > buffer->height) {
-    maxY = buffer->height;
-  }
-
-  uint32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
-    | (RoundReal32ToUint32(color.g * 255.0f) << 8)
-    | RoundReal32ToUint32(color.b * 255.0f);
-
-  uint8 *row
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
-
-  for(int y = minY; y < maxY; y++) {
-    uint32 *Pixel = (uint32 *)row;
-    for(int x = minX; x < maxX; x++) {
-      *Pixel++ = c;
-    }
-
-    row += buffer->pitch;
-  }
-}
-
-internal void
-DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v3 color)
-{
-  real32 r = 2;
-
-  // top and bottom
-  DrawRectangle(buffer,
-    V2(min.x - r, max.y - r),
-    V2(max.x + r, max.y + r),
-    color);
-  DrawRectangle(buffer,
-    V2(min.x - r, min.y - r),
-    V2(max.x + r, min.y + r),
-    color);
-
-  // left and right
-  DrawRectangle(buffer,
-    V2(min.x - r, min.y - r),
-    V2(min.x + r, max.y + r),
-    color);
-  DrawRectangle(buffer,
-    V2(max.x - r, min.y - r),
-    V2(max.x + r, max.y + r),
-    color);
-}
-
-internal void
 FillGroundBuffer(game_state *state,
   transient_state *tranState,
   ground_buffer *groundBuffer,
@@ -621,8 +408,8 @@ internal void
 DrawHitPoints(sim_entity *entity, render_group *renderGroup)
 {
   if(entity->hitPointCount > 0) {
-    v2 halfDim = { 0.1f, 0.08f };
-    real32 spanX = 1.5f * 2.0f * halfDim.x;
+    v2 dim = { 0.2f, 0.16f };
+    real32 spanX = 1.5f * dim.x;
     real32 startX = -0.5f * (entity->hitPointCount - 1) * spanX;
     real32 startY = -0.75f * entity->collision->totalVolume.dim.y;
     for(uint32 hitPointIndex = 0; hitPointIndex < entity->hitPointCount;
@@ -635,7 +422,7 @@ DrawHitPoints(sim_entity *entity, render_group *renderGroup)
       PushRect(renderGroup,
         V2(startX + spanX * hitPointIndex, startY),
         V2(0, 0),
-        halfDim,
+        dim,
         color);
     }
   }
@@ -1040,9 +827,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   // background
   DrawRectangle(drawBuffer,
-    v2{ 0, 0 },
-    v2{ (real32)buffer->width, (real32)buffer->height },
-    v3{ 1.0f, 0.5f, 0.0f });
+    V2(0, 0),
+    V2((real32)buffer->width, (real32)buffer->height),
+    V4(1.0f, 0.5f, 0.0f, 1.0f));
 
   real32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
   real32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
@@ -1234,7 +1021,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             = entity->collision->volumes + volumeIndex;
           // PushRectOutline(&renderGroup,
           //   v2{},
-          //   0.5f * volume->dim.xy,
+          //   volume->dim.xy,
           //   v3{ 0.0f, 0, 1.0f });
         }
       } break;
@@ -1252,8 +1039,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         PushRect(renderGroup,
           V2(0, 0),
           V2(0, 0),
-          0.5f * entity->walkableDim,
-          v3{ 1.0f, 0, 0 });
+          entity->walkableDim,
+          V3(1.0f, 0, 0));
       } break;
 
       case EntityType_Familiar: {
@@ -1298,38 +1085,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     // debug draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 dim = entity->collision->totalVolume.dim.xy;
-      PushRect(renderGroup,
-        V2(0, 0),
-        V2(0, 0),
-        0.5f * dim,
-        V3(1.0f, 1.0f, 0.0f));
+      PushRect(renderGroup, V2(0, 0), V2(0, 0), dim, V3(1.0f, 1.0f, 0.0f));
     }
   }
 
-  for(uint32 baseAddr = 0; baseAddr < renderGroup->pushBufferSize;) {
-    render_piece *piece
-      = (render_piece *)(renderGroup->pushBufferBase + baseAddr);
-    baseAddr += sizeof(render_piece);
-    v3 entityP = piece->basis->p;
-
-    real32 entityZ = entityP.z;
-    real32 zFudge = 1.0f + 0.1f * entityZ;
-    v2 entityCenter = screenCenter + zFudge * entityP.xy * metersToPixels;
-
-    if(piece->bitmap) {
-      v2 minCorner = {
-        entityCenter.x + piece->offset.x,
-        entityCenter.y + piece->offset.y
-          + entityZ * piece->entityZC * metersToPixels,
-      };
-      DrawBitmap(drawBuffer, piece->bitmap, minCorner, piece->alpha);
-    } else {
-      DrawRectangle(drawBuffer,
-        entityCenter + piece->offset - metersToPixels * piece->halfDim,
-        entityCenter + piece->offset + metersToPixels * piece->halfDim,
-        piece->color);
-    }
-  }
+  RenderGroupToOutput(renderGroup, drawBuffer);
 
   // debug: show current floors
   for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
@@ -1337,7 +1097,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     DrawRectangle(drawBuffer,
       start,
       start + v2{ 10, 10 },
-      v3{ 0.0f, 1.0f, 0.0f });
+      V4(0.0f, 1.0f, 0.0f, 1.0f));
   }
 
   EndSim(simRegion, state);

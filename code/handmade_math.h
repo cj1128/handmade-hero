@@ -273,8 +273,26 @@ union v4 {
   struct {
     real32 r, g, b, a;
   };
-  real32 e[2];
+  struct {
+    v3 rgb;
+    real32 alpha;
+  };
+  real32 e[4];
 };
+
+inline v4
+V4(real32 x, real32 y, real32 z, real32 w)
+{
+  v4 result = { x, y, z, w };
+  return result;
+}
+
+inline v4
+V4(v3 v, real32 w)
+{
+  v4 result = { v.x, v.y, v.z, w };
+  return result;
+}
 
 //
 // misc

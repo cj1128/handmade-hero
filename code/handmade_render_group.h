@@ -5,14 +5,41 @@ struct render_basis {
   v3 p;
 };
 
-struct render_piece {
+enum render_entry_type {
+  RenderEntryType_render_entry_clear,
+  RenderEntryType_render_entry_rectangle,
+  RenderEntryType_render_entry_bitmap,
+};
+
+struct render_entry_header {
+  render_entry_type type;
+};
+
+struct render_entry_clear {
+  render_entry_header header;
+};
+
+// position of the min corner
+struct render_entity_basis {
   render_basis *basis;
-  loaded_bitmap *bitmap;
-  v2 halfDim;
-  v3 color;
-  real32 alpha;
   v2 offset;
   real32 entityZC;
+};
+
+struct render_entry_rectangle {
+  render_entry_header header;
+  render_entity_basis entityBasis;
+
+  v2 dim;
+  v4 color;
+};
+
+struct render_entry_bitmap {
+  render_entry_header header;
+  render_entity_basis entityBasis;
+
+  real32 alpha;
+  loaded_bitmap *bitmap;
 };
 
 struct render_group {

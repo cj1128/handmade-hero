@@ -61,6 +61,7 @@ My preferred code style for C is different from Casey's.
 - camelCase for variables, e.g. `globalRunning`
 - PascalCase for functions and macro functions, e.g. `GameUpdateVideo`
 - UPPER_SNAKE_CASE for macro constants, e.g. `TILES_PER_CHUNK`
+- Prefix an underscore to indicate that this function should only be called with a corresponding macro, e.g. `_PushSize`
 
 ## Marks
 
@@ -184,6 +185,7 @@ Check day 83 for more details.
 - [Day 86: Aligning Ground Buffers to World Chunks](#day-86-aligning-ground-buffers-to-world-chunks)
 - [Day 87: Seamless Ground Textures](#day-87-seamless-ground-textures)
 - [Day 88: Push Buffer Rendering](#day-88-push-buffer-rendering)
+- [Day 89: Renderer Push Buffer Entry Types](#day-89-renderer-push-buffer-entry-types)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -934,6 +936,22 @@ To-do list:
 - Implement push buffer
   - Add `pushBufferBase`, `pushBufferSize` and `maxPushBufferSize` to render_group
   - Define `AllocateRenderGroup` and `PushRenderElement`
+
+### Day 89: Renderer Push Buffer Entry Types
+
+- Why we use a push buffer to do the rendering?
+  - Sorting!
+  - Process the source buffer into someting most suitable for the target
+- Architect our soft renderer the way actual GPU works
+- Move all drawing functions to handmade_render_group.cpp
+- Rename `render_piece` to `render_entry`
+- Define `RenderGroupToOutput`
+- Use "compact discriminated union"
+  - `render_entry_clear`
+  - `render_entry_rectangle`
+  - `render_entry_bitmap`
+- Define `render_entity_basis` to abstract common positioning logic
+- RESORUCE: [The ryg blog](https://fgiesen.wordpress.com/)
 
 ## TODO
 
