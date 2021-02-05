@@ -272,6 +272,20 @@ Clear(render_group *group, v4 color)
   entry->color = color;
 }
 
+internal render_entry_coordinate_system *
+CoordinateSystem(render_group *group, v2 origin, v2 xAxis, v2 yAxis, v4 color)
+{
+  render_entry_coordinate_system *entry
+    = PushRenderElement(group, render_entry_coordinate_system);
+
+  entry->origin = origin;
+  entry->xAxis = xAxis;
+  entry->yAxis = yAxis;
+  entry->color = color;
+
+  return entry;
+}
+
 // `offset` is from the center
 internal void
 PushRect(render_group *group,
@@ -382,6 +396,28 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           renderGroup->metersToPixels);
 
         DrawBitmap(outputTarget, entry->bitmap, min, entry->alpha);
+      } break;
+
+      case RenderEntryType_render_entry_coordinate_system: {
+        render_entry_coordinate_system *entry
+          = (render_entry_coordinate_system *)header;
+        baseAddr += sizeof(render_entry_coordinate_system);
+
+        v2 dim = V2(2, 2);
+        v2 p = entry->origin;
+        DrawRectangle(outputTarget, p, p + dim, entry->color);
+
+        p = entry->origin + entry->xAxis;
+        DrawRectangle(outputTarget, p, p + dim, entry->color);
+
+        p = entry->origin + entry->yAxis;
+        DrawRectangle(outputTarget, p, p + dim, entry->color);
+
+        for(uint32 i = 0; i < ArrayCount(entry->points); i++) {
+          v2 p = entry->points[i];
+          v2 min = entry->origin + p.x * entry->xAxis + p.y * entry->yAxis;
+          DrawRectangle(outputTarget, min, min + dim, entry->color);
+        }
       } break;
 
         InvalidDefaultCase;

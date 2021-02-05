@@ -187,6 +187,7 @@ Check day 83 for more details.
 - [Day 88: Push Buffer Rendering](#day-88-push-buffer-rendering)
 - [Day 89: Renderer Push Buffer Entry Types](#day-89-renderer-push-buffer-entry-types)
 - [Day 90: Bases Part 1](#day-90-bases-part-1)
+- [Day 91: Bases Part 2](#day-91-bases-part-2)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -959,6 +960,11 @@ To-do list:
 - Implement `Clear`
 - Implement `PushRectOutline`
 - Use `PushBitmap` in `FillGroundBuffer`
+
+### Day 91: Bases Part 2
+
+- Casey explains what is a basis and how it works
+- Implement a demo `render_entry_coordinate_system` to explore the basis transformation idea
 
 ## TODO
 

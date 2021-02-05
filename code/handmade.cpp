@@ -841,13 +841,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
     V3(screenWidthInMeters, screenHeightInMeters, 0));
 
-  // clear ground buffers when reloaded
+// clear ground buffers when reloaded
+#if 0
   if(input->executableReloaded) {
     for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
       ground_buffer *buffer = tranState->groundBuffers + i;
       buffer->p = NullPosition();
     }
   }
+#endif
 
   // render ground buffers
   {
@@ -1098,6 +1100,22 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         V2(0, 0),
         dim,
         V4(1.0f, 1.0f, 0.0f, 1.0f));
+    }
+  }
+
+  v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
+  static real32 angle = 0;
+  angle += input->dt;
+  v2 origin = ScreenCenter;
+  v2 xAxis = 90.0f * V2(Cos(angle), Sin(angle));
+  v2 yAxis = 100.0f * V2(Cos(angle + 0.8f), Sin(angle + 0.8f));
+  render_entry_coordinate_system *c
+    = CoordinateSystem(renderGroup, origin, xAxis, yAxis, V4(1, 1, 0, 1));
+
+  uint32 pointIndex = 0;
+  for(real32 y = 0.0f; y < 1.0f; y += 0.25) {
+    for(real32 x = 0.0f; x < 1.0f; x += 0.25) {
+      c->points[pointIndex++] = V2(x, y);
     }
   }
 

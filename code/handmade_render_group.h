@@ -9,10 +9,20 @@ enum render_entry_type {
   RenderEntryType_render_entry_clear,
   RenderEntryType_render_entry_rectangle,
   RenderEntryType_render_entry_bitmap,
+  RenderEntryType_render_entry_coordinate_system,
 };
 
 struct render_entry_header {
   render_entry_type type;
+};
+
+struct render_entry_coordinate_system {
+  render_entry_header header;
+  v2 origin;
+  v2 xAxis;
+  v2 yAxis;
+  v4 color;
+  v2 points[16];
 };
 
 struct render_entry_clear {
