@@ -218,6 +218,7 @@ AllocateRenderGroup(memory_arena *arena,
 {
   render_group *result = PushStruct(arena, render_group);
   render_basis *defaultBasis = PushStruct(arena, render_basis);
+  defaultBasis->p = {};
 
   result->defaultBasis = defaultBasis;
   result->pieceCount = 0;
@@ -247,27 +248,6 @@ _PushRenderElement(render_group *group, uint32 size, render_entry_type type)
   return header;
 }
 
-// internal void
-// PushRenderEntry(render_group *group,
-//   loaded_bitmap *bitmap,
-//   v2 offset,
-//   v2 align,
-//   v2 halfDim,
-//   v3 color,
-//   real32 entityZC,
-//   real32 alpha)
-// {
-//   render_entry_rectangle *entry
-//     = PushRenderElement(group, render_entry_rectangle);
-//   entry->bitmap = bitmap;
-//   entry->offset = group->metersToPixels * offset + align;
-//   entry->basis = group->defaultBasis;
-//   entry->alpha = alpha;
-//   entry->color = color;
-//   entry->halfDim = halfDim;
-//   entry->entityZC = entityZC;
-// }
-
 // `offset` is from the min corner
 internal void
 PushBitmap(render_group *group,
@@ -285,14 +265,20 @@ PushBitmap(render_group *group,
   entry->alpha = alpha;
 }
 
+internal void
+Clear(render_group *group, v4 color)
+{
+  render_entry_clear *entry = PushRenderElement(group, render_entry_clear);
+  entry->color = color;
+}
+
 // `offset` is from the center
 internal void
 PushRect(render_group *group,
   v2 offset,
   v2 align,
   v2 dim,
-  v3 color,
-  real32 alpha = 1.0f,
+  v4 color,
   real32 entityZC = 0.0f)
 {
   render_entry_rectangle *entry
@@ -301,13 +287,13 @@ PushRect(render_group *group,
     - 0.5f * dim * group->metersToPixels;
   entry->entityBasis.basis = group->defaultBasis;
   entry->entityBasis.entityZC = entityZC;
-  entry->color = V4(color, alpha);
+  entry->color = color;
   entry->dim = dim * group->metersToPixels;
 }
 
 // `offset` is from the center
 internal void
-PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v3 color)
+PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v4 color)
 {
   real32 thickness = 0.1f;
   v2 halfDim = 0.5f * dim;
@@ -315,25 +301,25 @@ PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v3 color)
   PushRect(group,
     V2(offset.x, offset.y - halfDim.y),
     align,
-    V2(halfDim.x, thickness),
-    v3{ 0.0f, 0, 1.0f });
+    V2(dim.x, thickness),
+    color);
   PushRect(group,
-    v2{ offset.x, offset.y + halfDim.y },
+    V2(offset.x, offset.y + halfDim.y),
     align,
-    v2{ halfDim.x, thickness },
-    v3{ 0.0f, 0, 1.0f });
+    V2(dim.x, thickness),
+    color);
 
   // Left and right
   PushRect(group,
-    v2{ offset.x - halfDim.x, offset.y },
+    V2(offset.x - halfDim.x, offset.y),
     align,
-    v2{ thickness, halfDim.y },
-    v3{ 0.0f, 0, 1.0f });
+    V2(thickness, dim.y),
+    color);
   PushRect(group,
-    v2{ offset.x + halfDim.x, offset.y },
+    V2(offset.x + halfDim.x, offset.y),
     align,
-    v2{ thickness, halfDim.y },
-    v3{ 0.0f, 0, 1.0f });
+    V2(thickness, dim.y),
+    color);
 }
 
 internal v2
@@ -354,11 +340,11 @@ GetEntityMinCorner(render_entity_basis *entityBasis,
 }
 
 internal void
-RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *drawBuffer)
+RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 {
   real32 metersToPixels = renderGroup->metersToPixels;
   v2 screenCenter
-    = 0.5f * v2{ (real32)drawBuffer->width, (real32)drawBuffer->height };
+    = 0.5f * v2{ (real32)outputTarget->width, (real32)outputTarget->height };
 
   for(uint32 baseAddr = 0; baseAddr < renderGroup->pushBufferSize;) {
     render_entry_header *header
@@ -366,7 +352,13 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *drawBuffer)
 
     switch(header->type) {
       case RenderEntryType_render_entry_clear: {
+        render_entry_clear *entry = (render_entry_clear *)header;
         baseAddr += sizeof(render_entry_clear);
+
+        DrawRectangle(outputTarget,
+          V2(0, 0),
+          V2((real32)outputTarget->width, (real32)outputTarget->height),
+          entry->color);
       } break;
 
       case RenderEntryType_render_entry_rectangle: {
@@ -378,7 +370,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *drawBuffer)
           screenCenter,
           renderGroup->metersToPixels);
 
-        DrawRectangle(drawBuffer, min, min + entry->dim, entry->color);
+        DrawRectangle(outputTarget, min, min + entry->dim, entry->color);
       } break;
 
       case RenderEntryType_render_entry_bitmap: {
@@ -389,7 +381,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *drawBuffer)
           screenCenter,
           renderGroup->metersToPixels);
 
-        DrawBitmap(drawBuffer, entry->bitmap, min, entry->alpha);
+        DrawBitmap(outputTarget, entry->bitmap, min, entry->alpha);
       } break;
 
         InvalidDefaultCase;

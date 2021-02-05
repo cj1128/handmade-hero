@@ -186,6 +186,7 @@ Check day 83 for more details.
 - [Day 87: Seamless Ground Textures](#day-87-seamless-ground-textures)
 - [Day 88: Push Buffer Rendering](#day-88-push-buffer-rendering)
 - [Day 89: Renderer Push Buffer Entry Types](#day-89-renderer-push-buffer-entry-types)
+- [Day 90: Bases Part 1](#day-90-bases-part-1)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -952,6 +953,12 @@ To-do list:
   - `render_entry_bitmap`
 - Define `render_entity_basis` to abstract common positioning logic
 - RESORUCE: [The ryg blog](https://fgiesen.wordpress.com/)
+
+### Day 90: Bases Part 1
+
+- Implement `Clear`
+- Implement `PushRectOutline`
+- Use `PushBitmap` in `FillGroundBuffer`
 
 ## TODO
 

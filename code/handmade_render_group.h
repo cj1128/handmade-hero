@@ -17,6 +17,7 @@ struct render_entry_header {
 
 struct render_entry_clear {
   render_entry_header header;
+  v4 color;
 };
 
 // position of the min corner

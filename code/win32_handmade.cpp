@@ -299,12 +299,12 @@ Win32GetFileLastWriteTime(char *fileName)
 }
 
 win32_game_code
-Win32LoadGameCode(char *dllPath, char *dllTempPath, char *lockPah)
+Win32LoadGameCode(char *dllPath, char *dllTempPath, char *lockPath)
 {
   win32_game_code result = {};
 
   WIN32_FILE_ATTRIBUTE_DATA ignored;
-  if(!GetFileAttributesExA(lockPah, GetFileExInfoStandard, &ignored)) {
+  if(!GetFileAttributesExA(lockPath, GetFileExInfoStandard, &ignored)) {
     result.gameDLLLastWriteTime = Win32GetFileLastWriteTime(dllPath);
 
     // CopyFile may fail the first few times
@@ -342,7 +342,7 @@ Win32UnloadGameCode(win32_game_code *code)
 {
   if(code->gameDLL) {
     FreeLibrary(code->gameDLL);
-    code->gameDLL = 0;
+    code->gameDLL = NULL;
   }
 
   code->isValid = false;
@@ -1210,11 +1210,11 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
                 newController->isAnalog = false;
               }
               if(pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT) {
-                newController->stickAverageY = 1.0f;
+                newController->stickAverageX = 1.0f;
                 newController->isAnalog = false;
               }
               if(pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT) {
-                newController->stickAverageY = -1.0f;
+                newController->stickAverageX = -1.0f;
                 newController->isAnalog = false;
               }
 

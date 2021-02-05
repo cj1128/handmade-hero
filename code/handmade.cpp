@@ -344,6 +344,10 @@ FillGroundBuffer(game_state *state,
   loaded_bitmap *buffer = &groundBuffer->bitmap;
   groundBuffer->p = chunkP;
 
+  SaveArena(&tranState->tranArena);
+  render_group *renderGroup
+    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), 1);
+
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
       int chunkX = chunkP.chunkX + offsetX;
@@ -372,7 +376,7 @@ FillGroundBuffer(game_state *state,
           RandomUnilateral(&series) * height);
         v2 offset = 0.5f * V2(stamp->width, stamp->height);
         v2 p = chunkOffset + center - offset;
-        DrawBitmap(buffer, stamp, p);
+        PushBitmap(renderGroup, stamp, p, V2(0, 0));
       }
     }
   }
@@ -398,10 +402,14 @@ FillGroundBuffer(game_state *state,
           RandomUnilateral(&series) * height);
         v2 offset = 0.5f * V2(stamp->width, stamp->height);
         v2 p = chunkOffset + center - offset;
-        DrawBitmap(buffer, stamp, p);
+
+        PushBitmap(renderGroup, stamp, p, V2(0, 0));
       }
     }
   }
+
+  RenderGroupToOutput(renderGroup, buffer);
+  RestoreArena(&tranState->tranArena);
 }
 
 internal void
@@ -415,9 +423,9 @@ DrawHitPoints(sim_entity *entity, render_group *renderGroup)
     for(uint32 hitPointIndex = 0; hitPointIndex < entity->hitPointCount;
         hitPointIndex++) {
       hit_point *hitPoint = entity->hitPoints + hitPointIndex;
-      v3 color = v3{ 0.25f, 0.25f, 0.25f };
+      v4 color = V4(0.25f, 0.25f, 0.25f, 1.0f);
       if(hitPoint->amount > 0) {
-        color = v3{ 1.0f, 0.0f, 0.0f };
+        color = V4(1.0f, 0.0f, 0.0f, 1.0f);
       }
       PushRect(renderGroup,
         V2(startX + spanX * hitPointIndex, startY),
@@ -826,10 +834,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
 
   // background
-  DrawRectangle(drawBuffer,
-    V2(0, 0),
-    V2((real32)buffer->width, (real32)buffer->height),
-    V4(1.0f, 0.5f, 0.0f, 1.0f));
+  Clear(renderGroup, V4(1.0f, 0.0f, 1.0f, 0.0f));
 
   real32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
   real32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
@@ -883,10 +888,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             v2 renderCenter = screenCenter + metersToPixels * chunkRel.xy;
             v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
 
-            // DrawRectangleOutline(drawBuffer,
-            //   renderCenter - 0.5f * renderDim,
-            //   renderCenter + 0.5f * renderDim,
-            //   V3(1, 1, 0));
+            PushRectOutline(renderGroup,
+              chunkRel.xy,
+              V2(0, 0),
+              world->chunkDimInMeters.xy,
+              V4(1, 1, 0, 1));
 
             ground_buffer *furthestBuffer = 0;
             real32 furthestLengthSq = 0.0f;
@@ -1019,10 +1025,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
             volumeIndex++) {
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
-          // PushRectOutline(&renderGroup,
-          //   v2{},
-          //   volume->dim.xy,
-          //   v3{ 0.0f, 0, 1.0f });
+
+          PushRectOutline(renderGroup,
+            V2(0, 0),
+            V2(0, 0),
+            volume->dim.xy,
+            V4(0.0f, 0, 1.0f, 1.0f));
         }
       } break;
 
@@ -1040,7 +1048,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           V2(0, 0),
           V2(0, 0),
           entity->walkableDim,
-          V3(1.0f, 0, 0));
+          V4(1.0f, 0, 0, 1.0f));
       } break;
 
       case EntityType_Familiar: {
@@ -1085,7 +1093,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     // debug draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
       v2 dim = entity->collision->totalVolume.dim.xy;
-      PushRect(renderGroup, V2(0, 0), V2(0, 0), dim, V3(1.0f, 1.0f, 0.0f));
+      PushRect(renderGroup,
+        V2(0, 0),
+        V2(0, 0),
+        dim,
+        V4(1.0f, 1.0f, 0.0f, 1.0f));
     }
   }
 
