@@ -1107,8 +1107,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   static real32 angle = 0;
   angle += input->dt;
   v2 origin = ScreenCenter;
-  v2 xAxis = 90.0f * V2(Cos(angle), Sin(angle));
-  v2 yAxis = 100.0f * V2(Cos(angle + 0.8f), Sin(angle + 0.8f));
+  v2 xAxis = 80.0f * V2(Cos(angle), Sin(angle));
+  v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
   render_entry_coordinate_system *c
     = CoordinateSystem(renderGroup, origin, xAxis, yAxis, V4(1, 1, 0, 1));
 

@@ -13,6 +13,13 @@ union v2 {
 };
 
 inline v2
+Perp(v2 v)
+{
+  v2 result = { -v.y, v.x };
+  return result;
+}
+
+inline v2
 V2(real32 x, real32 y)
 {
   v2 result = { x, y };

@@ -188,6 +188,7 @@ Check day 83 for more details.
 - [Day 89: Renderer Push Buffer Entry Types](#day-89-renderer-push-buffer-entry-types)
 - [Day 90: Bases Part 1](#day-90-bases-part-1)
 - [Day 91: Bases Part 2](#day-91-bases-part-2)
+- [Day 92: Filling Rotated and Scaled Rectangles](#day-92-filling-rotated-and-scaled-rectangles)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -965,6 +966,16 @@ To-do list:
 
 - Casey explains what is a basis and how it works
 - Implement a demo `render_entry_coordinate_system` to explore the basis transformation idea
+
+### Day 92: Filling Rotated and Scaled Rectangles
+
+- Collision detection has a lot to do with pixel filling
+- Casey demonstrates how to fill a rectangle
+  - Define `DrawRectangleSlowly`
+  - Start from an aligned rectangle
+  - Move to a rotated rectangle
+  - Calculate the min/max bound rather than always check the whole buffer
+  - Define `Perp` function
 
 ## TODO
 
