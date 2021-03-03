@@ -301,6 +301,81 @@ V4(v3 v, real32 w)
   return result;
 }
 
+inline v4
+operator+(v4 a, v4 b)
+{
+  v4 result;
+  result.x = a.x + b.x;
+  result.y = a.y + b.y;
+  result.z = a.z + b.z;
+  result.w = a.w + b.w;
+  return result;
+}
+
+inline v4
+operator+=(v4 &a, v4 b)
+{
+  a = a + b;
+  return a;
+}
+
+inline v4
+operator-(v4 a)
+{
+  v4 result;
+  result.x = -a.x;
+  result.y = -a.y;
+  result.z = -a.z;
+  result.w = -a.w;
+  return result;
+}
+
+inline v4
+operator-(v4 a, v4 b)
+{
+  v4 result;
+  result.x = a.x - b.x;
+  result.y = a.y - b.y;
+  result.z = a.z - b.z;
+  result.w = a.w - b.w;
+  return result;
+}
+
+inline v4
+operator-=(v4 &a, v4 b)
+{
+  a = a - b;
+  return a;
+}
+
+inline v4
+operator*(real32 a, v4 b)
+{
+  v4 result = { a * b.x, a * b.y, a * b.z, a * b.w };
+  return result;
+}
+
+inline v4
+operator*(v4 b, real32 a)
+{
+  v4 result = a * b;
+  return result;
+}
+
+inline v4
+operator*=(v4 &a, real32 b)
+{
+  a = b * a;
+  return a;
+}
+
+inline v4
+Lerp(v4 a, real32 t, v4 b)
+{
+  v4 result = (1 - t) * a + t * b;
+  return result;
+}
+
 //
 // misc
 //
@@ -364,7 +439,7 @@ Clamp01(v3 v)
 }
 
 inline real32
-Lerp(real32 t, real32 a, real32 b)
+Lerp(real32 a, real32 t, real32 b)
 {
   real32 result = (1 - t) * a + t * b;
   return result;

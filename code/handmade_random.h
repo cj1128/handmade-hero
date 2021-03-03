@@ -850,7 +850,7 @@ RandomBilateral(random_series *series) {
 
 inline real32
 RandomBetween(random_series *series, real32 min, real32 max) {
-  real32 result = Lerp(RandomUnilateral(series), min, max);
+  real32 result = Lerp(min, RandomUnilateral(series), max);
   return result;
 }
 

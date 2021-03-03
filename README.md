@@ -189,6 +189,7 @@ Check day 83 for more details.
 - [Day 90: Bases Part 1](#day-90-bases-part-1)
 - [Day 91: Bases Part 2](#day-91-bases-part-2)
 - [Day 92: Filling Rotated and Scaled Rectangles](#day-92-filling-rotated-and-scaled-rectangles)
+- [Day 93: Textured Quadrilaterals](#day-93-textured-quadrilaterals)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -976,6 +977,17 @@ To-do list:
   - Move to a rotated rectangle
   - Calculate the min/max bound rather than always check the whole buffer
   - Define `Perp` function
+
+### Day 93: Textured Quadrilaterals
+
+- Implement a textured quadrilaterals
+  - For each pixel, calculate the `u` and `v` uniform coordinate
+  - Use `u` and `v` to get color from texture
+  - Populate pixel with that color
+  - Implement alpha blending, just copy the old code
+- Subpixel rendering
+  - Casey demonstrates wiggling
+  - And then solve it by **Bilinear Texture Filtering**
 
 ## TODO
 

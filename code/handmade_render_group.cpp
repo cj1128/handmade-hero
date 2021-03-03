@@ -146,17 +146,31 @@ DrawMatte(loaded_bitmap *buffer,
   }
 }
 
+inline v4
+Uint32ToV4Color(uint32 color)
+{
+  v4 result = { (real32)((color >> 16) & 0xff),
+    (real32)((color >> 8) & 0xff),
+    (real32)((color >> 0) & 0xff),
+    (real32)((color >> 24) & 0xff) };
+  return result;
+}
+
 // exclusive
 internal void
 DrawRectangleSlowly(loaded_bitmap *buffer,
   v2 origin,
   v2 xAxis,
   v2 yAxis,
-  v4 color)
+  v4 color,
+  loaded_bitmap *texture)
 {
   uint32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
     | (RoundReal32ToUint32(color.g * 255.0f) << 8)
     | RoundReal32ToUint32(color.b * 255.0f);
+
+  real32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
+  real32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
 
   int32 maxWidth = buffer->width - 1;
   int32 maxHeight = buffer->height - 1;
@@ -186,6 +200,19 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
     }
   }
 
+  if(minX < 0) {
+    minX = 0;
+  }
+  if(minY < 0) {
+    minY = 0;
+  }
+  if(maxX > maxWidth) {
+    maxX = maxWidth;
+  }
+  if(maxY > maxHeight) {
+    maxY = maxHeight;
+  }
+
   uint8 *row = (uint8 *)buffer->memory + minY * buffer->pitch + minX * 4;
 
   for(int y = minY; y <= maxY; y++) {
@@ -193,14 +220,80 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
     for(int x = minX; x <= maxX; x++) {
       v2 p = V2(x, y);
-      real32 edgeTop = Inner(Perp(xAxis), p - (origin + yAxis));
-      real32 edgeBottom = Inner(-Perp(xAxis), p - origin);
-      real32 edgeLeft = Inner(Perp(yAxis), p - origin);
-      real32 edgeRight = Inner(-Perp(yAxis), p - (origin + xAxis));
+      v2 d = p - origin;
+
+      real32 edgeTop = Inner(Perp(xAxis), d - yAxis);
+      real32 edgeBottom = Inner(-Perp(xAxis), d);
+      real32 edgeLeft = Inner(Perp(yAxis), d);
+      real32 edgeRight = Inner(-Perp(yAxis), d - xAxis);
 
       if((edgeTop < 0) && (edgeBottom < 0) && (edgeLeft < 0)
         && (edgeRight < 0)) {
-        *pixel = c;
+        real32 u = Inner(d, xAxis) * invXAxisLengthSq;
+        real32 v = Inner(d, yAxis) * invYAxisLengthSq;
+
+        // real32 epsilon = 1.0f;
+        Assert(u >= 0.0f && u <= 1.0f);
+        Assert(v >= 0.0f && v <= 1.0f);
+
+        // TODO: SSE clamping
+        real32 tPx = u * (real32)(texture->width - 2);
+        real32 tPy = v * (real32)(texture->height - 2);
+
+        int32 tx = (int32)tPx;
+        int32 ty = (int32)tPy;
+
+        real32 fx = tPx - (real32)tx;
+        real32 fy = tPy - (real32)ty;
+
+        Assert(tx >= 0 && tx < texture->width - 1);
+        Assert(ty >= 0 && ty < texture->height - 1);
+
+        uint8 *texelPtr
+          = (uint8 *)(texture->memory) + ty * texture->pitch + tx * 4;
+
+        uint32 texelAValue = *((uint32 *)texelPtr);
+        uint32 texelBValue = *((uint32 *)(texelPtr + 4));
+        uint32 texelCValue = *((uint32 *)(texelPtr + texture->pitch));
+        uint32 texelDValue = *((uint32 *)(texelPtr + texture->pitch + 4));
+
+        v4 texelA = Uint32ToV4Color(texelAValue);
+        v4 texelB = Uint32ToV4Color(texelBValue);
+        v4 texelC = Uint32ToV4Color(texelCValue);
+        v4 texelD = Uint32ToV4Color(texelDValue);
+
+#if 1
+        // Bilinear texture filtering
+        v4 texel = Lerp(Lerp(texelA, fx, texelB), fy, Lerp(texelC, fx, texelD));
+#else
+        v4 texel = Uint32ToV4Color(texelAValue);
+#endif
+
+        real32 cAlpha = color.a;
+
+        real32 sA = texel.a;
+        real32 sR = texel.r;
+        real32 sG = texel.g;
+        real32 sB = texel.b;
+        real32 rSA = sA / 255.0f * cAlpha;
+
+        real32 dA = (real32)((*pixel >> 24) & 0xff);
+        real32 dR = (real32)((*pixel >> 16) & 0xff);
+        real32 dG = (real32)((*pixel >> 8) & 0xff);
+        real32 dB = (real32)((*pixel >> 0) & 0xff);
+        real32 rDA = dA / 255.0f;
+
+        real32 a = 255.0f * (rSA + rDA - rSA * rDA);
+        real32 r = sR + (1 - rSA) * dR;
+        real32 g = sG + (1 - rSA) * dG;
+        real32 b = sB + (1 - rSA) * dB;
+
+        // clang-format off
+      *pixel = ((uint32)(a + 0.5f) << 24) |
+        ((uint32)(r + 0.5f) << 16) |
+        ((uint32)(g + 0.5f) << 8) |
+        ((uint32)(b + 0.5f));
+        // clang-format on
       }
 
       pixel++;
@@ -473,7 +566,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->origin,
           entry->xAxis,
           entry->yAxis,
-          V4(1, 0, 1, 1));
+          V4(1, 0, 1, 1),
+          entry->texture);
 
         v2 dim = V2(2, 2);
         v2 p = entry->origin;

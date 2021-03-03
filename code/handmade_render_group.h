@@ -22,6 +22,7 @@ struct render_entry_coordinate_system {
   v2 xAxis;
   v2 yAxis;
   v4 color;
+  loaded_bitmap *texture;
   v2 points[16];
 };
 

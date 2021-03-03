@@ -263,8 +263,7 @@ ProcessPixelWithMask(uint32 Pixel, uint32 Mask)
 }
 
 // this is not a compelete BMP loading procedure
-// we just need to load sutff from ourself's
-// pixels from bottom to top
+// pixels are from bottom to top
 internal loaded_bitmap
 LoadBMP(thread_context *thread,
   debug_platform_read_file ReadFile,
@@ -308,6 +307,7 @@ LoadBMP(thread_context *thread,
         real32 a = (real32)((c & header->alphaMask) >> alphaShift);
         real32 ra = a / 255.0f;
 
+        // NOTE(cj): we are using *premultiplied alpha* here
         real32 r = ra * (real32)((c & header->redMask) >> redShift);
         real32 g = ra * (real32)((c & header->greenMask) >> greenShift);
         real32 b = ra * (real32)((c & header->blueMask) >> blueShift);
@@ -1106,11 +1106,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static real32 angle = 0;
   angle += input->dt;
-  v2 origin = ScreenCenter;
-  v2 xAxis = 80.0f * V2(Cos(angle), Sin(angle));
-  v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
+  // v2 xAxis = 160.0f * V2(Cos(angle), Sin(angle));
+  v2 xAxis = V2(300, 0);
+  // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
+  v2 yAxis = Perp(xAxis);
+  v2 origin
+    = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis;
   render_entry_coordinate_system *c
     = CoordinateSystem(renderGroup, origin, xAxis, yAxis, V4(1, 1, 0, 1));
+  c->texture = &state->tree;
 
   uint32 pointIndex = 0;
   for(real32 y = 0.0f; y < 1.0f; y += 0.25) {
