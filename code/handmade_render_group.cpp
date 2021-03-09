@@ -147,12 +147,35 @@ DrawMatte(loaded_bitmap *buffer,
 }
 
 inline v4
-Uint32ToV4Color(uint32 color)
+Uint32ToSRGB255(uint32 color)
 {
   v4 result = { (real32)((color >> 16) & 0xff),
     (real32)((color >> 8) & 0xff),
     (real32)((color >> 0) & 0xff),
     (real32)((color >> 24) & 0xff) };
+  return result;
+}
+
+inline v4
+SRGB255ToLinear1(v4 color)
+{
+  v4 result = {};
+  real32 inv255 = 1.0f / 255.0f;
+  result.r = Square(color.r * inv255);
+  result.g = Square(color.g * inv255);
+  result.b = Square(color.b * inv255);
+  result.a = color.a * inv255;
+  return result;
+}
+
+inline v4
+Linear1ToSRGB255(v4 color)
+{
+  v4 result = {};
+  result.r = 255.0f * SquareRoot(color.r);
+  result.g = 255.0f * SquareRoot(color.g);
+  result.b = 255.0f * SquareRoot(color.b);
+  result.a = 255.0f * color.a;
   return result;
 }
 
@@ -257,42 +280,54 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         uint32 texelCValue = *((uint32 *)(texelPtr + texture->pitch));
         uint32 texelDValue = *((uint32 *)(texelPtr + texture->pitch + 4));
 
-        v4 texelA = Uint32ToV4Color(texelAValue);
-        v4 texelB = Uint32ToV4Color(texelBValue);
-        v4 texelC = Uint32ToV4Color(texelCValue);
-        v4 texelD = Uint32ToV4Color(texelDValue);
+        v4 texelA = Uint32ToSRGB255(texelAValue);
+        texelA = SRGB255ToLinear1(texelA);
+
+        v4 texelB = Uint32ToSRGB255(texelBValue);
+        texelB = SRGB255ToLinear1(texelB);
+
+        v4 texelC = Uint32ToSRGB255(texelCValue);
+        texelC = SRGB255ToLinear1(texelC);
+
+        v4 texelD = Uint32ToSRGB255(texelDValue);
+        texelD = SRGB255ToLinear1(texelD);
 
 #if 1
         // Bilinear texture filtering
         v4 texel = Lerp(Lerp(texelA, fx, texelB), fy, Lerp(texelC, fx, texelD));
 #else
-        v4 texel = Uint32ToV4Color(texelAValue);
+        v4 texel = texelA;
 #endif
 
-        real32 cAlpha = color.a;
+        v4 dest = Uint32ToSRGB255(*pixel);
+        dest = SRGB255ToLinear1(dest);
 
         real32 sA = texel.a;
         real32 sR = texel.r;
         real32 sG = texel.g;
         real32 sB = texel.b;
-        real32 rSA = sA / 255.0f * cAlpha;
+        real32 rSA = color.a * sA;
 
-        real32 dA = (real32)((*pixel >> 24) & 0xff);
-        real32 dR = (real32)((*pixel >> 16) & 0xff);
-        real32 dG = (real32)((*pixel >> 8) & 0xff);
-        real32 dB = (real32)((*pixel >> 0) & 0xff);
-        real32 rDA = dA / 255.0f;
+        real32 dA = dest.a;
+        real32 dR = dest.r;
+        real32 dG = dest.g;
+        real32 dB = dest.b;
+        real32 rDA = dest.a;
 
-        real32 a = 255.0f * (rSA + rDA - rSA * rDA);
-        real32 r = sR + (1 - rSA) * dR;
-        real32 g = sG + (1 - rSA) * dG;
-        real32 b = sB + (1 - rSA) * dB;
+        v4 blended = {
+          color.a * color.r * sR + (1 - rSA) * dR,
+          color.a * color.g * sG + (1 - rSA) * dG,
+          color.a * color.b * sB + (1 - rSA) * dB,
+          rSA + rDA - rSA * rDA,
+        };
+
+        blended = Linear1ToSRGB255(blended);
 
         // clang-format off
-      *pixel = ((uint32)(a + 0.5f) << 24) |
-        ((uint32)(r + 0.5f) << 16) |
-        ((uint32)(g + 0.5f) << 8) |
-        ((uint32)(b + 0.5f));
+      *pixel = ((uint32)(blended.a + 0.5f) << 24) |
+        ((uint32)(blended.r + 0.5f) << 16) |
+        ((uint32)(blended.g + 0.5f) << 8) |
+        ((uint32)(blended.b + 0.5f));
         // clang-format on
       }
 
@@ -566,7 +601,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->origin,
           entry->xAxis,
           entry->yAxis,
-          V4(1, 0, 1, 1),
+          entry->color,
           entry->texture);
 
         v2 dim = V2(2, 2);

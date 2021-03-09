@@ -14,11 +14,11 @@ If you think __writing a professional-quality game from scratch on your own (no 
 
 In my opinion, it's **the best** I can find.
 
-## Current
+## Showcase
+
+### Day 85
 
 ![](./day85.gif)
-
-Recorded from day 85:
 
 - We can jump 😉
 - We can shoot 🔫
@@ -190,6 +190,7 @@ Check day 83 for more details.
 - [Day 91: Bases Part 2](#day-91-bases-part-2)
 - [Day 92: Filling Rotated and Scaled Rectangles](#day-92-filling-rotated-and-scaled-rectangles)
 - [Day 93: Textured Quadrilaterals](#day-93-textured-quadrilaterals)
+- [Day 94: Converting sRGB to Light-linear Space](#day-94-converting-srgb-to-light-linear-space)
 - [TODO](#todo)
 
 <!-- /MarkdownTOC -->
@@ -988,6 +989,19 @@ To-do list:
 - Subpixel rendering
   - Casey demonstrates wiggling
   - And then solve it by **Bilinear Texture Filtering**
+
+### Day 94: Converting sRGB to Light-linear Space
+
+- Casey explains what _Gamma Space_ is
+  - It's non linear and it makes our math broken
+- RESOURCE
+  - [Linear-Space Lighting (i.e. Gamma)](http://wiki.polycount.com/w/images/0/0e/John_Hable_-_Linear-Space_Lighting_%28i.e._Gamma%29.pdf)
+  - [Lighting Shading by John Hable](https://www.slideshare.net/naughty_dog/lighting-shading-by-john-hable)
+- Use `pow(2.2)` and `sqrt(2.2)` to convert between sRGB and linear space
+  - `pow(2.2)` is just a good approximation, is **not** suitable for all monitors
+  - We use `pow(2)` to approximate `pow(2.2)` because it's much more cheaper
+- Implement `SRGB255ToLinear1` and `Linear1ToSRGB255`
+- Implement a simple color tint
 
 ## TODO
 

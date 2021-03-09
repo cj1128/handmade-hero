@@ -1105,15 +1105,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static real32 angle = 0;
-  angle += input->dt;
-  // v2 xAxis = 160.0f * V2(Cos(angle), Sin(angle));
-  v2 xAxis = V2(300, 0);
+  angle += 0.4f * input->dt;
+  v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
+  // v2 xAxis = V2(300, 0);
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
   v2 yAxis = Perp(xAxis);
   v2 origin
     = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis;
+  v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
+    0.5f + 0.5f * Sin(8.0f * angle),
+    0.5f + 0.5f * Cos(5.0f * angle),
+    0.5f + 0.5f * Cos(10.0f * angle) };
   render_entry_coordinate_system *c
-    = CoordinateSystem(renderGroup, origin, xAxis, yAxis, V4(1, 1, 0, 1));
+    = CoordinateSystem(renderGroup, origin, xAxis, yAxis, color);
   c->texture = &state->tree;
 
   uint32 pointIndex = 0;
