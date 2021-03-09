@@ -1,7 +1,6 @@
 #ifndef WIN32_HANDMADE_H
 
-struct win32_offscreen_buffer
-{
+struct win32_offscreen_buffer {
   // Pixels are alwasy 32-bits wide, memory Order BB GG RR XX, 0xXXRRGGBB
   BITMAPINFO info;
   void *memory;
@@ -11,19 +10,18 @@ struct win32_offscreen_buffer
   int bytesPerPixel;
 };
 
-struct win32_window_dimension
-{
+struct win32_window_dimension {
   int width;
   int height;
 };
 
 struct win32_sound_output {
-  int32 samplesPerSecond;
-  int32 bytesPerSample;
+  i32 samplesPerSecond;
+  i32 bytesPerSample;
   DWORD bufferSize;
-  int32 safetyBytes;
-  int16 toneVolume;
-  uint32 runningSampleIndex;
+  i32 safetyBytes;
+  i16 toneVolume;
+  u32 runningSampleIndex;
 };
 
 struct win32_debug_sound_marker {
@@ -38,7 +36,7 @@ struct win32_debug_sound_marker {
 
 struct win32_game_code {
   HMODULE gameDLL;
-  FILETIME  gameDLLLastWriteTime;
+  FILETIME gameDLLLastWriteTime;
   bool32 isValid;
   game_update_video *gameUpdateVideo;
   game_update_audio *gameUpdateAudio;
@@ -58,7 +56,7 @@ struct win32_state {
   win32_replay_buffer replayBuffers[4];
 
   void *gameMemory;
-  uint64 memorySize;
+  u64 memorySize;
 
   char exePath[WIN32_MAX_PATH];
   int exeDirLength;

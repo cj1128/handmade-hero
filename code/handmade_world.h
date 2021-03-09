@@ -6,14 +6,14 @@
 struct stored_entity;
 struct entity_block {
   stored_entity *entities[16];
-  uint32 entityCount;
+  u32 entityCount;
   entity_block *next;
 };
 
 struct world_chunk {
-  int32 chunkX;
-  int32 chunkY;
-  int32 chunkZ;
+  i32 chunkX;
+  i32 chunkY;
+  i32 chunkZ;
 
   entity_block entityBlock;
 
@@ -21,17 +21,16 @@ struct world_chunk {
 };
 
 struct world_position {
-  int32 chunkX;
-  int32 chunkY;
-  int32 chunkZ;
+  i32 chunkX;
+  i32 chunkY;
+  i32 chunkZ;
 
   // relative to the center
   v3 offset;
 };
 
 struct game_world {
-  // real32 tileSizeInMeters;
-  real32 typicalFloorHeight;
+  f32 typicalFloorHeight;
   v3 chunkDimInMeters;
 
   entity_block *firstFree;

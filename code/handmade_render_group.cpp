@@ -2,19 +2,19 @@ internal void
 DrawBitmap(loaded_bitmap *buffer,
   loaded_bitmap *bitmap,
   v2 minCorner,
-  real32 cAlpha = 1.0f)
+  f32 cAlpha = 1.0f)
 {
-  int32 minX = RoundReal32ToInt32(minCorner.x);
-  int32 minY = RoundReal32ToInt32(minCorner.y);
-  int32 maxX = minX + bitmap->width;
-  int32 maxY = minY + bitmap->height;
+  i32 minX = RoundReal32ToInt32(minCorner.x);
+  i32 minY = RoundReal32ToInt32(minCorner.y);
+  i32 maxX = minX + bitmap->width;
+  i32 maxY = minY + bitmap->height;
 
-  int32 clipX = 0;
+  i32 clipX = 0;
   if(minX < 0) {
     clipX = -minX;
     minX = 0;
   }
-  int32 clipY = 0;
+  i32 clipY = 0;
   if(minY < 0) {
     clipY = -minY;
     minY = 0;
@@ -26,40 +26,40 @@ DrawBitmap(loaded_bitmap *buffer,
     maxY = buffer->height;
   }
 
-  uint8 *sourceRow
-    = (uint8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
-  uint8 *destRow
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
+  u8 *sourceRow
+    = (u8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
+  u8 *destRow
+    = (u8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
 
   for(int y = minY; y < maxY; y++) {
-    uint32 *source = (uint32 *)sourceRow;
-    uint32 *dest = (uint32 *)destRow;
+    u32 *source = (u32 *)sourceRow;
+    u32 *dest = (u32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      real32 sA = (real32)((*source >> 24) & 0xff);
-      real32 sR = cAlpha * (real32)((*source >> 16) & 0xff);
-      real32 sG = cAlpha * (real32)((*source >> 8) & 0xff);
-      real32 sB = cAlpha * (real32)((*source >> 0) & 0xff);
+      f32 sA = (f32)((*source >> 24) & 0xff);
+      f32 sR = cAlpha * (f32)((*source >> 16) & 0xff);
+      f32 sG = cAlpha * (f32)((*source >> 8) & 0xff);
+      f32 sB = cAlpha * (f32)((*source >> 0) & 0xff);
 
-      real32 rSA = sA / 255.0f * cAlpha;
+      f32 rSA = sA / 255.0f * cAlpha;
 
-      real32 dA = (real32)((*dest >> 24) & 0xff);
-      real32 dR = (real32)((*dest >> 16) & 0xff);
-      real32 dG = (real32)((*dest >> 8) & 0xff);
-      real32 dB = (real32)((*dest >> 0) & 0xff);
+      f32 dA = (f32)((*dest >> 24) & 0xff);
+      f32 dR = (f32)((*dest >> 16) & 0xff);
+      f32 dG = (f32)((*dest >> 8) & 0xff);
+      f32 dB = (f32)((*dest >> 0) & 0xff);
 
-      real32 rDA = dA / 255.0f;
+      f32 rDA = dA / 255.0f;
 
-      real32 a = 255.0f * (rSA + rDA - rSA * rDA);
-      real32 r = sR + (1 - rSA) * dR;
-      real32 g = sG + (1 - rSA) * dG;
-      real32 b = sB + (1 - rSA) * dB;
+      f32 a = 255.0f * (rSA + rDA - rSA * rDA);
+      f32 r = sR + (1 - rSA) * dR;
+      f32 g = sG + (1 - rSA) * dG;
+      f32 b = sB + (1 - rSA) * dB;
 
       // clang-format off
-      *dest = ((uint32)(a + 0.5f) << 24) |
-        ((uint32)(r + 0.5f) << 16) |
-        ((uint32)(g + 0.5f) << 8) |
-        ((uint32)(b + 0.5f));
+      *dest = ((u32)(a + 0.5f) << 24) |
+        ((u32)(r + 0.5f) << 16) |
+        ((u32)(g + 0.5f) << 8) |
+        ((u32)(b + 0.5f));
       // clang-format on
 
       dest++;
@@ -75,19 +75,19 @@ internal void
 DrawMatte(loaded_bitmap *buffer,
   loaded_bitmap *bitmap,
   v2 minCorner,
-  real32 cAlpha = 1.0f)
+  f32 cAlpha = 1.0f)
 {
-  int32 minX = RoundReal32ToInt32(minCorner.x);
-  int32 minY = RoundReal32ToInt32(minCorner.y);
-  int32 maxX = minX + bitmap->width;
-  int32 maxY = minY + bitmap->height;
+  i32 minX = RoundReal32ToInt32(minCorner.x);
+  i32 minY = RoundReal32ToInt32(minCorner.y);
+  i32 maxX = minX + bitmap->width;
+  i32 maxY = minY + bitmap->height;
 
-  int32 clipX = 0;
+  i32 clipX = 0;
   if(minX < 0) {
     clipX = -minX;
     minX = 0;
   }
-  int32 clipY = 0;
+  i32 clipY = 0;
   if(minY < 0) {
     clipY = -minY;
     minY = 0;
@@ -99,42 +99,42 @@ DrawMatte(loaded_bitmap *buffer,
     maxY = buffer->height;
   }
 
-  uint8 *sourceRow
-    = (uint8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
-  uint8 *destRow
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
+  u8 *sourceRow
+    = (u8 *)bitmap->memory + clipY * bitmap->pitch + clipX * BYTES_PER_PIXEL;
+  u8 *destRow
+    = (u8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
 
   for(int y = minY; y < maxY; y++) {
-    uint32 *source = (uint32 *)sourceRow;
-    uint32 *dest = (uint32 *)destRow;
+    u32 *source = (u32 *)sourceRow;
+    u32 *dest = (u32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      real32 sA = (real32)((*source >> 24) & 0xff);
-      real32 sR = cAlpha * (real32)((*source >> 16) & 0xff);
-      real32 sG = cAlpha * (real32)((*source >> 8) & 0xff);
-      real32 sB = cAlpha * (real32)((*source >> 0) & 0xff);
+      f32 sA = (f32)((*source >> 24) & 0xff);
+      f32 sR = cAlpha * (f32)((*source >> 16) & 0xff);
+      f32 sG = cAlpha * (f32)((*source >> 8) & 0xff);
+      f32 sB = cAlpha * (f32)((*source >> 0) & 0xff);
 
-      real32 rSA = sA / 255.0f * cAlpha;
+      f32 rSA = sA / 255.0f * cAlpha;
 
-      real32 dA = (real32)((*dest >> 24) & 0xff);
-      real32 dR = (real32)((*dest >> 16) & 0xff);
-      real32 dG = (real32)((*dest >> 8) & 0xff);
-      real32 dB = (real32)((*dest >> 0) & 0xff);
+      f32 dA = (f32)((*dest >> 24) & 0xff);
+      f32 dR = (f32)((*dest >> 16) & 0xff);
+      f32 dG = (f32)((*dest >> 8) & 0xff);
+      f32 dB = (f32)((*dest >> 0) & 0xff);
 
-      real32 rDA = dA / 255.0f;
+      f32 rDA = dA / 255.0f;
 
-      real32 invRSA = 1 - rSA;
+      f32 invRSA = 1 - rSA;
 
-      real32 a = invRSA * dA;
-      real32 r = invRSA * dR;
-      real32 g = invRSA * dG;
-      real32 b = invRSA * dB;
+      f32 a = invRSA * dA;
+      f32 r = invRSA * dR;
+      f32 g = invRSA * dG;
+      f32 b = invRSA * dB;
 
       // clang-format off
-      *dest = ((uint32)(a + 0.5f) << 24) |
-        ((uint32)(r + 0.5f) << 16) |
-        ((uint32)(g + 0.5f) << 8) |
-        ((uint32)(b + 0.5f));
+      *dest = ((u32)(a + 0.5f) << 24) |
+        ((u32)(r + 0.5f) << 16) |
+        ((u32)(g + 0.5f) << 8) |
+        ((u32)(b + 0.5f));
       // clang-format on
 
       dest++;
@@ -147,12 +147,12 @@ DrawMatte(loaded_bitmap *buffer,
 }
 
 inline v4
-Uint32ToSRGB255(uint32 color)
+Uint32ToSRGB255(u32 color)
 {
-  v4 result = { (real32)((color >> 16) & 0xff),
-    (real32)((color >> 8) & 0xff),
-    (real32)((color >> 0) & 0xff),
-    (real32)((color >> 24) & 0xff) };
+  v4 result = { (f32)((color >> 16) & 0xff),
+    (f32)((color >> 8) & 0xff),
+    (f32)((color >> 0) & 0xff),
+    (f32)((color >> 24) & 0xff) };
   return result;
 }
 
@@ -160,7 +160,7 @@ inline v4
 SRGB255ToLinear1(v4 color)
 {
   v4 result = {};
-  real32 inv255 = 1.0f / 255.0f;
+  f32 inv255 = 1.0f / 255.0f;
   result.r = Square(color.r * inv255);
   result.g = Square(color.g * inv255);
   result.b = Square(color.b * inv255);
@@ -188,26 +188,26 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   v4 color,
   loaded_bitmap *texture)
 {
-  uint32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
+  u32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
     | (RoundReal32ToUint32(color.g * 255.0f) << 8)
     | RoundReal32ToUint32(color.b * 255.0f);
 
-  real32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
-  real32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
+  f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
+  f32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
 
-  int32 maxWidth = buffer->width - 1;
-  int32 maxHeight = buffer->height - 1;
+  i32 maxWidth = buffer->width - 1;
+  i32 maxHeight = buffer->height - 1;
 
-  int32 minX = maxWidth;
-  int32 minY = maxHeight;
-  int32 maxX = 0;
-  int32 maxY = 0;
+  i32 minX = maxWidth;
+  i32 minY = maxHeight;
+  i32 maxX = 0;
+  i32 maxY = 0;
 
   v2 ps[4] = { origin, origin + xAxis, origin + yAxis, origin + xAxis + yAxis };
   for(int pIndex = 0; pIndex < ArrayCount(ps); pIndex++) {
     v2 p = ps[pIndex];
-    int32 floorX = FloorReal32ToInt32(p.x);
-    int32 floorY = FloorReal32ToInt32(p.y);
+    i32 floorX = FloorReal32ToInt32(p.x);
+    i32 floorY = FloorReal32ToInt32(p.y);
 
     if(minX > floorX) {
       minX = floorX;
@@ -236,49 +236,48 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
     maxY = maxHeight;
   }
 
-  uint8 *row = (uint8 *)buffer->memory + minY * buffer->pitch + minX * 4;
+  u8 *row = (u8 *)buffer->memory + minY * buffer->pitch + minX * 4;
 
   for(int y = minY; y <= maxY; y++) {
-    uint32 *pixel = (uint32 *)row;
+    u32 *pixel = (u32 *)row;
 
     for(int x = minX; x <= maxX; x++) {
       v2 p = V2(x, y);
       v2 d = p - origin;
 
-      real32 edgeTop = Inner(Perp(xAxis), d - yAxis);
-      real32 edgeBottom = Inner(-Perp(xAxis), d);
-      real32 edgeLeft = Inner(Perp(yAxis), d);
-      real32 edgeRight = Inner(-Perp(yAxis), d - xAxis);
+      f32 edgeTop = Inner(Perp(xAxis), d - yAxis);
+      f32 edgeBottom = Inner(-Perp(xAxis), d);
+      f32 edgeLeft = Inner(Perp(yAxis), d);
+      f32 edgeRight = Inner(-Perp(yAxis), d - xAxis);
 
       if((edgeTop < 0) && (edgeBottom < 0) && (edgeLeft < 0)
         && (edgeRight < 0)) {
-        real32 u = Inner(d, xAxis) * invXAxisLengthSq;
-        real32 v = Inner(d, yAxis) * invYAxisLengthSq;
+        f32 u = Inner(d, xAxis) * invXAxisLengthSq;
+        f32 v = Inner(d, yAxis) * invYAxisLengthSq;
 
-        // real32 epsilon = 1.0f;
+        // f32 epsilon = 1.0f;
         Assert(u >= 0.0f && u <= 1.0f);
         Assert(v >= 0.0f && v <= 1.0f);
 
         // TODO: SSE clamping
-        real32 tPx = u * (real32)(texture->width - 2);
-        real32 tPy = v * (real32)(texture->height - 2);
+        f32 tPx = u * (f32)(texture->width - 2);
+        f32 tPy = v * (f32)(texture->height - 2);
 
-        int32 tx = (int32)tPx;
-        int32 ty = (int32)tPy;
+        i32 tx = (i32)tPx;
+        i32 ty = (i32)tPy;
 
-        real32 fx = tPx - (real32)tx;
-        real32 fy = tPy - (real32)ty;
+        f32 fx = tPx - (f32)tx;
+        f32 fy = tPy - (f32)ty;
 
         Assert(tx >= 0 && tx < texture->width - 1);
         Assert(ty >= 0 && ty < texture->height - 1);
 
-        uint8 *texelPtr
-          = (uint8 *)(texture->memory) + ty * texture->pitch + tx * 4;
+        u8 *texelPtr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
 
-        uint32 texelAValue = *((uint32 *)texelPtr);
-        uint32 texelBValue = *((uint32 *)(texelPtr + 4));
-        uint32 texelCValue = *((uint32 *)(texelPtr + texture->pitch));
-        uint32 texelDValue = *((uint32 *)(texelPtr + texture->pitch + 4));
+        u32 texelAValue = *((u32 *)texelPtr);
+        u32 texelBValue = *((u32 *)(texelPtr + 4));
+        u32 texelCValue = *((u32 *)(texelPtr + texture->pitch));
+        u32 texelDValue = *((u32 *)(texelPtr + texture->pitch + 4));
 
         v4 texelA = Uint32ToSRGB255(texelAValue);
         texelA = SRGB255ToLinear1(texelA);
@@ -302,17 +301,17 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         v4 dest = Uint32ToSRGB255(*pixel);
         dest = SRGB255ToLinear1(dest);
 
-        real32 sA = texel.a;
-        real32 sR = texel.r;
-        real32 sG = texel.g;
-        real32 sB = texel.b;
-        real32 rSA = color.a * sA;
+        f32 sA = texel.a;
+        f32 sR = texel.r;
+        f32 sG = texel.g;
+        f32 sB = texel.b;
+        f32 rSA = color.a * sA;
 
-        real32 dA = dest.a;
-        real32 dR = dest.r;
-        real32 dG = dest.g;
-        real32 dB = dest.b;
-        real32 rDA = dest.a;
+        f32 dA = dest.a;
+        f32 dR = dest.r;
+        f32 dG = dest.g;
+        f32 dB = dest.b;
+        f32 rDA = dest.a;
 
         v4 blended = {
           color.a * color.r * sR + (1 - rSA) * dR,
@@ -324,10 +323,10 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         blended = Linear1ToSRGB255(blended);
 
         // clang-format off
-      *pixel = ((uint32)(blended.a + 0.5f) << 24) |
-        ((uint32)(blended.r + 0.5f) << 16) |
-        ((uint32)(blended.g + 0.5f) << 8) |
-        ((uint32)(blended.b + 0.5f));
+      *pixel = ((u32)(blended.a + 0.5f) << 24) |
+        ((u32)(blended.r + 0.5f) << 16) |
+        ((u32)(blended.g + 0.5f) << 8) |
+        ((u32)(blended.b + 0.5f));
         // clang-format on
       }
 
@@ -342,10 +341,10 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 internal void
 DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 {
-  int32 minX = RoundReal32ToInt32(min.x);
-  int32 minY = RoundReal32ToInt32(min.y);
-  int32 maxX = RoundReal32ToInt32(max.x);
-  int32 maxY = RoundReal32ToInt32(max.y);
+  i32 minX = RoundReal32ToInt32(min.x);
+  i32 minY = RoundReal32ToInt32(min.y);
+  i32 maxX = RoundReal32ToInt32(max.x);
+  i32 maxY = RoundReal32ToInt32(max.y);
 
   if(minX < 0) {
     minX = 0;
@@ -360,15 +359,15 @@ DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
     maxY = buffer->height;
   }
 
-  uint32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
+  u32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
     | (RoundReal32ToUint32(color.g * 255.0f) << 8)
     | RoundReal32ToUint32(color.b * 255.0f);
 
-  uint8 *row
-    = (uint8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
+  u8 *row
+    = (u8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
 
   for(int y = minY; y < maxY; y++) {
-    uint32 *Pixel = (uint32 *)row;
+    u32 *Pixel = (u32 *)row;
     for(int x = minX; x < maxX; x++) {
       *Pixel++ = c;
     }
@@ -380,7 +379,7 @@ DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 internal void
 DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 {
-  real32 r = 2;
+  f32 r = 2;
 
   // top and bottom
   DrawRectangle(buffer,
@@ -405,8 +404,8 @@ DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 
 internal render_group *
 AllocateRenderGroup(memory_arena *arena,
-  uint32 maxPushBufferSize,
-  real32 metersToPixels)
+  u32 maxPushBufferSize,
+  f32 metersToPixels)
 {
   render_group *result = PushStruct(arena, render_group);
   render_basis *defaultBasis = PushStruct(arena, render_basis);
@@ -418,7 +417,7 @@ AllocateRenderGroup(memory_arena *arena,
 
   result->maxPushBufferSize = maxPushBufferSize;
   result->pushBufferSize = 0;
-  result->pushBufferBase = (uint8 *)PushSize(arena, maxPushBufferSize);
+  result->pushBufferBase = (u8 *)PushSize(arena, maxPushBufferSize);
 
   return result;
 }
@@ -427,7 +426,7 @@ AllocateRenderGroup(memory_arena *arena,
   (type *)_PushRenderElement(group, sizeof(type), RenderEntryType_##type)
 
 internal void *
-_PushRenderElement(render_group *group, uint32 size, render_entry_type type)
+_PushRenderElement(render_group *group, u32 size, render_entry_type type)
 {
   Assert(group->pushBufferSize + size <= group->maxPushBufferSize);
 
@@ -446,8 +445,8 @@ PushBitmap(render_group *group,
   loaded_bitmap *bitmap,
   v2 offset,
   v2 align,
-  real32 entityZC = 1.0f,
-  real32 alpha = 1.0f)
+  f32 entityZC = 1.0f,
+  f32 alpha = 1.0f)
 {
   render_entry_bitmap *entry = PushRenderElement(group, render_entry_bitmap);
   entry->entityBasis.offset = group->metersToPixels * offset + align;
@@ -485,7 +484,7 @@ PushRect(render_group *group,
   v2 align,
   v2 dim,
   v4 color,
-  real32 entityZC = 0.0f)
+  f32 entityZC = 0.0f)
 {
   render_entry_rectangle *entry
     = PushRenderElement(group, render_entry_rectangle);
@@ -501,7 +500,7 @@ PushRect(render_group *group,
 internal void
 PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v4 color)
 {
-  real32 thickness = 0.1f;
+  f32 thickness = 0.1f;
   v2 halfDim = 0.5f * dim;
   // Top and bottom
   PushRect(group,
@@ -531,11 +530,11 @@ PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v4 color)
 internal v2
 GetEntityMinCorner(render_entity_basis *entityBasis,
   v2 screenCenter,
-  real32 metersToPixels)
+  f32 metersToPixels)
 {
   v3 entityP = entityBasis->basis->p;
-  real32 entityZ = entityP.z;
-  real32 zFudge = 1.0f + 0.1f * entityZ;
+  f32 entityZ = entityP.z;
+  f32 zFudge = 1.0f + 0.1f * entityZ;
 
   v2 min
     = screenCenter + zFudge * entityP.xy * metersToPixels + entityBasis->offset;
@@ -548,11 +547,11 @@ GetEntityMinCorner(render_entity_basis *entityBasis,
 internal void
 RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 {
-  real32 metersToPixels = renderGroup->metersToPixels;
+  f32 metersToPixels = renderGroup->metersToPixels;
   v2 screenCenter
-    = 0.5f * v2{ (real32)outputTarget->width, (real32)outputTarget->height };
+    = 0.5f * v2{ (f32)outputTarget->width, (f32)outputTarget->height };
 
-  for(uint32 baseAddr = 0; baseAddr < renderGroup->pushBufferSize;) {
+  for(u32 baseAddr = 0; baseAddr < renderGroup->pushBufferSize;) {
     render_entry_header *header
       = (render_entry_header *)(renderGroup->pushBufferBase + baseAddr);
 
@@ -563,7 +562,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         DrawRectangle(outputTarget,
           V2(0, 0),
-          V2((real32)outputTarget->width, (real32)outputTarget->height),
+          V2((f32)outputTarget->width, (f32)outputTarget->height),
           entry->color);
       } break;
 
@@ -616,7 +615,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         DrawRectangle(outputTarget, max, max + dim, entry->color);
 #if 0
-        for(uint32 i = 0; i < ArrayCount(entry->points); i++) {
+        for(u32 i = 0; i < ArrayCount(entry->points); i++) {
           v2 p = entry->points[i];
           v2 min = entry->origin + p.x * entry->xAxis + p.y * entry->yAxis;
           DrawRectangle(outputTarget, min, min + dim, entry->color);

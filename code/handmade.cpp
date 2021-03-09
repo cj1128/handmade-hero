@@ -8,17 +8,17 @@
 
 inline world_position
 WorldPositionFromTilePosition(game_world *world,
-  int32 tileX,
-  int32 tileY,
-  int32 tileZ,
+  i32 tileX,
+  i32 tileY,
+  i32 tileZ,
   v3 offset = {})
 {
-  real32 tileSizeInMeters = 1.4f;
+  f32 tileSizeInMeters = 1.4f;
 
   world_position base = {};
   v3 point = Hadamard(
     V3(tileSizeInMeters, tileSizeInMeters, world->typicalFloorHeight),
-    V3((real32)tileX, (real32)tileY, (real32)tileZ));
+    V3((f32)tileX, (f32)tileY, (f32)tileZ));
 
   point += offset;
 
@@ -30,7 +30,7 @@ WorldPositionFromTilePosition(game_world *world,
 }
 
 internal loaded_bitmap
-MakeEmptyBitmap(int32 width, int32 height, void *memory)
+MakeEmptyBitmap(i32 width, i32 height, void *memory)
 {
   loaded_bitmap result = {};
   result.width = width;
@@ -41,13 +41,10 @@ MakeEmptyBitmap(int32 width, int32 height, void *memory)
 }
 
 internal loaded_bitmap
-MakeEmptyBitmap(memory_arena *arena,
-  int32 width,
-  int32 height,
-  bool32 clearToZero)
+MakeEmptyBitmap(memory_arena *arena, i32 width, i32 height, bool32 clearToZero)
 {
   loaded_bitmap result = MakeEmptyBitmap(width, height, NULL);
-  int32 totalMemorySize = width * height * BYTES_PER_PIXEL;
+  i32 totalMemorySize = width * height * BYTES_PER_PIXEL;
   result.memory = PushSize(arena, totalMemorySize);
 
   if(clearToZero) {
@@ -58,7 +55,7 @@ MakeEmptyBitmap(memory_arena *arena,
 }
 
 internal sim_entity_collision_volume_group *
-MakeSimpleCollision(game_state *state, real32 dimX, real32 dimY, real32 dimZ)
+MakeSimpleCollision(game_state *state, f32 dimX, f32 dimY, f32 dimZ)
 {
   memory_arena *arena = &state->worldArena;
   // TODO: Change to using types arena
@@ -104,9 +101,9 @@ AddStoredEntity(game_state *state, entity_type type, world_position p)
 internal stored_entity *
 AddStoredEntity(game_state *state,
   entity_type type,
-  int32 tileX,
-  int32 tileY,
-  int32 tileZ,
+  i32 tileX,
+  i32 tileY,
+  i32 tileZ,
   v3 offset = {})
 {
   world_position p
@@ -136,7 +133,7 @@ InitHitPoints(stored_entity *stored, int value)
 }
 
 internal stored_entity *
-AddStandardRoom(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+AddStandardRoom(game_state *state, i32 tileX, i32 tileY, i32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
@@ -151,7 +148,7 @@ AddStandardRoom(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 }
 
 internal stored_entity *
-AddWall(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+AddWall(game_state *state, i32 tileX, i32 tileY, i32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
@@ -193,7 +190,7 @@ AddHero(game_state *state)
 }
 
 internal void
-AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+AddMonster(game_state *state, i32 tileX, i32 tileY, i32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
@@ -206,7 +203,7 @@ AddMonster(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 }
 
 internal void
-AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+AddStairwell(game_state *state, i32 tileX, i32 tileY, i32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
@@ -217,7 +214,7 @@ AddStairwell(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 }
 
 internal void
-AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
+AddFamiliar(game_state *state, i32 tileX, i32 tileY, i32 tileZ)
 {
   world_position p
     = WorldPositionFromTilePosition(&state->world, tileX, tileY, tileZ);
@@ -232,34 +229,34 @@ AddFamiliar(game_state *state, int32 tileX, int32 tileY, int32 tileZ)
 #pragma pack(push, 1)
 struct bitmap_header {
   char signature[2];
-  uint32 fileSize;
-  uint32 reserved;
-  uint32 dataOffset;
+  u32 fileSize;
+  u32 reserved;
+  u32 dataOffset;
 
-  uint32 size;
-  int32 width;
-  int32 height;
-  uint16 planes;
-  uint16 bitsPerPixel;
-  uint32 compression;
-  uint32 sizeOfBitmap;
-  uint32 horzResolution;
-  uint32 vertResolution;
-  uint32 colorsUsed;
-  uint32 colorsImportant;
-  uint32 redMask;
-  uint32 greenMask;
-  uint32 blueMask;
-  uint32 alphaMask;
+  u32 size;
+  i32 width;
+  i32 height;
+  u16 planes;
+  u16 bitsPerPixel;
+  u32 compression;
+  u32 sizeOfBitmap;
+  u32 horzResolution;
+  u32 vertResolution;
+  u32 colorsUsed;
+  u32 colorsImportant;
+  u32 redMask;
+  u32 greenMask;
+  u32 blueMask;
+  u32 alphaMask;
 };
 #pragma pack(pop)
 
-inline uint8
-ProcessPixelWithMask(uint32 Pixel, uint32 Mask)
+inline u8
+ProcessPixelWithMask(u32 Pixel, u32 Mask)
 {
   bit_scan_result result = FindLeastSignificantSetBit(Mask);
   Assert(result.found);
-  return (uint8)(Pixel >> result.index);
+  return (u8)(Pixel >> result.index);
 }
 
 // this is not a compelete BMP loading procedure
@@ -278,11 +275,11 @@ LoadBMP(thread_context *thread,
     result.height = header->height;
     Assert(header->compression == 3);
 
-    result.memory = (uint32 *)((uint8 *)ReadResult.memory + header->dataOffset);
+    result.memory = (u32 *)((u8 *)ReadResult.memory + header->dataOffset);
 
     // we have to restructure pixels
     // expected byte order: BB GG RR AA, 0xAARRGGBB
-    uint32 *pixel = (uint32 *)result.memory;
+    u32 *pixel = (u32 *)result.memory;
     for(int y = 0; y < header->height; y++) {
       for(int x = 0; x < header->width; x++) {
         bit_scan_result redScan = FindLeastSignificantSetBit(header->redMask);
@@ -297,26 +294,26 @@ LoadBMP(thread_context *thread,
         Assert(blueScan.found);
         Assert(alphaScan.found);
 
-        int32 redShift = (int32)redScan.index;
-        int32 greenShift = (int32)greenScan.index;
-        int32 blueShift = (int32)blueScan.index;
-        int32 alphaShift = (int32)alphaScan.index;
+        i32 redShift = (i32)redScan.index;
+        i32 greenShift = (i32)greenScan.index;
+        i32 blueShift = (i32)blueScan.index;
+        i32 alphaShift = (i32)alphaScan.index;
 
-        uint32 c = *pixel;
+        u32 c = *pixel;
 
-        real32 a = (real32)((c & header->alphaMask) >> alphaShift);
-        real32 ra = a / 255.0f;
+        f32 a = (f32)((c & header->alphaMask) >> alphaShift);
+        f32 ra = a / 255.0f;
 
         // NOTE(cj): we are using *premultiplied alpha* here
-        real32 r = ra * (real32)((c & header->redMask) >> redShift);
-        real32 g = ra * (real32)((c & header->greenMask) >> greenShift);
-        real32 b = ra * (real32)((c & header->blueMask) >> blueShift);
+        f32 r = ra * (f32)((c & header->redMask) >> redShift);
+        f32 g = ra * (f32)((c & header->greenMask) >> greenShift);
+        f32 b = ra * (f32)((c & header->blueMask) >> blueShift);
 
         // clang-format off
-        *pixel++ = ((uint32)(a + 0.5f) << 24) |
-          ((uint32)(r + 0.5f) << 16) |
-          ((uint32)(g + 0.5f) << 8) |
-          ((uint32)(b + 0.5f));
+        *pixel++ = ((u32)(a + 0.5f) << 24) |
+          ((u32)(r + 0.5f) << 16) |
+          ((u32)(g + 0.5f) << 8) |
+          ((u32)(b + 0.5f));
         // clang-format on
       }
     }
@@ -331,7 +328,7 @@ internal void
 InitializeArena(memory_arena *arena, size_t size, void *base)
 {
   arena->size = size;
-  arena->base = (uint8 *)base;
+  arena->base = (u8 *)base;
   arena->used = 0;
 }
 
@@ -357,11 +354,11 @@ FillGroundBuffer(game_state *state,
       random_series series
         = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
 
-      real32 width = (real32)buffer->width;
-      real32 height = (real32)buffer->height;
+      f32 width = (f32)buffer->width;
+      f32 height = (f32)buffer->height;
       v2 chunkOffset = { width * offsetX, height * offsetY };
 
-      for(uint32 i = 0; i < 100; i++) {
+      for(u32 i = 0; i < 100; i++) {
         loaded_bitmap *stamp;
 
         if(RandomChoice(&series, 2)) {
@@ -390,11 +387,11 @@ FillGroundBuffer(game_state *state,
       random_series series
         = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
 
-      real32 width = (real32)buffer->width;
-      real32 height = (real32)buffer->height;
+      f32 width = (f32)buffer->width;
+      f32 height = (f32)buffer->height;
       v2 chunkOffset = { width * offsetX, height * offsetY };
 
-      for(uint32 i = 0; i < 100; i++) {
+      for(u32 i = 0; i < 100; i++) {
         loaded_bitmap *stamp
           = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
@@ -417,10 +414,10 @@ DrawHitPoints(sim_entity *entity, render_group *renderGroup)
 {
   if(entity->hitPointCount > 0) {
     v2 dim = { 0.2f, 0.16f };
-    real32 spanX = 1.5f * dim.x;
-    real32 startX = -0.5f * (entity->hitPointCount - 1) * spanX;
-    real32 startY = -0.75f * entity->collision->totalVolume.dim.y;
-    for(uint32 hitPointIndex = 0; hitPointIndex < entity->hitPointCount;
+    f32 spanX = 1.5f * dim.x;
+    f32 startX = -0.5f * (entity->hitPointCount - 1) * spanX;
+    f32 startY = -0.75f * entity->collision->totalVolume.dim.y;
+    for(u32 hitPointIndex = 0; hitPointIndex < entity->hitPointCount;
         hitPointIndex++) {
       hit_point *hitPoint = entity->hitPoints + hitPointIndex;
       v4 color = V4(0.25f, 0.25f, 0.25f, 1.0f);
@@ -437,9 +434,7 @@ DrawHitPoints(sim_entity *entity, render_group *renderGroup)
 }
 
 internal void
-InitializeWorld(game_world *world,
-  real32 typicalFloorHeight,
-  v3 chunkDimInMeters)
+InitializeWorld(game_world *world, f32 typicalFloorHeight, v3 chunkDimInMeters)
 {
   world->typicalFloorHeight = typicalFloorHeight;
   world->chunkDimInMeters = chunkDimInMeters;
@@ -456,17 +451,17 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   game_world *world = &state->world;
 
   // in pixels
-  uint32 groundBufferWidth = 256;
-  uint32 groundBufferHeight = 256;
+  u32 groundBufferWidth = 256;
+  u32 groundBufferHeight = 256;
 
-  real32 typicalFloorHeight = 3.0f;
+  f32 typicalFloorHeight = 3.0f;
 
-  // real32 TileSizeInPixels = 60.0f;
-  // real32 tileSizeInMeters = 1.4f;
-  // real32 tileDepthInMeters = 3.0f;
+  // f32 TileSizeInPixels = 60.0f;
+  // f32 tileSizeInMeters = 1.4f;
+  // f32 tileDepthInMeters = 3.0f;
 
-  real32 metersToPixels = 42.0f;
-  real32 pixelsToMeters = 1 / metersToPixels;
+  f32 metersToPixels = 42.0f;
+  f32 pixelsToMeters = 1 / metersToPixels;
   state->metersToPixels = metersToPixels;
   state->pixelsToMeters = pixelsToMeters;
 
@@ -559,12 +554,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     InitializeArena(worldArena,
       memory->permanentStorageSize - sizeof(game_state),
-      (uint8 *)memory->permanentStorage + sizeof(game_state));
+      (u8 *)memory->permanentStorage + sizeof(game_state));
 
     InitializeWorld(world, typicalFloorHeight, chunkDimInMeters);
 
-    real32 tileSizeInMeters = 1.4f;
-    real32 tileDepthInMeters = typicalFloorHeight;
+    f32 tileSizeInMeters = 1.4f;
+    f32 tileDepthInMeters = typicalFloorHeight;
     int tilesPerWidth = 17;
     int tilesPerHeight = 9;
 
@@ -586,20 +581,20 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       1.1f * tileDepthInMeters);
     state->nullCollision = MakeNullCollision(state);
 
-    int32 screenBaseX = 0;
-    int32 screenBaseY = 0;
-    int32 screenBaseZ = 0;
-    int32 screenX = screenBaseX;
-    int32 screenY = screenBaseY;
+    i32 screenBaseX = 0;
+    i32 screenBaseY = 0;
+    i32 screenBaseZ = 0;
+    i32 screenX = screenBaseX;
+    i32 screenY = screenBaseY;
 
-    int32 randomIndex = 0;
+    i32 randomIndex = 0;
     bool32 doorLeft = false;
     bool32 doorRight = false;
     bool32 doorTop = false;
     bool32 doorBottom = false;
     bool32 doorUp = false;
     bool32 doorDown = false;
-    int32 absTileZ = 0;
+    i32 absTileZ = 0;
 
     // world generation
     random_series series = RandomSeed(0x100);
@@ -640,11 +635,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
       // 1: empty
       // 2: wall
-      for(int32 tileY = 0; tileY < tilesPerHeight; tileY++) {
-        for(int32 tileX = 0; tileX < tilesPerWidth; tileX++) {
-          int32 absTileX = screenX * tilesPerWidth + tileX;
-          int32 absTileY = screenY * tilesPerHeight + tileY;
-          int32 tileValue = 1;
+      for(i32 tileY = 0; tileY < tilesPerHeight; tileY++) {
+        for(i32 tileX = 0; tileX < tilesPerWidth; tileX++) {
+          i32 absTileX = screenX * tilesPerWidth + tileX;
+          i32 absTileY = screenY * tilesPerHeight + tileY;
+          i32 tileValue = 1;
 
           if(tileX == 0) {
             tileValue = 2;
@@ -712,9 +707,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
 
     world_position newCameraP = {};
-    int32 cameraTileX = screenBaseX * tilesPerWidth + tilesPerWidth / 2;
-    int32 cameraTileY = screenBaseY * tilesPerHeight + tilesPerHeight / 2;
-    int32 cameraTileZ = 0;
+    i32 cameraTileX = screenBaseX * tilesPerWidth + tilesPerWidth / 2;
+    i32 cameraTileY = screenBaseY * tilesPerHeight + tilesPerHeight / 2;
+    i32 cameraTileZ = 0;
     newCameraP = WorldPositionFromTilePosition(world,
       cameraTileX,
       cameraTileY,
@@ -731,11 +726,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     tranState->isInitialized = true;
     InitializeArena(&tranState->tranArena,
       memory->transientStorageSize - sizeof(transient_state),
-      (uint8 *)memory->transientStorage + sizeof(transient_state));
+      (u8 *)memory->transientStorage + sizeof(transient_state));
 
-    int32 groundWidth = 256;
-    int32 groundHeight = 256;
-    int32 totalMemorySize = groundWidth * groundHeight * BYTES_PER_PIXEL;
+    i32 groundWidth = 256;
+    i32 groundHeight = 256;
+    i32 totalMemorySize = groundWidth * groundHeight * BYTES_PER_PIXEL;
     tranState->groundWidth = groundWidth;
     tranState->groundHeight = groundHeight;
     tranState->groundPitch = groundWidth * BYTES_PER_PIXEL;
@@ -744,7 +739,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       tranState->groundBufferCount,
       ground_buffer);
 
-    for(uint32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
+    for(u32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
         groundIndex++) {
       ground_buffer *groundBuffer = tranState->groundBuffers + groundIndex;
       groundBuffer->p = NullPosition();
@@ -831,20 +826,20 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   render_group *renderGroup
     = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), metersToPixels);
 
-  v2 screenCenter = 0.5f * v2{ (real32)buffer->width, (real32)buffer->height };
+  v2 screenCenter = 0.5f * v2{ (f32)buffer->width, (f32)buffer->height };
 
   // background
   Clear(renderGroup, V4(1.0f, 0.0f, 1.0f, 0.0f));
 
-  real32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
-  real32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
+  f32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
+  f32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
   rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
     V3(screenWidthInMeters, screenHeightInMeters, 0));
 
 // clear ground buffers when reloaded
 #if 0
   if(input->executableReloaded) {
-    for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
+    for(u32 i = 0; i < tranState->groundBufferCount; i++) {
       ground_buffer *buffer = tranState->groundBuffers + i;
       buffer->p = NullPosition();
     }
@@ -853,7 +848,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   // render ground buffers
   {
-    for(uint32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
+    for(u32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
         groundIndex++) {
       ground_buffer *buffer = tranState->groundBuffers + groundIndex;
       if(IsValid(&buffer->p)) {
@@ -876,10 +871,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     world_position maxChunk
       = MapIntoWorldSpace(world, state->cameraP, GetMaxCorner(cameraBounds));
 
-    for(int32 chunkZ = minChunk.chunkZ; chunkZ <= maxChunk.chunkZ; chunkZ++) {
-      for(int32 chunkY = minChunk.chunkY; chunkY <= maxChunk.chunkY; chunkY++) {
-        for(int32 chunkX = minChunk.chunkX; chunkX <= maxChunk.chunkX;
-            chunkX++) {
+    for(i32 chunkZ = minChunk.chunkZ; chunkZ <= maxChunk.chunkZ; chunkZ++) {
+      for(i32 chunkY = minChunk.chunkY; chunkY <= maxChunk.chunkY; chunkY++) {
+        for(i32 chunkX = minChunk.chunkX; chunkX <= maxChunk.chunkX; chunkX++) {
           world_chunk *chunk = GetWorldChunk(world, chunkX, chunkY, chunkZ);
 
           {
@@ -897,9 +891,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
               V4(1, 1, 0, 1));
 
             ground_buffer *furthestBuffer = 0;
-            real32 furthestLengthSq = 0.0f;
+            f32 furthestLengthSq = 0.0f;
 
-            for(uint32 i = 0; i < tranState->groundBufferCount; i++) {
+            for(u32 i = 0; i < tranState->groundBufferCount; i++) {
               ground_buffer *buffer = tranState->groundBuffers + i;
 
               if(AreInSameChunk(world, &chunkCenterP, &buffer->p)) {
@@ -913,7 +907,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
               } else {
                 v3 bufferRel
                   = SubtractPosition(world, buffer->p, state->cameraP);
-                real32 lengthSq = LengthSq(bufferRel.xy);
+                f32 lengthSq = LengthSq(bufferRel.xy);
                 if(lengthSq > furthestLengthSq) {
                   furthestBuffer = buffer;
                   furthestLengthSq = lengthSq;
@@ -940,7 +934,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     input->dt);
 
   // entities
-  for(uint32 index = 0; index < simRegion->entityCount; index++) {
+  for(u32 index = 0; index < simRegion->entityCount; index++) {
     sim_entity *entity = simRegion->entities + index;
 
     if(!entity->updatable) {
@@ -980,7 +974,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           }
         }
 
-        real32 shadowAlpha = 1.0f - 0.5f * entity->p.z;
+        f32 shadowAlpha = 1.0f - 0.5f * entity->p.z;
         if(shadowAlpha < 0.0f) {
           shadowAlpha = 0.0f;
         }
@@ -1022,8 +1016,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Space: {
-        for(uint32 volumeIndex = 0;
-            volumeIndex < entity->collision->volumeCount;
+        for(u32 volumeIndex = 0; volumeIndex < entity->collision->volumeCount;
             volumeIndex++) {
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
@@ -1055,12 +1048,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
       case EntityType_Familiar: {
         sim_entity *closestHero = NULL;
-        real32 closestDSq = Square(10.0f);
+        f32 closestDSq = Square(10.0f);
 
-        for(uint32 i = 0; i < simRegion->entityCount; i++) {
+        for(u32 i = 0; i < simRegion->entityCount; i++) {
           sim_entity *testEntity = simRegion->entities + i;
           if(testEntity->type == EntityType_Hero) {
-            real32 testDSq = LengthSq(testEntity->p - entity->p);
+            f32 testDSq = LengthSq(testEntity->p - entity->p);
             if(testDSq < closestDSq) {
               closestDSq = testDSq;
               closestHero = testEntity;
@@ -1104,7 +1097,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   }
 
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
-  static real32 angle = 0;
+  static f32 angle = 0;
   angle += 0.4f * input->dt;
   v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
   // v2 xAxis = V2(300, 0);
@@ -1120,9 +1113,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     = CoordinateSystem(renderGroup, origin, xAxis, yAxis, color);
   c->texture = &state->tree;
 
-  uint32 pointIndex = 0;
-  for(real32 y = 0.0f; y < 1.0f; y += 0.25) {
-    for(real32 x = 0.0f; x < 1.0f; x += 0.25) {
+  u32 pointIndex = 0;
+  for(f32 y = 0.0f; y < 1.0f; y += 0.25) {
+    for(f32 x = 0.0f; x < 1.0f; x += 0.25) {
       c->points[pointIndex++] = V2(x, y);
     }
   }
@@ -1131,7 +1124,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   // debug: show current floors
   for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
-    v2 start = { 10 + (real32)i * 15, (real32)buffer->height - 20 };
+    v2 start = { 10 + (f32)i * 15, (f32)buffer->height - 20 };
     DrawRectangle(drawBuffer,
       start,
       start + v2{ 10, 10 },

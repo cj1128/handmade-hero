@@ -9,9 +9,9 @@
 
 struct memory_arena {
   size_t size;
-  uint8 *base;
+  u8 *base;
   size_t used;
-  uint32 _savedCount;
+  u32 _savedCount;
   size_t _saved[8];
 };
 
@@ -39,7 +39,7 @@ internal void *
 _PushSize(memory_arena *arena, size_t size)
 {
   Assert((arena->used + size) <= arena->size);
-  uint8 *result = arena->base + arena->used;
+  u8 *result = arena->base + arena->used;
   arena->used += size;
   return (void *)result;
 }
@@ -47,7 +47,7 @@ _PushSize(memory_arena *arena, size_t size)
 internal void
 ZeroSize(void *ptr, size_t size)
 {
-  uint8 *byte = (uint8 *)ptr;
+  u8 *byte = (u8 *)ptr;
   while(size--) {
     *byte++ = 0;
   }
@@ -62,9 +62,9 @@ ZeroSize(void *ptr, size_t size)
 
 struct loaded_bitmap {
   void *memory;
-  int32 width;
-  int32 height;
-  int32 pitch;
+  i32 width;
+  i32 height;
+  i32 pitch;
 };
 
 struct hero_bitmaps {
@@ -83,7 +83,7 @@ struct controlled_hero {
 
   v2 ddP;
   v3 dSword;
-  real32 dZ;
+  f32 dZ;
 };
 
 struct pairwise_collision_rule {
@@ -102,23 +102,23 @@ struct ground_buffer {
 struct transient_state {
   bool32 isInitialized;
   memory_arena tranArena;
-  int32 groundWidth;
-  int32 groundHeight;
-  int32 groundPitch;
-  uint32 groundBufferCount;
+  i32 groundWidth;
+  i32 groundHeight;
+  i32 groundPitch;
+  u32 groundBufferCount;
   ground_buffer *groundBuffers;
 };
 
 struct game_state {
-  real32 metersToPixels;
-  real32 pixelsToMeters;
+  f32 metersToPixels;
+  f32 pixelsToMeters;
   memory_arena worldArena;
   game_world world;
   world_position cameraP;
 
   bool32 debugDrawBoundary = false;
 
-  uint32 entityCount;
+  u32 entityCount;
   stored_entity entities[4096];
 
   controlled_hero controlledHeroes[ArrayCount(((game_input *)0)->controllers)];

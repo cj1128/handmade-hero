@@ -35,7 +35,7 @@ struct render_entry_clear {
 struct render_entity_basis {
   render_basis *basis;
   v2 offset;
-  real32 entityZC;
+  f32 entityZC;
 };
 
 struct render_entry_rectangle {
@@ -50,18 +50,18 @@ struct render_entry_bitmap {
   render_entry_header header;
   render_entity_basis entityBasis;
 
-  real32 alpha;
+  f32 alpha;
   loaded_bitmap *bitmap;
 };
 
 struct render_group {
-  real32 metersToPixels;
+  f32 metersToPixels;
   render_basis *defaultBasis;
-  uint32 pieceCount;
+  u32 pieceCount;
 
-  uint32 maxPushBufferSize;
-  uint32 pushBufferSize;
-  uint8 *pushBufferBase;
+  u32 maxPushBufferSize;
+  u32 pushBufferSize;
+  u8 *pushBufferBase;
 };
 
 #endif

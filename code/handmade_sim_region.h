@@ -3,8 +3,8 @@
 
 struct move_spec {
   bool32 unitddP;
-  real32 ddPScale;
-  real32 drag;
+  f32 ddPScale;
+  f32 drag;
 };
 
 struct sim_region_hash {
@@ -19,10 +19,10 @@ struct sim_region {
   rectangle3 bounds;
   rectangle3 updatableBounds;
 
-  real32 maxEntityRadius;
-  real32 maxEntityVelocity;
+  f32 maxEntityRadius;
+  f32 maxEntityVelocity;
 
-  uint32 entityCount;
+  u32 entityCount;
   sim_entity entities[4096];
 
   sim_region_hash hash[4096];

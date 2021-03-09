@@ -3,70 +3,70 @@
 
 #include "math.h"
 
-inline real32
-SquareRoot(real32 value)
+inline f32
+SquareRoot(f32 value)
 {
-  real32 result = sqrtf(value);
+  f32 result = sqrtf(value);
   return result;
 }
 
-inline int32
-RoundReal32ToUint32(real32 input)
+inline i32
+RoundReal32ToUint32(f32 input)
 {
-  uint32 result = (uint32)roundf(input);
+  u32 result = (u32)roundf(input);
   return result;
 }
 
-inline int32
-RoundReal32ToInt32(real32 input)
+inline i32
+RoundReal32ToInt32(f32 input)
 {
-  int32 result = (int32)roundf(input);
+  i32 result = (i32)roundf(input);
   return result;
 }
 
-inline int32
-FloorReal32ToInt32(real32 value)
+inline i32
+FloorReal32ToInt32(f32 value)
 {
-  int32 result = (int32)floor(value);
+  i32 result = (i32)floor(value);
   return result;
 }
 
-inline int32
-CeilReal32ToInt32(real32 value)
+inline i32
+CeilReal32ToInt32(f32 value)
 {
-  int32 result = (int32)ceil(value);
+  i32 result = (i32)ceil(value);
   return result;
 }
 
-inline real32
-Sin(real32 value)
+inline f32
+Sin(f32 value)
 {
-  real32 result = sinf(value);
+  f32 result = sinf(value);
   return result;
 }
 
-inline real32
-Cos(real32 value)
+inline f32
+Cos(f32 value)
 {
-  real32 result = cosf(value);
+  f32 result = cosf(value);
   return result;
 }
 
 struct bit_scan_result {
   bool32 found;
-  uint32 index;
+  u32 index;
 };
 
 inline bit_scan_result
-FindLeastSignificantSetBit(uint32 value)
+FindLeastSignificantSetBit(u32 value)
 {
   bit_scan_result result = {};
 
 #if COMPILER_MSVC
   result.found = _BitScanForward((unsigned long *)&result.index, value);
 #else
-  uint32 test = 0;
-  for(uint32 test = 0; test < 32; test++) {
+  u32 test = 0;
+  for(u32 test = 0; test < 32; test++) {
     if((value & (1 << test)) == 1) {
       result.found = true;
       result.index = test;
@@ -77,32 +77,32 @@ FindLeastSignificantSetBit(uint32 value)
   return result;
 }
 
-inline real32
-Square(real32 value)
+inline f32
+Square(f32 value)
 {
-  real32 result;
+  f32 result;
   result = value * value;
   return result;
 }
 
-inline real32
-Abs(real32 value)
+inline f32
+Abs(f32 value)
 {
-  real32 result = fabsf(value);
+  f32 result = fabsf(value);
   return result;
 }
 
-inline uint32
-RotateLeft(uint32 value, int32 shift)
+inline u32
+RotateLeft(u32 value, i32 shift)
 {
-  uint32 result = _rotl(value, shift);
+  u32 result = _rotl(value, shift);
   return result;
 }
 
-inline uint32
-RotateRight(uint32 value, int32 shift)
+inline u32
+RotateRight(u32 value, i32 shift)
 {
-  uint32 result = _rotr(value, shift);
+  u32 result = _rotr(value, shift);
   return result;
 }
 

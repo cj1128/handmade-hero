@@ -5,7 +5,7 @@
 #define MIN_RANDOM_NUM 1
 
 // clang-format off
-global_variable uint32 randomNumberTable[] = {
+global_variable u32 randomNumberTable[] = {
   6, 86, 98, 44, 22,
   97, 5, 69, 7, 93,
   97, 88, 23, 60, 16,
@@ -809,48 +809,48 @@ global_variable uint32 randomNumberTable[] = {
 };
 
 struct random_series {
-  uint32 randomIndex;
+  u32 randomIndex;
 };
 
 inline random_series
-RandomSeed(uint32 index) {
+RandomSeed(u32 index) {
   random_series result = {};
   result.randomIndex = index % ArrayCount(randomNumberTable);
   return result;
 }
 
-inline uint32
+inline u32
 RandomNextValue(random_series *series) {
   series->randomIndex++;
   if(series->randomIndex >= ArrayCount(randomNumberTable)) {
     series->randomIndex = 0;
   }
 
-  uint32 result = randomNumberTable[series->randomIndex];
+  u32 result = randomNumberTable[series->randomIndex];
   return result;
 }
 
-inline uint32
-RandomChoice(random_series *series, uint32 choiceCount) {
-  uint32 result = RandomNextValue(series) % choiceCount;
+inline u32
+RandomChoice(random_series *series, u32 choiceCount) {
+  u32 result = RandomNextValue(series) % choiceCount;
   return result;
 }
 
-inline real32
+inline f32
 RandomUnilateral(random_series *series) {
-  real32 result = (real32)RandomNextValue(series) / (real32)MAX_RANDOM_NUM;
+  f32 result = (f32)RandomNextValue(series) / (f32)MAX_RANDOM_NUM;
   return result;
 }
 
-inline real32
+inline f32
 RandomBilateral(random_series *series) {
-  real32 result = 2.0f * RandomUnilateral(series) - 1.0f;
+  f32 result = 2.0f * RandomUnilateral(series) - 1.0f;
   return result;
 }
 
-inline real32
-RandomBetween(random_series *series, real32 min, real32 max) {
-  real32 result = Lerp(min, RandomUnilateral(series), max);
+inline f32
+RandomBetween(random_series *series, f32 min, f32 max) {
+  f32 result = Lerp(min, RandomUnilateral(series), max);
   return result;
 }
 

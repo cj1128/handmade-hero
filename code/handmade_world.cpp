@@ -21,7 +21,7 @@ IsValid(v3 p)
 }
 
 inline world_position
-CenteredChunkPoint(game_world *world, int32 chunkX, int32 chunkY, int32 chunkZ)
+CenteredChunkPoint(game_world *world, i32 chunkX, i32 chunkY, i32 chunkZ)
 {
   world_position result = {};
 
@@ -40,12 +40,12 @@ CenteredChunkPoint(game_world *world, world_chunk *chunk)
 
 inline world_chunk *
 GetWorldChunk(game_world *world,
-  int32 chunkX,
-  int32 chunkY,
-  int32 chunkZ,
+  i32 chunkX,
+  i32 chunkY,
+  i32 chunkZ,
   memory_arena *arena = NULL)
 {
-  uint32 hashIndex = (chunkX * 19 + chunkY * 7 + chunkZ * 3)
+  u32 hashIndex = (chunkX * 19 + chunkY * 7 + chunkZ * 3)
     & (ArrayCount(world->chunkHash) - 1);
   world_chunk *chunk = world->chunkHash[hashIndex];
 
@@ -73,10 +73,10 @@ GetWorldChunk(game_world *world,
 }
 
 inline bool32
-IsCanonical(real32 chunkDim, real32 value)
+IsCanonical(f32 chunkDim, f32 value)
 {
-  real32 epsilon = 0.01f;
-  real32 r = 0.5f * chunkDim + epsilon;
+  f32 epsilon = 0.01f;
+  f32 r = 0.5f * chunkDim + epsilon;
   bool32 result = (value >= -r) && (value <= r);
   return result;
 }
@@ -111,10 +111,10 @@ AreInSameChunk(game_world *world, world_position *p1, world_position *p2)
 }
 
 internal inline void
-RecanonicalizeCoord(real32 chunkDim, int32 *chunk, real32 *chunkRel)
+RecanonicalizeCoord(f32 chunkDim, i32 *chunk, f32 *chunkRel)
 {
   // NOTE(cj): game_world is not allowd to be wrapped
-  int32 offset = RoundReal32ToInt32(*chunkRel / chunkDim);
+  i32 offset = RoundReal32ToInt32(*chunkRel / chunkDim);
   *chunk += offset;
   *chunkRel -= offset * chunkDim;
 
@@ -141,9 +141,9 @@ inline v3
 SubtractPosition(game_world *world, world_position p1, world_position p2)
 {
   v3 dChunk = {
-    (real32)p1.chunkX - (real32)p2.chunkX,
-    (real32)p1.chunkY - (real32)p2.chunkY,
-    (real32)p1.chunkZ - (real32)p2.chunkZ,
+    (f32)p1.chunkX - (f32)p2.chunkX,
+    (f32)p1.chunkY - (f32)p2.chunkY,
+    (f32)p1.chunkZ - (f32)p2.chunkZ,
   };
   v3 result
     = Hadamard(world->chunkDimInMeters, dChunk) + (p1.offset - p2.offset);
@@ -182,7 +182,7 @@ ChangeEntityLocationRaw(memory_arena *arena,
     entity_block *block = &chunk->entityBlock;
     bool32 notFound = true;
     for(; block && notFound; block = block->next) {
-      for(uint32 index = 0; index < block->entityCount; index++) {
+      for(u32 index = 0; index < block->entityCount; index++) {
         if(block->entities[index] == stored) {
           Assert(firstBlock->entityCount > 0);
           block->entities[index]

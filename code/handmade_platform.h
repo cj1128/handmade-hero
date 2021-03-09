@@ -2,17 +2,17 @@
 #define HANDMADE_PLATFORM_H
 
 #include <stdint.h>
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-typedef int32 bool32;
-typedef float real32;
-typedef double real64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef i32 bool32;
+typedef float f32;
+typedef double f64;
 
 #include <float.h>
 #define REAL32_MAX FLT_MAX
@@ -67,10 +67,11 @@ typedef double real64;
     InvalidCodePath                                                            \
   } break
 
-inline uint32
-SafeTruncateUInt64(uint64 value)
+inline u32
+SafeTruncateUInt64(u64 value)
 {
-  Assert(value <= 0xFFFFFFFF) uint32 result = (uint32)value;
+  Assert(value <= 0xFFFFFFFF);
+  u32 result = (u32)value;
   return result;
 }
 
@@ -94,11 +95,11 @@ struct game_sound_buffer {
   int samplesPerSecond;
   int sampleCount;
   int toneVolume;
-  int16 *memory;
+  i16 *memory;
 };
 
 struct game_button_state {
-  int32 halfTransitionCount;
+  i32 halfTransitionCount;
   bool32 isEndedDown;
 };
 
@@ -106,8 +107,8 @@ struct game_controller_input {
   bool32 isConnected;
   bool32 isAnalog;
 
-  real32 stickAverageX;
-  real32 stickAverageY;
+  f32 stickAverageX;
+  f32 stickAverageY;
 
   // D-pad
   union {
@@ -136,8 +137,8 @@ struct game_controller_input {
 };
 
 struct game_input {
-  real32 dt;
-  int32 mouseX, mouseY;
+  f32 dt;
+  i32 mouseX, mouseY;
   game_button_state mouseButtons[5];
   bool32 executableReloaded;
 
@@ -146,7 +147,7 @@ struct game_input {
 
 #ifdef HANDMADE_INTERNAL
 struct debug_read_file_result {
-  uint32 size;
+  u32 size;
   void *memory;
 };
 
@@ -158,7 +159,7 @@ typedef DEBUG_PLATFORM_READ_FILE(debug_platform_read_file);
   bool32 name(thread_context *thread,                                          \
     char *fileName,                                                            \
     void *memory,                                                              \
-    uint32 fileSize)
+    u32 fileSize)
 typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(name)                                  \

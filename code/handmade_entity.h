@@ -5,8 +5,8 @@
 
 #define HIT_POINT_AMOUNT 4
 struct hit_point {
-  uint8 flags;
-  uint8 amount;
+  u8 flags;
+  u8 amount;
 };
 
 enum entity_type {
@@ -47,7 +47,7 @@ struct sim_entity_collision_volume_group {
   sim_entity_collision_volume totalVolume;
 
   // NOTE: currently volumeCount must > 0 if entity is collidable
-  uint32 volumeCount;
+  u32 volumeCount;
   sim_entity_collision_volume *volumes;
 };
 
@@ -57,26 +57,26 @@ struct sim_entity {
 
   entity_type type;
 
-  uint32 flags;
+  u32 flags;
 
   v3 p; // ground point
   v3 dP;
 
   // 0: right, 1: up, 2: left, 3: down
-  uint32 facingDirection;
+  u32 facingDirection;
 
   sim_entity_collision_volume_group *collision;
 
-  uint32 hitPointCount;
+  u32 hitPointCount;
   hit_point hitPoints[16];
 
   // 0 means no limit
-  real32 distanceLimit;
+  f32 distanceLimit;
 
   entity_reference sword;
 
   // only for stairwell
-  real32 walkableHeight;
+  f32 walkableHeight;
   v2 walkableDim;
 };
 
@@ -86,20 +86,20 @@ struct stored_entity {
 };
 
 inline bool32
-HasFlag(sim_entity *entity, uint32 flag)
+HasFlag(sim_entity *entity, u32 flag)
 {
   bool32 result = entity->flags & flag;
   return result;
 }
 
 inline void
-AddFlags(sim_entity *entity, uint32 flags)
+AddFlags(sim_entity *entity, u32 flags)
 {
   entity->flags |= flags;
 }
 
 inline void
-ClearFlags(sim_entity *entity, uint32 flags)
+ClearFlags(sim_entity *entity, u32 flags)
 {
   entity->flags &= ~flags;
 }
@@ -126,14 +126,14 @@ GetEntityGroundPoint(sim_entity *entity)
   return result;
 }
 
-internal real32
+internal f32
 GetStairwellGround(sim_entity *entity, v3 moverGround)
 {
   Assert(entity->type == EntityType_Stairwell);
 
   rectangle2 entityRect = RectCenterDim(entity->p.xy, entity->walkableDim);
   v2 bary = Clamp01(GetBarycentric(entityRect, moverGround.xy));
-  real32 ground = entity->p.z + bary.y * entity->walkableHeight;
+  f32 ground = entity->p.z + bary.y * entity->walkableHeight;
 
   return ground;
 }
