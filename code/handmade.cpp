@@ -301,19 +301,24 @@ LoadBMP(thread_context *thread,
 
         u32 c = *pixel;
 
-        f32 a = (f32)((c & header->alphaMask) >> alphaShift);
-        f32 ra = a / 255.0f;
+        v4 texel = {
+          (f32)((*pixel & header->redMask) >> redShift),
+          (f32)((*pixel & header->greenMask) >> greenShift),
+          (f32)((*pixel & header->blueMask) >> blueShift),
+          (f32)((*pixel & header->alphaMask) >> alphaShift),
+        };
+        texel = SRGB255ToLinear1(texel);
 
-        // NOTE(cj): we are using *premultiplied alpha* here
-        f32 r = ra * (f32)((c & header->redMask) >> redShift);
-        f32 g = ra * (f32)((c & header->greenMask) >> greenShift);
-        f32 b = ra * (f32)((c & header->blueMask) >> blueShift);
+        // NOTE(cj): premultiplied alpha
+        texel.rgb *= texel.a;
+
+        texel = Linear1ToSRGB255(texel);
 
         // clang-format off
-        *pixel++ = ((u32)(a + 0.5f) << 24) |
-          ((u32)(r + 0.5f) << 16) |
-          ((u32)(g + 0.5f) << 8) |
-          ((u32)(b + 0.5f));
+        *pixel++ = ((u32)(texel.a + 0.5f) << 24) |
+          ((u32)(texel.r + 0.5f) << 16) |
+          ((u32)(texel.g + 0.5f) << 8) |
+          ((u32)(texel.b + 0.5f));
         // clang-format on
       }
     }

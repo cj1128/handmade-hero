@@ -282,7 +282,7 @@ union v4 {
   };
   struct {
     v3 rgb;
-    f32 alpha;
+    f32 a;
   };
   f32 e[4];
 };
@@ -376,6 +376,13 @@ Lerp(v4 a, f32 t, v4 b)
   return result;
 }
 
+inline v4
+Hadamard(v4 a, v4 b)
+{
+  v4 result = { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
+  return result;
+}
+
 //
 // misc
 //
@@ -460,6 +467,7 @@ RectMinMax(v2 min, v2 max)
   rectangle2 result = {};
   result.min = min;
   result.max = max;
+  return result;
 }
 
 inline rectangle2
@@ -512,6 +520,7 @@ GetBarycentric(rectangle2 rect, v2 p)
 
 //
 // rectangle3
+//
 
 struct rectangle3 {
   v3 min;
@@ -538,6 +547,7 @@ RectMinMax(v3 min, v3 max)
   rectangle3 result = {};
   result.min = min;
   result.max = max;
+  return result;
 }
 
 inline rectangle3

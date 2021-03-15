@@ -75,10 +75,8 @@ My preferred code style for C is different from Casey's.
 ## Game Programming
 
 - Every memory allocation should go through a macro, it will make the debugging much easier.
-
-### Premultiplied Alpha
-
-Check day 83 for more details.
+- `Premultiplied Alpha`: check day 83 for more details.
+- `Gamma Correction`: check day 94 for more details.
 
 ## Windows Programming
 
@@ -95,6 +93,12 @@ Check day 83 for more details.
 ### Visual Studio
 
 - `Spy++`: inspect windows and messages
+
+## TODO
+
+- Fix full screen problem caused by systeml-level display scale
+- Fix long running freeze bug: let the game run for a while and it will freeze
+- Slow speed when moving across rooms
 
 ## Roadmap
 
@@ -191,7 +195,7 @@ Check day 83 for more details.
 - [Day 92: Filling Rotated and Scaled Rectangles](#day-92-filling-rotated-and-scaled-rectangles)
 - [Day 93: Textured Quadrilaterals](#day-93-textured-quadrilaterals)
 - [Day 94: Converting sRGB to Light-linear Space](#day-94-converting-srgb-to-light-linear-space)
-- [TODO](#todo)
+- [Day 95: Gamma-correct Premultiplied Alpha](#day-95-gamma-correct-premultiplied-alpha)
 
 <!-- /MarkdownTOC -->
 
@@ -1003,8 +1007,14 @@ To-do list:
 - Implement `SRGB255ToLinear1` and `Linear1ToSRGB255`
 - Implement a simple color tint
 
-## TODO
+### Day 95: Gamma-correct Premultiplied Alpha
 
-- Fix full screen problem caused by systeml-level display scale
-- Fix long running freeze bug: let the game run for a while and it will freeze
-- Slow speed when moving across rooms
+- When we load a BMP
+  - Convert it to linear space
+  - Multiply alpha with the color
+  - Convert it back to sRGB space
+- Remove `render_entry_header` in render entry types
+  - Add this header in every render entry type is very error-prone
+  - Let's the `PushRenderElement` function do this job
+- `-Zo` used for [enhanced optimized code debugging](https://docs.microsoft.com/en-us/cpp/build/reference/zo-enhance-optimized-debugging?view=msvc-160)
+

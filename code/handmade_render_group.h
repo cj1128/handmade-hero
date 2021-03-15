@@ -17,7 +17,6 @@ struct render_entry_header {
 };
 
 struct render_entry_coordinate_system {
-  render_entry_header header;
   v2 origin;
   v2 xAxis;
   v2 yAxis;
@@ -27,7 +26,6 @@ struct render_entry_coordinate_system {
 };
 
 struct render_entry_clear {
-  render_entry_header header;
   v4 color;
 };
 
@@ -39,7 +37,6 @@ struct render_entity_basis {
 };
 
 struct render_entry_rectangle {
-  render_entry_header header;
   render_entity_basis entityBasis;
 
   v2 dim;
@@ -47,7 +44,6 @@ struct render_entry_rectangle {
 };
 
 struct render_entry_bitmap {
-  render_entry_header header;
   render_entity_basis entityBasis;
 
   f32 alpha;

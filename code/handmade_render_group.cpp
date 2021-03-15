@@ -1,3 +1,26 @@
+inline v4
+SRGB255ToLinear1(v4 color)
+{
+  v4 result = {};
+  f32 inv255 = 1.0f / 255.0f;
+  result.r = Square(color.r * inv255);
+  result.g = Square(color.g * inv255);
+  result.b = Square(color.b * inv255);
+  result.a = color.a * inv255;
+  return result;
+}
+
+inline v4
+Linear1ToSRGB255(v4 color)
+{
+  v4 result = {};
+  result.r = 255.0f * SquareRoot(color.r);
+  result.g = 255.0f * SquareRoot(color.g);
+  result.b = 255.0f * SquareRoot(color.b);
+  result.a = 255.0f * color.a;
+  return result;
+}
+
 internal void
 DrawBitmap(loaded_bitmap *buffer,
   loaded_bitmap *bitmap,
@@ -36,30 +59,33 @@ DrawBitmap(loaded_bitmap *buffer,
     u32 *dest = (u32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      f32 sA = (f32)((*source >> 24) & 0xff);
-      f32 sR = cAlpha * (f32)((*source >> 16) & 0xff);
-      f32 sG = cAlpha * (f32)((*source >> 8) & 0xff);
-      f32 sB = cAlpha * (f32)((*source >> 0) & 0xff);
+      v4 texel = {
+        (f32)((*source >> 16) & 0xff),
+        (f32)((*source >> 8) & 0xff),
+        (f32)((*source >> 0) & 0xff),
+        (f32)((*source >> 24) & 0xff),
+      };
 
-      f32 rSA = sA / 255.0f * cAlpha;
+      texel = SRGB255ToLinear1(texel);
 
-      f32 dA = (f32)((*dest >> 24) & 0xff);
-      f32 dR = (f32)((*dest >> 16) & 0xff);
-      f32 dG = (f32)((*dest >> 8) & 0xff);
-      f32 dB = (f32)((*dest >> 0) & 0xff);
+      texel *= cAlpha;
 
-      f32 rDA = dA / 255.0f;
+      v4 d = {
+        (f32)((*dest >> 16) & 0xff),
+        (f32)((*dest >> 8) & 0xff),
+        (f32)((*dest >> 0) & 0xff),
+        (f32)((*dest >> 24) & 0xff),
+      };
+      d = SRGB255ToLinear1(d);
 
-      f32 a = 255.0f * (rSA + rDA - rSA * rDA);
-      f32 r = sR + (1 - rSA) * dR;
-      f32 g = sG + (1 - rSA) * dG;
-      f32 b = sB + (1 - rSA) * dB;
+      v4 blended = (1.0f - texel.a) * d + texel;
+      blended = Linear1ToSRGB255(blended);
 
       // clang-format off
-      *dest = ((u32)(a + 0.5f) << 24) |
-        ((u32)(r + 0.5f) << 16) |
-        ((u32)(g + 0.5f) << 8) |
-        ((u32)(b + 0.5f));
+      *dest = ((u32)(blended.a + 0.5f) << 24) |
+        ((u32)(blended.r + 0.5f) << 16) |
+        ((u32)(blended.g + 0.5f) << 8) |
+        ((u32)(blended.b + 0.5f));
       // clang-format on
 
       dest++;
@@ -109,32 +135,32 @@ DrawMatte(loaded_bitmap *buffer,
     u32 *dest = (u32 *)destRow;
 
     for(int x = minX; x < maxX; x++) {
-      f32 sA = (f32)((*source >> 24) & 0xff);
-      f32 sR = cAlpha * (f32)((*source >> 16) & 0xff);
-      f32 sG = cAlpha * (f32)((*source >> 8) & 0xff);
-      f32 sB = cAlpha * (f32)((*source >> 0) & 0xff);
+      v4 texel = {
+        (f32)((*source >> 16) & 0xff),
+        (f32)((*source >> 8) & 0xff),
+        (f32)((*source >> 0) & 0xff),
+        (f32)((*source >> 24) & 0xff),
+      };
 
-      f32 rSA = sA / 255.0f * cAlpha;
+      texel = SRGB255ToLinear1(texel);
+      texel *= cAlpha;
 
-      f32 dA = (f32)((*dest >> 24) & 0xff);
-      f32 dR = (f32)((*dest >> 16) & 0xff);
-      f32 dG = (f32)((*dest >> 8) & 0xff);
-      f32 dB = (f32)((*dest >> 0) & 0xff);
+      v4 d = {
+        (f32)((*dest >> 16) & 0xff),
+        (f32)((*dest >> 8) & 0xff),
+        (f32)((*dest >> 0) & 0xff),
+        (f32)((*dest >> 24) & 0xff),
+      };
 
-      f32 rDA = dA / 255.0f;
+      v4 blended = (1.0f - texel.a) * d;
 
-      f32 invRSA = 1 - rSA;
-
-      f32 a = invRSA * dA;
-      f32 r = invRSA * dR;
-      f32 g = invRSA * dG;
-      f32 b = invRSA * dB;
+      blended = Linear1ToSRGB255(blended);
 
       // clang-format off
-      *dest = ((u32)(a + 0.5f) << 24) |
-        ((u32)(r + 0.5f) << 16) |
-        ((u32)(g + 0.5f) << 8) |
-        ((u32)(b + 0.5f));
+      *dest = ((u32)(blended.a + 0.5f) << 24) |
+        ((u32)(blended.r + 0.5f) << 16) |
+        ((u32)(blended.g + 0.5f) << 8) |
+        ((u32)(blended.b + 0.5f));
       // clang-format on
 
       dest++;
@@ -156,29 +182,6 @@ Uint32ToSRGB255(u32 color)
   return result;
 }
 
-inline v4
-SRGB255ToLinear1(v4 color)
-{
-  v4 result = {};
-  f32 inv255 = 1.0f / 255.0f;
-  result.r = Square(color.r * inv255);
-  result.g = Square(color.g * inv255);
-  result.b = Square(color.b * inv255);
-  result.a = color.a * inv255;
-  return result;
-}
-
-inline v4
-Linear1ToSRGB255(v4 color)
-{
-  v4 result = {};
-  result.r = 255.0f * SquareRoot(color.r);
-  result.g = 255.0f * SquareRoot(color.g);
-  result.b = 255.0f * SquareRoot(color.b);
-  result.a = 255.0f * color.a;
-  return result;
-}
-
 // exclusive
 internal void
 DrawRectangleSlowly(loaded_bitmap *buffer,
@@ -188,6 +191,8 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   v4 color,
   loaded_bitmap *texture)
 {
+  color.rgb *= color.a;
+
   u32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
     | (RoundReal32ToUint32(color.g * 255.0f) << 8)
     | RoundReal32ToUint32(color.b * 255.0f);
@@ -298,35 +303,19 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         v4 texel = texelA;
 #endif
 
-        v4 dest = Uint32ToSRGB255(*pixel);
-        dest = SRGB255ToLinear1(dest);
+        texel = Hadamard(texel, color);
 
-        f32 sA = texel.a;
-        f32 sR = texel.r;
-        f32 sG = texel.g;
-        f32 sB = texel.b;
-        f32 rSA = color.a * sA;
+        v4 dest = SRGB255ToLinear1(Uint32ToSRGB255(*pixel));
 
-        f32 dA = dest.a;
-        f32 dR = dest.r;
-        f32 dG = dest.g;
-        f32 dB = dest.b;
-        f32 rDA = dest.a;
-
-        v4 blended = {
-          color.a * color.r * sR + (1 - rSA) * dR,
-          color.a * color.g * sG + (1 - rSA) * dG,
-          color.a * color.b * sB + (1 - rSA) * dB,
-          rSA + rDA - rSA * rDA,
-        };
+        v4 blended = (1.0f - texel.a) * dest + texel;
 
         blended = Linear1ToSRGB255(blended);
 
         // clang-format off
-      *pixel = ((u32)(blended.a + 0.5f) << 24) |
-        ((u32)(blended.r + 0.5f) << 16) |
-        ((u32)(blended.g + 0.5f) << 8) |
-        ((u32)(blended.b + 0.5f));
+        *pixel = ((u32)(blended.a + 0.5f) << 24) |
+          ((u32)(blended.r + 0.5f) << 16) |
+          ((u32)(blended.g + 0.5f) << 8) |
+          ((u32)(blended.b + 0.5f));
         // clang-format on
       }
 
@@ -428,6 +417,7 @@ AllocateRenderGroup(memory_arena *arena,
 internal void *
 _PushRenderElement(render_group *group, u32 size, render_entry_type type)
 {
+  size += sizeof(render_entry_header);
   Assert(group->pushBufferSize + size <= group->maxPushBufferSize);
 
   render_entry_header *header
@@ -436,7 +426,7 @@ _PushRenderElement(render_group *group, u32 size, render_entry_type type)
 
   header->type = type;
 
-  return header;
+  return header + 1;
 }
 
 // `offset` is from the min corner
@@ -551,14 +541,16 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
   v2 screenCenter
     = 0.5f * v2{ (f32)outputTarget->width, (f32)outputTarget->height };
 
-  for(u32 baseAddr = 0; baseAddr < renderGroup->pushBufferSize;) {
+  for(u32 offset = 0; offset < renderGroup->pushBufferSize;) {
     render_entry_header *header
-      = (render_entry_header *)(renderGroup->pushBufferBase + baseAddr);
+      = (render_entry_header *)(renderGroup->pushBufferBase + offset);
+    offset += sizeof(render_entry_header);
+    void *data = (void *)(header + 1);
 
     switch(header->type) {
       case RenderEntryType_render_entry_clear: {
-        render_entry_clear *entry = (render_entry_clear *)header;
-        baseAddr += sizeof(render_entry_clear);
+        render_entry_clear *entry = (render_entry_clear *)data;
+        offset += sizeof(render_entry_clear);
 
         DrawRectangle(outputTarget,
           V2(0, 0),
@@ -567,8 +559,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
       } break;
 
       case RenderEntryType_render_entry_rectangle: {
-        render_entry_rectangle *entry = (render_entry_rectangle *)header;
-        baseAddr += sizeof(render_entry_rectangle);
+        render_entry_rectangle *entry = (render_entry_rectangle *)data;
+        offset += sizeof(render_entry_rectangle);
         v3 entityP = entry->entityBasis.basis->p;
 
         v2 min = GetEntityMinCorner(&entry->entityBasis,
@@ -579,8 +571,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
       } break;
 
       case RenderEntryType_render_entry_bitmap: {
-        render_entry_bitmap *entry = (render_entry_bitmap *)header;
-        baseAddr += sizeof(render_entry_bitmap);
+        render_entry_bitmap *entry = (render_entry_bitmap *)data;
+        offset += sizeof(render_entry_bitmap);
 
         v2 min = GetEntityMinCorner(&entry->entityBasis,
           screenCenter,
@@ -591,8 +583,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
       case RenderEntryType_render_entry_coordinate_system: {
         render_entry_coordinate_system *entry
-          = (render_entry_coordinate_system *)header;
-        baseAddr += sizeof(render_entry_coordinate_system);
+          = (render_entry_coordinate_system *)data;
+        offset += sizeof(render_entry_coordinate_system);
 
         v2 min = entry->origin;
         v2 max = entry->origin + entry->xAxis + entry->yAxis;
