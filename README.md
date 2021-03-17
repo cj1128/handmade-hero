@@ -196,6 +196,7 @@ My preferred code style for C is different from Casey's.
 - [Day 93: Textured Quadrilaterals](#day-93-textured-quadrilaterals)
 - [Day 94: Converting sRGB to Light-linear Space](#day-94-converting-srgb-to-light-linear-space)
 - [Day 95: Gamma-correct Premultiplied Alpha](#day-95-gamma-correct-premultiplied-alpha)
+- [Day 96: Introduction to Lighting](#day-96-introduction-to-lighting)
 
 <!-- /MarkdownTOC -->
 
@@ -1018,3 +1019,18 @@ To-do list:
   - Let's the `PushRenderElement` function do this job
 - `-Zo` used for [enhanced optimized code debugging](https://docs.microsoft.com/en-us/cpp/build/reference/zo-enhance-optimized-debugging?view=msvc-160)
 
+### Day 96: Introduction to Lighting
+
+I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.com/computer-graphics-from-scratch/) these days, it's a good source to learn about lighting.
+
+- Only render render_entry_coordinate_system and turn the optimization flag off
+- Doug Church: Lighting is the sound of graphics.
+- Casey explains things about lighting and there are so many terms I don't understand...
+- Get lighting fully right is extremely hard
+- Lighting problems in 2D
+  - We don't know what the surfaces are
+    - normal maps
+  - We don't know what the light field is
+    - point lights
+    - light rendering
+- RESOURCE: A good book about lighting [Physically Based Rendering:From Theory To Implementation](http://www.pbr-book.org/)

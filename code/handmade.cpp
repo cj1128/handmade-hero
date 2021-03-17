@@ -834,7 +834,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 screenCenter = 0.5f * v2{ (f32)buffer->width, (f32)buffer->height };
 
   // background
-  Clear(renderGroup, V4(1.0f, 0.0f, 1.0f, 0.0f));
+  Clear(renderGroup, V4(0.5f, 0.5f, 0.5f, 0.0f));
 
   f32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
   f32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;

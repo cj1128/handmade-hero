@@ -567,7 +567,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           screenCenter,
           renderGroup->metersToPixels);
 
-        DrawRectangle(outputTarget, min, min + entry->dim, entry->color);
+        // DrawRectangle(outputTarget, min, min + entry->dim, entry->color);
       } break;
 
       case RenderEntryType_render_entry_bitmap: {
@@ -578,7 +578,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           screenCenter,
           renderGroup->metersToPixels);
 
-        DrawBitmap(outputTarget, entry->bitmap, min, entry->alpha);
+        // DrawBitmap(outputTarget, entry->bitmap, min, entry->alpha);
       } break;
 
       case RenderEntryType_render_entry_coordinate_system: {
