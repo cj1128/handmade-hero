@@ -197,6 +197,8 @@ My preferred code style for C is different from Casey's.
 - [Day 94: Converting sRGB to Light-linear Space](#day-94-converting-srgb-to-light-linear-space)
 - [Day 95: Gamma-correct Premultiplied Alpha](#day-95-gamma-correct-premultiplied-alpha)
 - [Day 96: Introduction to Lighting](#day-96-introduction-to-lighting)
+- [Day 97: Adding Normal Maps to the Pipeline](#day-97-adding-normal-maps-to-the-pipeline)
+- [Day 98: Normal Map Code Cleanup](#day-98-normal-map-code-cleanup)
 
 <!-- /MarkdownTOC -->
 
@@ -1034,3 +1036,16 @@ I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.
     - point lights
     - light rendering
 - RESOURCE: A good book about lighting [Physically Based Rendering:From Theory To Implementation](http://www.pbr-book.org/)
+
+### Day 97: Adding Normal Maps to the Pipeline
+
+- Introduce normal map and environment map
+  - Define `environment_map`
+  - Add top, middle and bottom environment map and normal map to `DrawRectangleSlowly`
+- Define `SampleEnvironmentMap`
+- Define `MakeSphereNormalMap` to generate a fake normal map and test our code
+
+### Day 98: Normal Map Code Cleanup
+
+- There are two types of bitmaps: front-facing bitmaps and up-facing bitmaps
+- Clean up previous code

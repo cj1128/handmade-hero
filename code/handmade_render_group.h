@@ -1,6 +1,10 @@
 #ifndef HANDMADE_RENDER_GROUP_H
 #define HANDMADE_RENDER_GROUP_H
 
+struct environment_map {
+  loaded_bitmap *lod[4];
+};
+
 struct render_basis {
   v3 p;
 };
@@ -22,7 +26,10 @@ struct render_entry_coordinate_system {
   v2 yAxis;
   v4 color;
   loaded_bitmap *texture;
-  v2 points[16];
+  loaded_bitmap *normalMap;
+  environment_map *top;
+  environment_map *middle;
+  environment_map *bottom;
 };
 
 struct render_entry_clear {

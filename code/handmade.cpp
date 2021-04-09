@@ -6,6 +6,46 @@
 #include "handmade_entity.cpp"
 #include "handmade_sim_region.cpp"
 
+internal void
+MakeSphereNormalMap(loaded_bitmap *bitmap, f32 roughness)
+{
+
+  f32 invWidth = 1.0f / (f32)(bitmap->width - 1);
+  f32 invHeight = 1.0f / (f32)(bitmap->height - 1);
+
+  u8 *row = (u8 *)bitmap->memory;
+
+  for(i32 y = 0; y < bitmap->height; y++) {
+    u32 *pixel = (u32 *)row;
+
+    for(i32 x = 0; x < bitmap->width; x++) {
+      v2 uv = { invWidth * x, invHeight * y };
+
+      f32 nx = 2.0f * uv.x - 1.0f;
+      f32 ny = 2.0f * uv.y - 1.0f;
+
+      f32 rootTerm = 1.0f - nx * nx - ny * ny;
+      v3 normal = { 0, 0, 1 };
+      f32 nz = 0.0f;
+      if(rootTerm >= 0.0f) {
+        nz = SquareRoot(rootTerm);
+        normal = V3(nx, ny, nz);
+      }
+
+      v4 value = {
+        255.0f * (0.5f * (normal.x + 1.0f)),
+        255.0f * (0.5f * (normal.y + 1.0f)),
+        255.0f * (0.5f * (normal.z + 1.0f)),
+        255.0f * roughness,
+      };
+
+      *pixel++ = Pack4x8(value);
+    }
+
+    row += bitmap->pitch;
+  }
+}
+
 inline world_position
 WorldPositionFromTilePosition(game_world *world,
   i32 tileX,
@@ -729,6 +769,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   transient_state *tranState = (transient_state *)(memory->transientStorage);
   if(!tranState->isInitialized) {
     tranState->isInitialized = true;
+
     InitializeArena(&tranState->tranArena,
       memory->transientStorageSize - sizeof(transient_state),
       (u8 *)memory->transientStorage + sizeof(transient_state));
@@ -752,6 +793,12 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         groundHeight,
         PushSize(&tranState->tranArena, totalMemorySize));
     }
+
+    state->treeNormal = MakeEmptyBitmap(&tranState->tranArena,
+      state->tree.width,
+      state->tree.height,
+      false);
+    MakeSphereNormalMap(&state->treeNormal, 0.0f);
   }
 
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);
@@ -1103,27 +1150,27 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static f32 angle = 0;
-  angle += 0.4f * input->dt;
+  // angle += 0.4f * input->dt;
   v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
+  v2 yAxis = Perp(xAxis);
   // v2 xAxis = V2(300, 0);
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
-  v2 yAxis = Perp(xAxis);
   v2 origin
     = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis;
   v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
     0.5f + 0.5f * Sin(8.0f * angle),
     0.5f + 0.5f * Cos(5.0f * angle),
     0.5f + 0.5f * Cos(10.0f * angle) };
-  render_entry_coordinate_system *c
-    = CoordinateSystem(renderGroup, origin, xAxis, yAxis, color);
-  c->texture = &state->tree;
-
-  u32 pointIndex = 0;
-  for(f32 y = 0.0f; y < 1.0f; y += 0.25) {
-    for(f32 x = 0.0f; x < 1.0f; x += 0.25) {
-      c->points[pointIndex++] = V2(x, y);
-    }
-  }
+  render_entry_coordinate_system *c = CoordinateSystem(renderGroup,
+    origin,
+    xAxis,
+    yAxis,
+    color,
+    &state->tree,
+    &state->treeNormal,
+    NULL,
+    NULL,
+    NULL);
 
   RenderGroupToOutput(renderGroup, drawBuffer);
 

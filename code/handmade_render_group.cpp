@@ -1,4 +1,20 @@
 inline v4
+UnscaleAndBiasNormal(v4 normal)
+{
+  v4 result;
+
+  f32 inv255 = 1.0f / 255.0f;
+
+  result.x = -1.0f + 2.0f * (normal.x * inv255);
+  result.y = -1.0f + 2.0f * (normal.y * inv255);
+  result.z = -1.0f + 2.0f * (normal.z * inv255);
+
+  result.w = normal.w * inv255;
+
+  return result;
+}
+
+inline v4
 SRGB255ToLinear1(v4 color)
 {
   v4 result = {};
@@ -173,12 +189,98 @@ DrawMatte(loaded_bitmap *buffer,
 }
 
 inline v4
-Uint32ToSRGB255(u32 color)
+Unpack4x8(u32 color)
 {
   v4 result = { (f32)((color >> 16) & 0xff),
     (f32)((color >> 8) & 0xff),
     (f32)((color >> 0) & 0xff),
     (f32)((color >> 24) & 0xff) };
+  return result;
+}
+
+inline u32
+Pack4x8(v4 value)
+{
+  u32 result = ((u32)(value.a + 0.5f) << 24) | ((u32)(value.r + 0.5f) << 16)
+    | ((u32)(value.g + 0.5f) << 8) | (u32)(value.b + 0.5f);
+
+  return result;
+}
+
+inline u32
+SRGB1ToUint32(v4 color)
+{
+  u32 result = Pack4x8(color * 255.0f);
+
+  return result;
+}
+
+struct bilinear_sample {
+  u32 a, b, c, d;
+};
+
+inline bilinear_sample
+BilinearSample(loaded_bitmap *bitmap, i32 x, i32 y)
+{
+  Assert(x >= 0 && x < bitmap->width - 1);
+  Assert(y >= 0 && y < bitmap->height - 1);
+
+  bilinear_sample result;
+  u8 *ptr = (u8 *)(bitmap->memory) + y * bitmap->pitch + x * 4;
+
+  result.a = *((u32 *)ptr);
+  result.b = *((u32 *)(ptr + 4));
+  result.c = *((u32 *)(ptr + bitmap->pitch));
+  result.d = *((u32 *)(ptr + bitmap->pitch + 4));
+
+  return result;
+}
+
+v4
+SRGBBilinearBlend(bilinear_sample sample, f32 fx, f32 fy)
+{
+  v4 texelA = Unpack4x8(sample.a);
+  v4 texelB = Unpack4x8(sample.b);
+  v4 texelC = Unpack4x8(sample.c);
+  v4 texelD = Unpack4x8(sample.d);
+
+  texelA = SRGB255ToLinear1(texelA);
+  texelB = SRGB255ToLinear1(texelB);
+  texelC = SRGB255ToLinear1(texelC);
+  texelD = SRGB255ToLinear1(texelD);
+
+  v4 result = Lerp(Lerp(texelA, fx, texelB), fy, Lerp(texelC, fx, texelD));
+
+  return result;
+}
+
+inline v3
+SampleEnvironmentMap(v2 screenSpaceUV,
+  v3 normal,
+  f32 roughness,
+  environment_map *map)
+{
+  u32 lodIndex = (u32)(roughness * (f32)(ArrayCount(map->lod) - 1) + 0.5f);
+  Assert(lodIndex < ArrayCount(map->lod));
+
+  loaded_bitmap *lod = map->lod[lodIndex];
+
+  // TODO: Do intersection math to determine where we should be
+  f32 tx = 0.0f;
+  f32 ty = 0.0f;
+
+  i32 x = (i32)tx;
+  i32 y = (i32)ty;
+
+  f32 fx = tx - (f32)x;
+  f32 fy = ty - (f32)y;
+
+  Assert(x >= 0 && x < lod->width - 1);
+  Assert(y >= 0 && y < lod->height - 1);
+
+  bilinear_sample sample = BilinearSample(lod, x, y);
+  v3 result = SRGBBilinearBlend(sample, fx, fy).xyz;
+
   return result;
 }
 
@@ -189,19 +291,24 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   v2 xAxis,
   v2 yAxis,
   v4 color,
-  loaded_bitmap *texture)
+  loaded_bitmap *texture,
+  loaded_bitmap *normalMap,
+  environment_map *top,
+  environment_map *middle,
+  environment_map *bottom)
 {
   color.rgb *= color.a;
 
-  u32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
-    | (RoundReal32ToUint32(color.g * 255.0f) << 8)
-    | RoundReal32ToUint32(color.b * 255.0f);
+  u32 c = SRGB1ToUint32(color);
 
   f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
   f32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
 
   i32 maxWidth = buffer->width - 1;
   i32 maxHeight = buffer->height - 1;
+
+  f32 invMaxWidth = 1.0f / (f32)maxWidth;
+  f32 invMaxHeight = 1.0f / (f32)maxHeight;
 
   i32 minX = maxWidth;
   i32 minY = maxHeight;
@@ -260,6 +367,8 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         f32 u = Inner(d, xAxis) * invXAxisLengthSq;
         f32 v = Inner(d, yAxis) * invYAxisLengthSq;
 
+        v2 screenSpaceUV = { invMaxWidth * (f32)x, invMaxHeight * (f32)y };
+
         // f32 epsilon = 1.0f;
         Assert(u >= 0.0f && u <= 1.0f);
         Assert(v >= 0.0f && v <= 1.0f);
@@ -277,46 +386,60 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
         Assert(tx >= 0 && tx < texture->width - 1);
         Assert(ty >= 0 && ty < texture->height - 1);
 
-        u8 *texelPtr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
+        bilinear_sample bilinearSample = BilinearSample(texture, tx, ty);
+        v4 texel = SRGBBilinearBlend(bilinearSample, fx, fy);
 
-        u32 texelAValue = *((u32 *)texelPtr);
-        u32 texelBValue = *((u32 *)(texelPtr + 4));
-        u32 texelCValue = *((u32 *)(texelPtr + texture->pitch));
-        u32 texelDValue = *((u32 *)(texelPtr + texture->pitch + 4));
+        if(normalMap) {
+          bilinear_sample normalSample = BilinearSample(normalMap, tx, ty);
+          v4 normalA = Unpack4x8(normalSample.a);
+          v4 normalB = Unpack4x8(normalSample.b);
+          v4 normalC = Unpack4x8(normalSample.c);
+          v4 normalD = Unpack4x8(normalSample.d);
 
-        v4 texelA = Uint32ToSRGB255(texelAValue);
-        texelA = SRGB255ToLinear1(texelA);
+          v4 normal
+            = Lerp(Lerp(normalA, fx, normalB), fy, Lerp(normalC, fx, normalD));
 
-        v4 texelB = Uint32ToSRGB255(texelBValue);
-        texelB = SRGB255ToLinear1(texelB);
+          normal = UnscaleAndBiasNormal(normal);
 
-        v4 texelC = Uint32ToSRGB255(texelCValue);
-        texelC = SRGB255ToLinear1(texelC);
+          // TODO: Do we really need to do this?
+          normal.xyz = Normalize(normal.xyz);
 
-        v4 texelD = Uint32ToSRGB255(texelDValue);
-        texelD = SRGB255ToLinear1(texelD);
+          environment_map *farMap = 0;
+          f32 tEnvMap = normal.y;
+          f32 tFarMap = 0.0f;
 
-#if 1
-        // Bilinear texture filtering
-        v4 texel = Lerp(Lerp(texelA, fx, texelB), fy, Lerp(texelC, fx, texelD));
-#else
-        v4 texel = texelA;
-#endif
+          if(tEnvMap < -0.5f) {
+            farMap = bottom;
+            tFarMap = 2.0f * (tEnvMap + 1.0f);
+          } else if(tEnvMap > 0.5f) {
+            tFarMap = 2.0f * (tEnvMap - 0.5f);
+          }
+
+          v3 lightColor = { 0, 0, 0.5f };
+
+          if(farMap) {
+            v3 farMapColor = SampleEnvironmentMap(screenSpaceUV,
+              normal.xyz,
+              normal.w,
+              farMap);
+            lightColor = Lerp(lightColor, tFarMap, farMapColor);
+          }
+
+          texel.rgb = texel.rgb + texel.a * lightColor;
+        }
 
         texel = Hadamard(texel, color);
+        texel.r = Clamp01(texel.r);
+        texel.g = Clamp01(texel.g);
+        texel.b = Clamp01(texel.b);
 
-        v4 dest = SRGB255ToLinear1(Uint32ToSRGB255(*pixel));
+        v4 dest = SRGB255ToLinear1(Unpack4x8(*pixel));
 
+        // texel is premultiplied alpha
         v4 blended = (1.0f - texel.a) * dest + texel;
 
         blended = Linear1ToSRGB255(blended);
-
-        // clang-format off
-        *pixel = ((u32)(blended.a + 0.5f) << 24) |
-          ((u32)(blended.r + 0.5f) << 16) |
-          ((u32)(blended.g + 0.5f) << 8) |
-          ((u32)(blended.b + 0.5f));
-        // clang-format on
+        *pixel = Pack4x8(blended);
       }
 
       pixel++;
@@ -454,7 +577,16 @@ Clear(render_group *group, v4 color)
 }
 
 internal render_entry_coordinate_system *
-CoordinateSystem(render_group *group, v2 origin, v2 xAxis, v2 yAxis, v4 color)
+CoordinateSystem(render_group *group,
+  v2 origin,
+  v2 xAxis,
+  v2 yAxis,
+  v4 color,
+  loaded_bitmap *texture,
+  loaded_bitmap *normalMap,
+  environment_map *top,
+  environment_map *middle,
+  environment_map *bottom)
 {
   render_entry_coordinate_system *entry
     = PushRenderElement(group, render_entry_coordinate_system);
@@ -463,6 +595,11 @@ CoordinateSystem(render_group *group, v2 origin, v2 xAxis, v2 yAxis, v4 color)
   entry->xAxis = xAxis;
   entry->yAxis = yAxis;
   entry->color = color;
+  entry->texture = texture;
+  entry->normalMap = normalMap;
+  entry->top = top;
+  entry->middle = middle;
+  entry->bottom = bottom;
 
   return entry;
 }
@@ -593,19 +730,23 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->xAxis,
           entry->yAxis,
           entry->color,
-          entry->texture);
+          entry->texture,
+          entry->normalMap,
+          entry->top,
+          entry->middle,
+          entry->bottom);
 
-        v2 dim = V2(2, 2);
-        v2 p = entry->origin;
-        DrawRectangle(outputTarget, p, p + dim, entry->color);
+        // v2 dim = V2(2, 2);
+        // v2 p = entry->origin;
+        // DrawRectangle(outputTarget, p, p + dim, entry->color);
 
-        p = entry->origin + entry->xAxis;
-        DrawRectangle(outputTarget, p, p + dim, entry->color);
+        // p = entry->origin + entry->xAxis;
+        // DrawRectangle(outputTarget, p, p + dim, entry->color);
 
-        p = entry->origin + entry->yAxis;
-        DrawRectangle(outputTarget, p, p + dim, entry->color);
+        // p = entry->origin + entry->yAxis;
+        // DrawRectangle(outputTarget, p, p + dim, entry->color);
 
-        DrawRectangle(outputTarget, max, max + dim, entry->color);
+        // DrawRectangle(outputTarget, max, max + dim, entry->color);
 #if 0
         for(u32 i = 0; i < ArrayCount(entry->points); i++) {
           v2 p = entry->points[i];

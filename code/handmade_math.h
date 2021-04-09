@@ -269,6 +269,20 @@ IsZero(v3 a)
   return result;
 }
 
+inline v3
+Normalize(v3 value)
+{
+  v3 result = value * (1.0f / Length(value));
+  return result;
+}
+
+inline v3
+Lerp(v3 a, f32 t, v3 b)
+{
+  v3 result = (1 - t) * a + t * b;
+  return result;
+}
+
 //
 // v4
 //
@@ -283,6 +297,10 @@ union v4 {
   struct {
     v3 rgb;
     f32 a;
+  };
+  struct {
+    v3 xyz;
+    f32 w;
   };
   f32 e[4];
 };
