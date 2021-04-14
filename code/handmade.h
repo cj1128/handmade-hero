@@ -60,12 +60,10 @@ ZeroSize(void *ptr, size_t size)
 
 #define ZeroStruct(instance) ZeroSize(&(instance), sizeof(instance))
 
-struct loaded_bitmap {
-  void *memory;
-  i32 width;
-  i32 height;
-  i32 pitch;
-};
+#include "handmade_world.h"
+#include "handmade_entity.h"
+#include "handmade_sim_region.h"
+#include "handmade_render_group.h"
 
 struct hero_bitmaps {
   v2 align;
@@ -73,10 +71,6 @@ struct hero_bitmaps {
   loaded_bitmap cape;
   loaded_bitmap torso;
 };
-
-#include "handmade_world.h"
-#include "handmade_entity.h"
-#include "handmade_sim_region.h"
 
 struct controlled_hero {
   stored_entity *stored;
@@ -107,6 +101,14 @@ struct transient_state {
   i32 groundPitch;
   u32 groundBufferCount;
   ground_buffer *groundBuffers;
+
+  i32 envMapWidth;
+  i32 envMapHeight;
+  // 0: bottom, 1: middle, 2: top
+  environment_map envMap[3];
+
+  loaded_bitmap testDiffuse;
+  loaded_bitmap testNormal;
 };
 
 struct game_state {
@@ -115,6 +117,8 @@ struct game_state {
   memory_arena worldArena;
   game_world world;
   world_position cameraP;
+
+  f32 time;
 
   bool32 debugDrawBoundary = false;
 
@@ -131,7 +135,6 @@ struct game_state {
 
   loaded_bitmap background;
   loaded_bitmap tree;
-  loaded_bitmap treeNormal;
   loaded_bitmap sword;
   loaded_bitmap shadow;
   hero_bitmaps heroBitmaps[4];

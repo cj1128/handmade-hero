@@ -1,8 +1,15 @@
 #ifndef HANDMADE_RENDER_GROUP_H
 #define HANDMADE_RENDER_GROUP_H
 
+struct loaded_bitmap {
+  void *memory;
+  i32 width;
+  i32 height;
+  i32 pitch;
+};
+
 struct environment_map {
-  loaded_bitmap *lod[4];
+  loaded_bitmap lod[4];
 };
 
 struct render_basis {
@@ -14,10 +21,15 @@ enum render_entry_type {
   RenderEntryType_render_entry_rectangle,
   RenderEntryType_render_entry_bitmap,
   RenderEntryType_render_entry_coordinate_system,
+  RenderEntryType_render_entry_saturation,
 };
 
 struct render_entry_header {
   render_entry_type type;
+};
+
+struct render_entry_saturation {
+  f32 level;
 };
 
 struct render_entry_coordinate_system {

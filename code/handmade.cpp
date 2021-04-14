@@ -1,5 +1,4 @@
 #include "handmade.h"
-#include "handmade_render_group.h"
 #include "handmade_render_group.cpp"
 #include "handmade_random.h"
 #include "handmade_world.cpp"
@@ -794,11 +793,37 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         PushSize(&tranState->tranArena, totalMemorySize));
     }
 
-    state->treeNormal = MakeEmptyBitmap(&tranState->tranArena,
-      state->tree.width,
-      state->tree.height,
+    tranState->testDiffuse
+      = MakeEmptyBitmap(&tranState->tranArena, 256, 256, false);
+    DrawRectangle(&tranState->testDiffuse,
+      V2(0, 0),
+      V2(tranState->testDiffuse.width, tranState->testDiffuse.height),
+      V4(0.5f, 0.5f, 0.5f, 1.0f));
+
+    tranState->testNormal = MakeEmptyBitmap(&tranState->tranArena,
+      tranState->testDiffuse.width,
+      tranState->testDiffuse.height,
       false);
-    MakeSphereNormalMap(&state->treeNormal, 0.0f);
+    MakeSphereNormalMap(&tranState->testNormal, 0.0f);
+
+    tranState->envMapWidth = 512;
+    tranState->envMapHeight = 256;
+
+    for(u32 mapIndex = 0; mapIndex < ArrayCount(tranState->envMap);
+        mapIndex++) {
+      environment_map *map = tranState->envMap + mapIndex;
+
+      i32 lodWidth = tranState->envMapWidth;
+      i32 lodHeight = tranState->envMapHeight;
+
+      for(u32 lodIndex = 0; lodIndex < ArrayCount(map->lod); lodIndex++) {
+        map->lod[lodIndex]
+          = MakeEmptyBitmap(&tranState->tranArena, lodWidth, lodHeight, false);
+
+        lodWidth >>= 1;
+        lodHeight >>= 1;
+      }
+    }
   }
 
   for(int controllerIndex = 0; controllerIndex < ArrayCount(input->controllers);
@@ -881,7 +906,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 screenCenter = 0.5f * v2{ (f32)buffer->width, (f32)buffer->height };
 
   // background
-  Clear(renderGroup, V4(0.5f, 0.5f, 0.5f, 0.0f));
+  Clear(renderGroup, V4(0.25f, 0.25f, 0.25f, 0.0f));
 
   f32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
   f32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
@@ -978,6 +1003,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   v3 simExpansion = { 15.0f, 15.0f, 15.0f };
   rectangle3 simBounds = AddRadius(cameraBounds, simExpansion);
+
+  state->time += input->dt;
 
   sim_region *simRegion = BeginSim(&tranState->tranArena,
     state,
@@ -1157,20 +1184,84 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
   v2 origin
     = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis;
-  v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
-    0.5f + 0.5f * Sin(8.0f * angle),
-    0.5f + 0.5f * Cos(5.0f * angle),
-    0.5f + 0.5f * Cos(10.0f * angle) };
-  render_entry_coordinate_system *c = CoordinateSystem(renderGroup,
+  v4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+  // v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
+  //   0.5f + 0.5f * Sin(8.0f * angle),
+  //   0.5f + 0.5f * Cos(5.0f * angle),
+  //   0.5f + 0.5f * Cos(10.0f * angle) };
+  CoordinateSystem(renderGroup,
     origin,
     xAxis,
     yAxis,
     color,
-    &state->tree,
-    &state->treeNormal,
-    NULL,
-    NULL,
-    NULL);
+    &tranState->testDiffuse,
+    &tranState->testNormal,
+    tranState->envMap + 2,
+    tranState->envMap + 1,
+    tranState->envMap + 0);
+
+  v4 mapColors[] = {
+    { 1, 0, 0, 1 },
+    { 0, 1, 0, 1 },
+    { 0, 0, 1, 1 },
+  };
+  for(u32 mapIndex = 0; mapIndex < ArrayCount(tranState->envMap); mapIndex++) {
+    environment_map *map = tranState->envMap + mapIndex;
+    loaded_bitmap *lod = map->lod + 0;
+
+    i32 checkerWidth = 16;
+    i32 checkerHeight = 16;
+    bool32 rowToggle = false;
+
+    for(i32 y = 0; y < lod->height; y += checkerHeight) {
+      bool32 toggle = rowToggle;
+
+      for(i32 x = 0; x < lod->width; x += checkerWidth) {
+        v2 minP = V2(x, y);
+        v2 maxP = minP + V2(checkerWidth, checkerHeight);
+
+        DrawRectangle(lod,
+          minP,
+          maxP,
+          toggle ? mapColors[mapIndex] : V4(0, 0, 0, 1));
+
+        toggle = !toggle;
+      }
+
+      rowToggle = !rowToggle;
+    }
+  }
+
+  {
+    v2 mapP = V2(0, 0);
+
+    for(u32 mapIndex = 0; mapIndex < ArrayCount(tranState->envMap);
+        mapIndex++) {
+      environment_map *map = tranState->envMap + mapIndex;
+      i32 width = map->lod[0].width;
+      i32 height = map->lod[0].height;
+
+      v2 xAxis = 0.5f * V2(width, 0);
+      v2 yAxis = 0.5f * V2(0, height);
+
+      CoordinateSystem(renderGroup,
+        mapP,
+        xAxis,
+        yAxis,
+        V4(1, 1, 1, 1),
+        map->lod + 0,
+        NULL,
+        NULL,
+        NULL,
+        NULL);
+
+      mapP += V2(0.0f, 6.0f + yAxis.y);
+    }
+  }
+
+#if 0
+  Saturation(renderGroup, 0.5f + 0.5f * Sin(10.f * state->time));
+#endif
 
   RenderGroupToOutput(renderGroup, drawBuffer);
 

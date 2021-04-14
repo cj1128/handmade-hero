@@ -1,4 +1,31 @@
 inline v4
+Unpack4x8(u32 color)
+{
+  v4 result = { (f32)((color >> 16) & 0xff),
+    (f32)((color >> 8) & 0xff),
+    (f32)((color >> 0) & 0xff),
+    (f32)((color >> 24) & 0xff) };
+  return result;
+}
+
+inline u32
+Pack4x8(v4 value)
+{
+  u32 result = ((u32)(value.a + 0.5f) << 24) | ((u32)(value.r + 0.5f) << 16)
+    | ((u32)(value.g + 0.5f) << 8) | (u32)(value.b + 0.5f);
+
+  return result;
+}
+
+inline u32
+SRGB1ToUint32(v4 color)
+{
+  u32 result = Pack4x8(color * 255.0f);
+
+  return result;
+}
+
+inline v4
 UnscaleAndBiasNormal(v4 normal)
 {
   v4 result;
@@ -35,6 +62,32 @@ Linear1ToSRGB255(v4 color)
   result.b = 255.0f * SquareRoot(color.b);
   result.a = 255.0f * color.a;
   return result;
+}
+
+internal void
+ChangeSaturation(loaded_bitmap *buffer, f32 level)
+{
+  u8 *destRow = (u8 *)buffer->memory;
+
+  for(int y = 0; y < buffer->height; y++) {
+    u32 *dest = (u32 *)destRow;
+
+    for(int x = 0; x < buffer->width; x++) {
+      v4 d = Unpack4x8(*dest);
+
+      d = SRGB255ToLinear1(d);
+
+      f32 avg = (1.0f / 3.0f) * (d.r + d.g + d.b);
+      v3 delta = { d.r - avg, d.g - avg, d.b - avg };
+      d = V4(V3(avg, avg, avg) + level * delta, d.a);
+
+      *dest = SRGB1ToUint32(d);
+
+      dest++;
+    }
+
+    destRow += buffer->pitch;
+  }
 }
 
 internal void
@@ -188,33 +241,6 @@ DrawMatte(loaded_bitmap *buffer,
   }
 }
 
-inline v4
-Unpack4x8(u32 color)
-{
-  v4 result = { (f32)((color >> 16) & 0xff),
-    (f32)((color >> 8) & 0xff),
-    (f32)((color >> 0) & 0xff),
-    (f32)((color >> 24) & 0xff) };
-  return result;
-}
-
-inline u32
-Pack4x8(v4 value)
-{
-  u32 result = ((u32)(value.a + 0.5f) << 24) | ((u32)(value.r + 0.5f) << 16)
-    | ((u32)(value.g + 0.5f) << 8) | (u32)(value.b + 0.5f);
-
-  return result;
-}
-
-inline u32
-SRGB1ToUint32(v4 color)
-{
-  u32 result = Pack4x8(color * 255.0f);
-
-  return result;
-}
-
 struct bilinear_sample {
   u32 a, b, c, d;
 };
@@ -263,11 +289,11 @@ SampleEnvironmentMap(v2 screenSpaceUV,
   u32 lodIndex = (u32)(roughness * (f32)(ArrayCount(map->lod) - 1) + 0.5f);
   Assert(lodIndex < ArrayCount(map->lod));
 
-  loaded_bitmap *lod = map->lod[lodIndex];
+  loaded_bitmap *lod = map->lod + lodIndex;
 
   // TODO: Do intersection math to determine where we should be
-  f32 tx = 0.0f;
-  f32 ty = 0.0f;
+  f32 tx = lod->width / 2 + normal.x * (f32)(lod->width / 2);
+  f32 ty = lod->height / 2 + normal.y * (f32)(lod->height / 2);
 
   i32 x = (i32)tx;
   i32 y = (i32)ty;
@@ -410,12 +436,13 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
           if(tEnvMap < -0.5f) {
             farMap = bottom;
-            tFarMap = 2.0f * (tEnvMap + 1.0f);
+            tFarMap = 2.0f * (-tEnvMap - 0.5f);
           } else if(tEnvMap > 0.5f) {
+            farMap = top;
             tFarMap = 2.0f * (tEnvMap - 0.5f);
           }
 
-          v3 lightColor = { 0, 0, 0.5f };
+          v3 lightColor = { 0, 0, 0 };
 
           if(farMap) {
             v3 farMapColor = SampleEnvironmentMap(screenSpaceUV,
@@ -449,7 +476,7 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   }
 }
 
-// exclusive
+// exclusive: [min, max)
 internal void
 DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 {
@@ -471,9 +498,7 @@ DrawRectangle(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
     maxY = buffer->height;
   }
 
-  u32 c = (RoundReal32ToUint32(color.r * 255.0f) << 16)
-    | (RoundReal32ToUint32(color.g * 255.0f) << 8)
-    | RoundReal32ToUint32(color.b * 255.0f);
+  u32 c = SRGB1ToUint32(color);
 
   u8 *row
     = (u8 *)buffer->memory + minY * buffer->pitch + minX * BYTES_PER_PIXEL;
@@ -567,6 +592,14 @@ PushBitmap(render_group *group,
   entry->entityBasis.entityZC = entityZC;
   entry->bitmap = bitmap;
   entry->alpha = alpha;
+}
+
+internal void
+Saturation(render_group *group, f32 level)
+{
+  render_entry_saturation *entry
+    = PushRenderElement(group, render_entry_saturation);
+  entry->level = level;
 }
 
 internal void
@@ -695,6 +728,13 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->color);
       } break;
 
+      case RenderEntryType_render_entry_saturation: {
+        render_entry_saturation *saturation = (render_entry_saturation *)data;
+        offset += sizeof(render_entry_saturation);
+
+        ChangeSaturation(outputTarget, saturation->level);
+      } break;
+
       case RenderEntryType_render_entry_rectangle: {
         render_entry_rectangle *entry = (render_entry_rectangle *)data;
         offset += sizeof(render_entry_rectangle);
@@ -736,17 +776,18 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->middle,
           entry->bottom);
 
-        // v2 dim = V2(2, 2);
-        // v2 p = entry->origin;
-        // DrawRectangle(outputTarget, p, p + dim, entry->color);
+        v2 dim = V2(4, 4);
+        v2 p = entry->origin;
+        v4 color = { 1.0f, 1.0f, 0.0f, 1.0f };
+        DrawRectangle(outputTarget, p, p + dim, color);
 
-        // p = entry->origin + entry->xAxis;
-        // DrawRectangle(outputTarget, p, p + dim, entry->color);
+        p = entry->origin + entry->xAxis;
+        DrawRectangle(outputTarget, p, p + dim, color);
 
-        // p = entry->origin + entry->yAxis;
-        // DrawRectangle(outputTarget, p, p + dim, entry->color);
+        p = entry->origin + entry->yAxis;
+        DrawRectangle(outputTarget, p, p + dim, color);
 
-        // DrawRectangle(outputTarget, max, max + dim, entry->color);
+        DrawRectangle(outputTarget, max, max + dim, color);
 #if 0
         for(u32 i = 0; i < ArrayCount(entry->points); i++) {
           v2 p = entry->points[i];

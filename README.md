@@ -199,6 +199,7 @@ My preferred code style for C is different from Casey's.
 - [Day 96: Introduction to Lighting](#day-96-introduction-to-lighting)
 - [Day 97: Adding Normal Maps to the Pipeline](#day-97-adding-normal-maps-to-the-pipeline)
 - [Day 98: Normal Map Code Cleanup](#day-98-normal-map-code-cleanup)
+- [Day 99: Test Environment Maps](#day-99-test-environment-maps)
 
 <!-- /MarkdownTOC -->
 
@@ -1049,3 +1050,15 @@ I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.
 
 - There are two types of bitmaps: front-facing bitmaps and up-facing bitmaps
 - Clean up previous code
+
+### Day 99: Test Environment Maps
+
+- Initialize top, middle and bottom env maps
+- Note: Out roughness is always zero now
+- Fill LOD with color and draw the LODs
+- Fill LOD with checker board
+- Define testDiffuse and testNormal to test our lighting program
+- Casey demonstrates how to change saturation
+  - avg = (r + g + b)/3
+  - delta = (r - avg, g - avg, b- avg)
+  - color = avg + saturationLevel * dela
