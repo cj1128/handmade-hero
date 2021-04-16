@@ -6,7 +6,7 @@
 #include "handmade_sim_region.cpp"
 
 internal void
-MakeSphereNormalMap(loaded_bitmap *bitmap, f32 roughness)
+MakeSphereNormalMap(loaded_bitmap *bitmap, f32 roughness, f32 cx, f32 cy)
 {
 
   f32 invWidth = 1.0f / (f32)(bitmap->width - 1);
@@ -20,11 +20,11 @@ MakeSphereNormalMap(loaded_bitmap *bitmap, f32 roughness)
     for(i32 x = 0; x < bitmap->width; x++) {
       v2 uv = { invWidth * x, invHeight * y };
 
-      f32 nx = 2.0f * uv.x - 1.0f;
-      f32 ny = 2.0f * uv.y - 1.0f;
+      f32 nx = cx * (2.0f * uv.x - 1.0f);
+      f32 ny = cy * (2.0f * uv.y - 1.0f);
 
       f32 rootTerm = 1.0f - nx * nx - ny * ny;
-      v3 normal = { 0, 0, 1 };
+      v3 normal = { 0, 0.707106781188f, 0.707106781188f };
       f32 nz = 0.0f;
       if(rootTerm >= 0.0f) {
         nz = SquareRoot(rootTerm);
@@ -804,7 +804,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       tranState->testDiffuse.width,
       tranState->testDiffuse.height,
       false);
-    MakeSphereNormalMap(&tranState->testNormal, 0.0f);
+    MakeSphereNormalMap(&tranState->testNormal, 0.0f, 0.0f, 1.0f);
 
     tranState->envMapWidth = 512;
     tranState->envMapHeight = 256;
@@ -1177,13 +1177,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static f32 angle = 0;
-  // angle += 0.4f * input->dt;
-  v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
+  angle += 0.4f * input->dt;
+  // v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
+  v2 xAxis = { 200.0f, 0.0f };
   v2 yAxis = Perp(xAxis);
   // v2 xAxis = V2(300, 0);
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
-  v2 origin
-    = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis;
+  v2 distance = { 50.0f + 50.0f * Cos(angle * 2.0f), 0.0f };
+  v2 origin = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis
+    - 0.5f * yAxis + distance;
   v4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
   // v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
   //   0.5f + 0.5f * Sin(8.0f * angle),

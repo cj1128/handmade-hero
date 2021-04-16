@@ -282,7 +282,7 @@ SRGBBilinearBlend(bilinear_sample sample, f32 fx, f32 fy)
 
 inline v3
 SampleEnvironmentMap(v2 screenSpaceUV,
-  v3 normal,
+  v3 sampleDirection,
   f32 roughness,
   environment_map *map)
 {
@@ -291,9 +291,24 @@ SampleEnvironmentMap(v2 screenSpaceUV,
 
   loaded_bitmap *lod = map->lod + lodIndex;
 
-  // TODO: Do intersection math to determine where we should be
-  f32 tx = lod->width / 2 + normal.x * (f32)(lod->width / 2);
-  f32 ty = lod->height / 2 + normal.y * (f32)(lod->height / 2);
+  // 这里我们始终认为 environment map 在上面
+  // 如果外层选择了 bottom 的 environment map
+  // 我们会将 y 取反
+  // 这样这个函数工作起来比较一致
+  Assert(sampleDirection.y > 0);
+
+  // TODO(cj): The coordinate system is confusing, sometimes y sometimes z
+  // clearify the coordinate system
+  f32 distanceFromMapInZ = 1.0f;
+  f32 uvsPerMeter = 0.01f;
+  f32 C = distanceFromMapInZ / sampleDirection.y;
+  v2 offset = C * V2(sampleDirection.x, sampleDirection.z);
+  v2 uv = screenSpaceUV + uvsPerMeter * offset;
+
+  uv = Clamp01(uv);
+
+  f32 tx = uv.x * (f32)(lod->width - 2);
+  f32 ty = uv.y * (f32)(lod->height - 2);
 
   i32 x = (i32)tx;
   i32 y = (i32)ty;
@@ -430,13 +445,18 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
           // TODO: Do we really need to do this?
           normal.xyz = Normalize(normal.xyz);
 
+          // NOTE(cj): The eye vector is always assumed to be [0, 0, 1]
+          // This is the simplified version of -e + 2Inner(e, N)N
+          v3 bouncingVector = 2.0f * normal.z * normal.xyz - V3(0, 0, 1);
+
           environment_map *farMap = 0;
-          f32 tEnvMap = normal.y;
+          f32 tEnvMap = bouncingVector.y;
           f32 tFarMap = 0.0f;
 
           if(tEnvMap < -0.5f) {
             farMap = bottom;
             tFarMap = 2.0f * (-tEnvMap - 0.5f);
+            bouncingVector.y = -bouncingVector.y;
           } else if(tEnvMap > 0.5f) {
             farMap = top;
             tFarMap = 2.0f * (tEnvMap - 0.5f);
@@ -446,7 +466,7 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
           if(farMap) {
             v3 farMapColor = SampleEnvironmentMap(screenSpaceUV,
-              normal.xyz,
+              bouncingVector,
               normal.w,
               farMap);
             lightColor = Lerp(lightColor, tFarMap, farMapColor);

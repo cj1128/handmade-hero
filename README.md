@@ -200,6 +200,7 @@ My preferred code style for C is different from Casey's.
 - [Day 97: Adding Normal Maps to the Pipeline](#day-97-adding-normal-maps-to-the-pipeline)
 - [Day 98: Normal Map Code Cleanup](#day-98-normal-map-code-cleanup)
 - [Day 99: Test Environment Maps](#day-99-test-environment-maps)
+- [Day 100: Reflection Vectors](#day-100-reflection-vectors)
 
 <!-- /MarkdownTOC -->
 
@@ -1062,3 +1063,12 @@ I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.
   - avg = (r + g + b)/3
   - delta = (r - avg, g - avg, b- avg)
   - color = avg + saturationLevel * dela
+
+### Day 100: Reflection Vectors
+
+- Calc the reflection vector: -e + 2Inner(e, N)N
+- Modify `SampleEnvironmentMap`
+  - Take the reflection vector as input
+  - Define distanceFromMapInZ, let's say it's 1.0f
+  - Define uvsPerMeter, let's say it's 0.01f
+  - Calculate the point in the environment map and get color from it
