@@ -201,6 +201,7 @@ My preferred code style for C is different from Casey's.
 - [Day 98: Normal Map Code Cleanup](#day-98-normal-map-code-cleanup)
 - [Day 99: Test Environment Maps](#day-99-test-environment-maps)
 - [Day 100: Reflection Vectors](#day-100-reflection-vectors)
+- [Day 101: The Inverse and the Transpose](#day-101-the-inverse-and-the-transpose)
 
 <!-- /MarkdownTOC -->
 
@@ -1072,3 +1073,38 @@ I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.
   - Define distanceFromMapInZ, let's say it's 1.0f
   - Define uvsPerMeter, let's say it's 0.01f
   - Calculate the point in the environment map and get color from it
+
+### Day 101: The Inverse and the Transpose
+
+This is a math day. Casey explains matrices and other stuff of linear algebra.
+
+Speaking abuot lingear algebra, I recommond this book [Linear Algebra by Jim Hefferon](https://hefferon.net/linearalgebra/). It's freely available and totally accessible.
+
+Inverse of a rotation matrix:
+
+```
+X and Y are perpendicular unit vectors.
+
+R =
+Xx Yx
+Xy Yy
+
+R inverse = R' =
+Xx Xy
+Yx Yy
+
+Based on this fact:
+
+XxXx +XyXy = Inner(X, X) = 1
+
+XxYx + XyYy = Inner(X, Y) = 0
+
+YxXx + YyXy = Inner(X, Y) = 0
+
+YxYx + YyYy = Inner(Y, Y) = 1
+
+So R' R =
+
+1 0
+0 1
+```

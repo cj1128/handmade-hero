@@ -405,6 +405,7 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
       if((edgeTop < 0) && (edgeBottom < 0) && (edgeLeft < 0)
         && (edgeRight < 0)) {
+        // NOTE(cj): xAxis must be perpendicular with yAxis
         f32 u = Inner(d, xAxis) * invXAxisLengthSq;
         f32 v = Inner(d, yAxis) * invYAxisLengthSq;
 
