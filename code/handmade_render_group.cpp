@@ -284,22 +284,30 @@ inline v3
 SampleEnvironmentMap(v2 screenSpaceUV,
   v3 sampleDirection,
   f32 roughness,
-  environment_map *map)
+  environment_map *map,
+  f32 distanceFromMapInZ)
 {
+  /*
+    NOTE(cj):
+
+    screenSpaceUV tells us where the ray is being cast _from_ in normalized
+    screen coordinates.
+
+    sampleDirection tells us what direction the cast is going - it does not have
+    to be normalized.
+
+    roughness says which LODs of map we sample from.
+
+    distanceFromMapInZ says how far the map is from the sample point in Z, given
+    in meters.
+  */
+
+  // NOTE(cj): Pick which LOD to sample from
   u32 lodIndex = (u32)(roughness * (f32)(ArrayCount(map->lod) - 1) + 0.5f);
   Assert(lodIndex < ArrayCount(map->lod));
 
   loaded_bitmap *lod = map->lod + lodIndex;
 
-  // 这里我们始终认为 environment map 在上面
-  // 如果外层选择了 bottom 的 environment map
-  // 我们会将 y 取反
-  // 这样这个函数工作起来比较一致
-  Assert(sampleDirection.y > 0);
-
-  // TODO(cj): The coordinate system is confusing, sometimes y sometimes z
-  // clearify the coordinate system
-  f32 distanceFromMapInZ = 1.0f;
   f32 uvsPerMeter = 0.01f;
   f32 C = distanceFromMapInZ / sampleDirection.y;
   v2 offset = C * V2(sampleDirection.x, sampleDirection.z);
@@ -318,6 +326,9 @@ SampleEnvironmentMap(v2 screenSpaceUV,
 
   Assert(x >= 0 && x < lod->width - 1);
   Assert(y >= 0 && y < lod->height - 1);
+
+  u8 *texelPtr = (u8 *)lod->memory + y * lod->pitch + x * 4;
+  *(u32 *)texelPtr = 0xFFFFFFFF;
 
   bilinear_sample sample = BilinearSample(lod, x, y);
   v3 result = SRGBBilinearBlend(sample, fx, fy).xyz;
@@ -341,6 +352,16 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   color.rgb *= color.a;
 
   u32 c = SRGB1ToUint32(color);
+
+  f32 xAxisLength = Length(xAxis);
+  f32 yAxisLength = Length(yAxis);
+
+  v2 nXAxis = (yAxisLength / xAxisLength) * xAxis;
+  v2 nYAxis = (xAxisLength / yAxisLength) * yAxis;
+
+  // NOTE(cj): this could be a parameter if we want people to
+  // have control over the amount of scaling in the Z direction.
+  f32 nZScale = 0.5f * (xAxisLength + yAxisLength);
 
   f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
   f32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
@@ -443,21 +464,26 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
           normal = UnscaleAndBiasNormal(normal);
 
-          // TODO: Do we really need to do this?
+          // Rotate the normal
+          normal.xy = normal.x * nXAxis + normal.y * nYAxis;
+          normal.z *= nZScale;
           normal.xyz = Normalize(normal.xyz);
 
           // NOTE(cj): The eye vector is always assumed to be [0, 0, 1]
           // This is the simplified version of -e + 2Inner(e, N)N
-          v3 bouncingVector = 2.0f * normal.z * normal.xyz - V3(0, 0, 1);
+          v3 bouncingDirection = 2.0f * normal.z * normal.xyz - V3(0, 0, 1);
+
+          bouncingDirection.z = -bouncingDirection.z;
 
           environment_map *farMap = 0;
-          f32 tEnvMap = bouncingVector.y;
+          f32 distanceFromMapInZ = 2.0f;
+          f32 tEnvMap = bouncingDirection.y;
           f32 tFarMap = 0.0f;
 
           if(tEnvMap < -0.5f) {
             farMap = bottom;
             tFarMap = 2.0f * (-tEnvMap - 0.5f);
-            bouncingVector.y = -bouncingVector.y;
+            distanceFromMapInZ = -distanceFromMapInZ;
           } else if(tEnvMap > 0.5f) {
             farMap = top;
             tFarMap = 2.0f * (tEnvMap - 0.5f);
@@ -467,9 +493,10 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
           if(farMap) {
             v3 farMapColor = SampleEnvironmentMap(screenSpaceUV,
-              bouncingVector,
+              bouncingDirection,
               normal.w,
-              farMap);
+              farMap,
+              distanceFromMapInZ);
             lightColor = Lerp(lightColor, tFarMap, farMapColor);
           }
 

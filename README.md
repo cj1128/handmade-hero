@@ -77,6 +77,7 @@ My preferred code style for C is different from Casey's.
 - Every memory allocation should go through a macro, it will make the debugging much easier.
 - `Premultiplied Alpha`: check day 83 for more details.
 - `Gamma Correction`: check day 94 for more details.
+- `Transform Normal`: check day 102 for more details.
 
 ## Windows Programming
 
@@ -202,6 +203,7 @@ My preferred code style for C is different from Casey's.
 - [Day 99: Test Environment Maps](#day-99-test-environment-maps)
 - [Day 100: Reflection Vectors](#day-100-reflection-vectors)
 - [Day 101: The Inverse and the Transpose](#day-101-the-inverse-and-the-transpose)
+- [Day 102: Transforming Normals Properly](#day-102-transforming-normals-properly)
 
 <!-- /MarkdownTOC -->
 
@@ -1108,3 +1110,11 @@ So R' R =
 1 0
 0 1
 ```
+
+### Day 102: Transforming Normals Properly
+
+Because normals are perpendicular to vectors, they are affected in a perpendicular way by any transforms we do.
+
+- Rotate the normal
+- Document `SampleEnvironmentMap` function
+- Paint the LOD to debug SampleEnvironmentMap

@@ -6,7 +6,10 @@
 #include "handmade_sim_region.cpp"
 
 internal void
-MakeSphereNormalMap(loaded_bitmap *bitmap, f32 roughness, f32 cx, f32 cy)
+MakeSphereNormalMap(loaded_bitmap *bitmap,
+  f32 roughness,
+  f32 cx = 1.0f,
+  f32 cy = 1.0f)
 {
 
   f32 invWidth = 1.0f / (f32)(bitmap->width - 1);
@@ -804,7 +807,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       tranState->testDiffuse.width,
       tranState->testDiffuse.height,
       false);
-    MakeSphereNormalMap(&tranState->testNormal, 0.0f, 0.0f, 1.0f);
+    MakeSphereNormalMap(&tranState->testNormal, 0.0f);
 
     tranState->envMapWidth = 512;
     tranState->envMapHeight = 256;
@@ -1178,14 +1181,15 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static f32 angle = 0;
   angle += 0.4f * input->dt;
-  // v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
-  v2 xAxis = { 200.0f, 0.0f };
+  v2 xAxis = 200.0f * V2(Cos(angle), Sin(angle));
+  // v2 xAxis = { 200.0f, 0.0f };
   v2 yAxis = Perp(xAxis);
   // v2 xAxis = V2(300, 0);
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
-  v2 distance = { 50.0f + 50.0f * Cos(angle * 2.0f), 0.0f };
-  v2 origin = V2(10.0f * Cos(angle), 0.0f) + ScreenCenter - 0.5f * xAxis
-    - 0.5f * yAxis + distance;
+  v2 distance
+    = { 50.0f + 100.0f * Cos(angle * 2.0f), 50.0f + 50.0f * Sin(angle * 2.0f) };
+  v2 origin
+    = V2(0.0f, 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis + distance;
   v4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
   // v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
   //   0.5f + 0.5f * Sin(8.0f * angle),
@@ -1203,7 +1207,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     tranState->envMap + 0);
 
   v4 mapColors[] = {
-    { 1, 0, 0, 1 },
     { 0, 1, 0, 1 },
     { 0, 0, 1, 1 },
   };

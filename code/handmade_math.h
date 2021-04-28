@@ -302,6 +302,11 @@ union v4 {
     v3 xyz;
     f32 w;
   };
+  struct {
+    v2 xy;
+    f32 z;
+    f32 w;
+  };
   f32 e[4];
 };
 
