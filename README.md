@@ -204,6 +204,7 @@ My preferred code style for C is different from Casey's.
 - [Day 100: Reflection Vectors](#day-100-reflection-vectors)
 - [Day 101: The Inverse and the Transpose](#day-101-the-inverse-and-the-transpose)
 - [Day 102: Transforming Normals Properly](#day-102-transforming-normals-properly)
+- [Day 103: Card-like Normal Map Reflections](#day-103-card-like-normal-map-reflections)
 
 <!-- /MarkdownTOC -->
 
@@ -1118,3 +1119,14 @@ Because normals are perpendicular to vectors, they are affected in a perpendicul
 - Rotate the normal
 - Document `SampleEnvironmentMap` function
 - Paint the LOD to debug SampleEnvironmentMap
+
+### Day 103: Card-like Normal Map Reflections
+
+In a 2D perspective, the things are intentionally wrong, because the art wants them to be different.
+
+- Fix `DrawRectangleSlowly`
+  - Calculate the correct screenSpaceUV
+  - Add `z` in environment_map
+- There are two types of cards:
+  - lying-down card
+  - standing-up card
