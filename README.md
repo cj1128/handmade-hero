@@ -47,7 +47,7 @@ Build system for Sublime Text 3:
 
 ## Setup
 
-NOTE: **This repo does not contain private assets from HandmadeHero, so to build this repo, please consider preorder HandmadeHero or use some alternative assets**.
+NOTE: **This repo does not contain copyrighted assets from HandmadeHero, so to build this repo, please consider preorder HandmadeHero or use some alternative assets**.
 
 - Create a `w` drive using subst: `subst w: /c/whatever_directory_you_choose`
 - Clone this repo into the root of `w`
