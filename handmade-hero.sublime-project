@@ -1,0 +1,27 @@
+{
+  "folders":
+  [
+    {
+      "binary_file_patterns":
+      [
+      ],
+      "file_exclude_patterns":
+      [
+      ],
+      "folder_exclude_patterns":
+      [
+      ],
+      "name": "handmade-hero",
+      "path": "."
+    }
+  ],
+  "build_systems":
+  [
+    {
+      "name": "HandmadeHero",
+      "shell_cmd": "build",
+      "file_regex":"^(.+?)\\((\\d+\\))(): (error)(.+)$"
+    }
+  ]
+}
+

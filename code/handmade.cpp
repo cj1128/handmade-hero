@@ -48,6 +48,45 @@ MakeSphereNormalMap(loaded_bitmap *bitmap,
   }
 }
 
+internal void
+MakeSphereDiffuseMap(loaded_bitmap *bitmap, f32 cx = 1.0f, f32 cy = 1.0f)
+{
+
+  f32 invWidth = 1.0f / (f32)(bitmap->width - 1);
+  f32 invHeight = 1.0f / (f32)(bitmap->height - 1);
+
+  u8 *row = (u8 *)bitmap->memory;
+
+  for(i32 y = 0; y < bitmap->height; y++) {
+    u32 *pixel = (u32 *)row;
+
+    for(i32 x = 0; x < bitmap->width; x++) {
+      v2 uv = { invWidth * (f32)x, invHeight * (f32)y };
+
+      f32 nx = cx * (2.0f * uv.x - 1.0f);
+      f32 ny = cy * (2.0f * uv.y - 1.0f);
+
+      f32 rootTerm = 1.0f - nx * nx - ny * ny;
+      f32 alpha = 0.0f;
+      if(rootTerm >= 0.0f) {
+        alpha = 1.0f;
+      }
+
+      v3 baseColor = { 0.0f, 0.0f, 0.0f };
+      alpha *= 255.0f;
+
+      v4 value = { alpha * baseColor.x,
+        alpha * baseColor.y,
+        alpha * baseColor.z,
+        alpha };
+
+      *pixel++ = Pack4x8(value);
+    }
+
+    row += bitmap->pitch;
+  }
+}
+
 inline world_position
 WorldPositionFromTilePosition(game_world *world,
   i32 tileX,
@@ -808,6 +847,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       tranState->testDiffuse.height,
       false);
     MakeSphereNormalMap(&tranState->testNormal, 0.0f);
+    MakeSphereDiffuseMap(&tranState->testDiffuse);
 
     tranState->envMapWidth = 512;
     tranState->envMapHeight = 256;
@@ -1186,10 +1226,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   v2 yAxis = Perp(xAxis);
   // v2 xAxis = V2(300, 0);
   // v2 yAxis = 80.0f * V2(Cos(angle + 1.0f), Sin(angle + 1.0f));
-  v2 distance
+  v2 disp
     = { 50.0f + 100.0f * Cos(angle * 2.0f), 50.0f + 50.0f * Sin(angle * 2.0f) };
+  // v2 disp = {};
   v2 origin
-    = V2(0.0f, 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis + distance;
+    = V2(0.0f, 0.0f) + ScreenCenter - 0.5f * xAxis - 0.5f * yAxis + disp;
   v4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
   // v4 color = { 0.5f + 0.5f * Sin(5.0f * angle),
   //   0.5f + 0.5f * Sin(8.0f * angle),
@@ -1207,6 +1248,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     tranState->envMap + 0);
 
   v4 mapColors[] = {
+    { 1, 0, 0, 1 },
     { 0, 1, 0, 1 },
     { 0, 0, 1, 1 },
   };
@@ -1236,6 +1278,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       rowToggle = !rowToggle;
     }
   }
+  tranState->envMap[0].z = -1.5f;
+  tranState->envMap[1].z = 0.0f;
+  tranState->envMap[2].z = 1.5f;
 
   {
     v2 mapP = V2(0, 0);

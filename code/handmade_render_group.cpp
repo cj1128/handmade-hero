@@ -308,7 +308,7 @@ SampleEnvironmentMap(v2 screenSpaceUV,
 
   loaded_bitmap *lod = map->lod + lodIndex;
 
-  f32 uvsPerMeter = 0.01f;
+  f32 uvsPerMeter = 0.1f;
   f32 C = distanceFromMapInZ / sampleDirection.y;
   v2 offset = C * V2(sampleDirection.x, sampleDirection.z);
   v2 uv = screenSpaceUV + uvsPerMeter * offset;
@@ -327,8 +327,10 @@ SampleEnvironmentMap(v2 screenSpaceUV,
   Assert(x >= 0 && x < lod->width - 1);
   Assert(y >= 0 && y < lod->height - 1);
 
+#if 0
   u8 *texelPtr = (u8 *)lod->memory + y * lod->pitch + x * 4;
   *(u32 *)texelPtr = 0xFFFFFFFF;
+#endif
 
   bilinear_sample sample = BilinearSample(lod, x, y);
   v3 result = SRGBBilinearBlend(sample, fx, fy).xyz;
@@ -347,7 +349,8 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   loaded_bitmap *normalMap,
   environment_map *top,
   environment_map *middle,
-  environment_map *bottom)
+  environment_map *bottom,
+  f32 pixelsToMeters)
 {
   color.rgb *= color.a;
 
@@ -376,6 +379,10 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   i32 minY = maxHeight;
   i32 maxX = 0;
   i32 maxY = 0;
+
+  f32 originZ = 0.0f;
+  f32 originY = (origin + 0.5f * xAxis + 0.5f * yAxis).y;
+  f32 fixedCastY = invMaxHeight * originY;
 
   v2 ps[4] = { origin, origin + xAxis, origin + yAxis, origin + xAxis + yAxis };
   for(int pIndex = 0; pIndex < ArrayCount(ps); pIndex++) {
@@ -426,11 +433,12 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
       if((edgeTop < 0) && (edgeBottom < 0) && (edgeLeft < 0)
         && (edgeRight < 0)) {
+        v2 screenSpaceUV = { invMaxWidth * (f32)x, fixedCastY };
+        f32 zDiff = pixelsToMeters * ((f32)y - originY);
+
         // NOTE(cj): xAxis must be perpendicular with yAxis
         f32 u = Inner(d, xAxis) * invXAxisLengthSq;
         f32 v = Inner(d, yAxis) * invYAxisLengthSq;
-
-        v2 screenSpaceUV = { invMaxWidth * (f32)x, invMaxHeight * (f32)y };
 
         // f32 epsilon = 1.0f;
         Assert(u >= 0.0f && u <= 1.0f);
@@ -445,9 +453,6 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
         f32 fx = tPx - (f32)tx;
         f32 fy = tPy - (f32)ty;
-
-        Assert(tx >= 0 && tx < texture->width - 1);
-        Assert(ty >= 0 && ty < texture->height - 1);
 
         bilinear_sample bilinearSample = BilinearSample(texture, tx, ty);
         v4 texel = SRGBBilinearBlend(bilinearSample, fx, fy);
@@ -471,29 +476,31 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
           // NOTE(cj): The eye vector is always assumed to be [0, 0, 1]
           // This is the simplified version of -e + 2Inner(e, N)N
-          v3 bouncingDirection = 2.0f * normal.z * normal.xyz - V3(0, 0, 1);
-
-          bouncingDirection.z = -bouncingDirection.z;
+          v3 bouceDirection = 2.0f * normal.z * normal.xyz - V3(0, 0, 1);
+          bouceDirection.z = -bouceDirection.z;
 
           environment_map *farMap = 0;
-          f32 distanceFromMapInZ = 2.0f;
-          f32 tEnvMap = bouncingDirection.y;
+          f32 z = originZ + zDiff;
+          f32 mapZ = 2.0f;
+          f32 tEnvMap = bouceDirection.y;
           f32 tFarMap = 0.0f;
 
           if(tEnvMap < -0.5f) {
             farMap = bottom;
             tFarMap = 2.0f * (-tEnvMap - 0.5f);
-            distanceFromMapInZ = -distanceFromMapInZ;
           } else if(tEnvMap > 0.5f) {
             farMap = top;
             tFarMap = 2.0f * (tEnvMap - 0.5f);
           }
 
-          v3 lightColor = { 0, 0, 0 };
+          tFarMap *= tFarMap;
+          tFarMap *= tFarMap;
 
+          v3 lightColor = { 0, 0, 0 };
           if(farMap) {
+            f32 distanceFromMapInZ = farMap->z - z;
             v3 farMapColor = SampleEnvironmentMap(screenSpaceUV,
-              bouncingDirection,
+              bouceDirection,
               normal.w,
               farMap,
               distanceFromMapInZ);
@@ -501,6 +508,7 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
           }
 
           texel.rgb = texel.rgb + texel.a * lightColor;
+          // texel.rgb = V3(0.5f, 0.5f, 0.5f) + 0.5f * bouceDirection;
         }
 
         texel = Hadamard(texel, color);
@@ -822,7 +830,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->normalMap,
           entry->top,
           entry->middle,
-          entry->bottom);
+          entry->bottom,
+          1.0f / renderGroup->metersToPixels);
 
         v2 dim = V2(4, 4);
         v2 p = entry->origin;

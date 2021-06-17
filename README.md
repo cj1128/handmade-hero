@@ -1083,7 +1083,7 @@ I am reading this book [Computer Graphics from Scratch](https://gabrielgambetta.
 
 This is a math day. Casey explains matrices and other stuff of linear algebra.
 
-Speaking abuot lingear algebra, I recommond this book [Linear Algebra by Jim Hefferon](https://hefferon.net/linearalgebra/). It's freely available and totally accessible.
+Speaking abuot lingear algebra, I highly recommond this book [Linear Algebra by Jim Hefferon](https://hefferon.net/linearalgebra/). It's freely available and totally accessible.
 
 Inverse of a rotation matrix:
 
@@ -1124,11 +1124,14 @@ Because normals are perpendicular to vectors, they are affected in a perpendicul
 
 ### Day 103: Card-like Normal Map Reflections
 
-In a 2D perspective, the things are intentionally wrong, because the art wants them to be different.
+In a 2D perspective, things are intentionally wrong, because the art wants them to be different.
 
 - Fix `DrawRectangleSlowly`
   - Calculate the correct screenSpaceUV
   - Add `z` in environment_map
+  - Set `z` for environment maps
 - There are two types of cards:
   - lying-down card
   - standing-up card
+- Define `MakeSphereDiffuseMap`
+- TODO: The mechanism of lighting is very confusing for me now, need to review them later.
