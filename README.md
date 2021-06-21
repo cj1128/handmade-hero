@@ -47,7 +47,7 @@ Build system for Sublime Text 3:
 
 ## Setup
 
-NOTE: **This repo does not contain copyrighted assets from HandmadeHero, so to build this repo, please consider preorder HandmadeHero or use some alternative assets**.
+NOTE: **This repo does not contain copyrighted HandmadeHero assets, to build this repo, please consider preorder HandmadeHero**.
 
 - Create a `w` drive using subst: `subst w: /c/whatever_directory_you_choose`
 - Clone this repo into the root of `w`
@@ -207,6 +207,7 @@ My preferred code style for C is different from Casey's.
 - [Day 101: The Inverse and the Transpose](#day-101-the-inverse-and-the-transpose)
 - [Day 102: Transforming Normals Properly](#day-102-transforming-normals-properly)
 - [Day 103: Card-like Normal Map Reflections](#day-103-card-like-normal-map-reflections)
+- [Day 104: Switching to Y-is-up Render Targets](#day-104-switching-to-y-is-up-render-targets)
 
 <!-- /MarkdownTOC -->
 
@@ -1135,3 +1136,7 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
   - standing-up card
 - Define `MakeSphereDiffuseMap`
 - TODO: The mechanism of lighting is very confusing for me now, need to review them later.
+
+### Day 104: Switching to Y-is-up Render Targets
+
+- Switch to Y-up render targets. I don't need to do anything cause I did this long before.

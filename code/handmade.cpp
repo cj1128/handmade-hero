@@ -352,9 +352,11 @@ LoadBMP(thread_context *thread,
   debug_read_file_result ReadResult = ReadFile(thread, fileName);
   if(ReadResult.memory) {
     bitmap_header *header = (bitmap_header *)ReadResult.memory;
+
     result.width = header->width;
     result.height = header->height;
     Assert(header->compression == 3);
+    Assert(result.height >= 0);
 
     result.memory = (u32 *)((u8 *)ReadResult.memory + header->dataOffset);
 
@@ -388,9 +390,10 @@ LoadBMP(thread_context *thread,
           (f32)((*pixel & header->blueMask) >> blueShift),
           (f32)((*pixel & header->alphaMask) >> alphaShift),
         };
+
         texel = SRGB255ToLinear1(texel);
 
-        // NOTE(cj): premultiplied alpha
+        // premultiplied alpha
         texel.rgb *= texel.a;
 
         texel = Linear1ToSRGB255(texel);
@@ -996,48 +999,45 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         for(i32 chunkX = minChunk.chunkX; chunkX <= maxChunk.chunkX; chunkX++) {
           world_chunk *chunk = GetWorldChunk(world, chunkX, chunkY, chunkZ);
 
-          {
-            world_position chunkCenterP
-              = CenteredChunkPoint(world, chunkX, chunkY, chunkZ);
-            v3 chunkRel = SubtractPosition(world, chunkCenterP, state->cameraP);
+          world_position chunkCenterP
+            = CenteredChunkPoint(world, chunkX, chunkY, chunkZ);
+          v3 chunkRel = SubtractPosition(world, chunkCenterP, state->cameraP);
 
-            v2 renderCenter = screenCenter + metersToPixels * chunkRel.xy;
-            v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
+          v2 renderCenter = screenCenter + metersToPixels * chunkRel.xy;
+          v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
 
-            PushRectOutline(renderGroup,
-              chunkRel.xy,
-              V2(0, 0),
-              world->chunkDimInMeters.xy,
-              V4(1, 1, 0, 1));
+          // PushRectOutline(renderGroup,
+          //   chunkRel.xy,
+          //   V2(0, 0),
+          //   world->chunkDimInMeters.xy,
+          //   V4(1, 1, 0, 1));
 
-            ground_buffer *furthestBuffer = 0;
-            f32 furthestLengthSq = 0.0f;
+          ground_buffer *furthestBuffer = 0;
+          f32 furthestLengthSq = 0.0f;
 
-            for(u32 i = 0; i < tranState->groundBufferCount; i++) {
-              ground_buffer *buffer = tranState->groundBuffers + i;
+          for(u32 i = 0; i < tranState->groundBufferCount; i++) {
+            ground_buffer *buffer = tranState->groundBuffers + i;
 
-              if(AreInSameChunk(world, &chunkCenterP, &buffer->p)) {
-                furthestBuffer = 0;
-                break;
-              }
+            if(AreInSameChunk(world, &chunkCenterP, &buffer->p)) {
+              furthestBuffer = 0;
+              break;
+            }
 
-              if(!IsValid(&buffer->p)) {
+            if(!IsValid(&buffer->p)) {
+              furthestBuffer = buffer;
+              break;
+            } else {
+              v3 bufferRel = SubtractPosition(world, buffer->p, state->cameraP);
+              f32 lengthSq = LengthSq(bufferRel.xy);
+              if(lengthSq > furthestLengthSq) {
                 furthestBuffer = buffer;
-                break;
-              } else {
-                v3 bufferRel
-                  = SubtractPosition(world, buffer->p, state->cameraP);
-                f32 lengthSq = LengthSq(bufferRel.xy);
-                if(lengthSq > furthestLengthSq) {
-                  furthestBuffer = buffer;
-                  furthestLengthSq = lengthSq;
-                }
+                furthestLengthSq = lengthSq;
               }
             }
+          }
 
-            if(furthestBuffer != 0) {
-              FillGroundBuffer(state, tranState, furthestBuffer, chunkCenterP);
-            }
+          if(furthestBuffer != 0) {
+            FillGroundBuffer(state, tranState, furthestBuffer, chunkCenterP);
           }
         }
       }
@@ -1218,6 +1218,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
+#if 0
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static f32 angle = 0;
   angle += 0.4f * input->dt;
@@ -1308,6 +1309,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       mapP += V2(0.0f, 6.0f + yAxis.y);
     }
   }
+#endif
 
 #if 0
   Saturation(renderGroup, 0.5f + 0.5f * Sin(10.f * state->time));

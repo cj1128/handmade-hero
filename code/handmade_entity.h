@@ -33,6 +33,7 @@ enum entity_flag {
 
 struct stored_entity;
 struct sim_entity;
+
 union entity_reference {
   sim_entity *entity;
   stored_entity *stored;
