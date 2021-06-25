@@ -66,7 +66,6 @@ ZeroSize(void *ptr, size_t size)
 #include "handmade_render_group.h"
 
 struct hero_bitmaps {
-  v2 align;
   loaded_bitmap head;
   loaded_bitmap cape;
   loaded_bitmap torso;
@@ -90,7 +89,6 @@ struct pairwise_collision_rule {
 struct ground_buffer {
   world_position p; // center of the bitmap
   loaded_bitmap bitmap;
-  // void *memory;
 };
 
 struct transient_state {

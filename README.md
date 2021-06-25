@@ -208,6 +208,7 @@ My preferred code style for C is different from Casey's.
 - [Day 102: Transforming Normals Properly](#day-102-transforming-normals-properly)
 - [Day 103: Card-like Normal Map Reflections](#day-103-card-like-normal-map-reflections)
 - [Day 104: Switching to Y-is-up Render Targets](#day-104-switching-to-y-is-up-render-targets)
+- [Day 105: Cleaning Up the Renderer API](#day-105-cleaning-up-the-renderer-api)
 
 <!-- /MarkdownTOC -->
 
@@ -1140,3 +1141,12 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 ### Day 104: Switching to Y-is-up Render Targets
 
 - Switch to Y-up render targets. I don't need to do anything cause I did this long before.
+
+### Day 105: Cleaning Up the Renderer API
+
+- Pull out render api
+  - Remove `PushPiece`
+  - Make alignment baked in the bitmap
+  - Remove `entityZC`
+  - Unify v2 offset and offsetZ into v3 offset
+  - `PushBitmap` should accept a v4 color

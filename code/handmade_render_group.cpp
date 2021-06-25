@@ -65,32 +65,6 @@ Linear1ToSRGB255(v4 color)
 }
 
 internal void
-ChangeSaturation(loaded_bitmap *buffer, f32 level)
-{
-  u8 *destRow = (u8 *)buffer->memory;
-
-  for(int y = 0; y < buffer->height; y++) {
-    u32 *dest = (u32 *)destRow;
-
-    for(int x = 0; x < buffer->width; x++) {
-      v4 d = Unpack4x8(*dest);
-
-      d = SRGB255ToLinear1(d);
-
-      f32 avg = (1.0f / 3.0f) * (d.r + d.g + d.b);
-      v3 delta = { d.r - avg, d.g - avg, d.b - avg };
-      d = V4(V3(avg, avg, avg) + level * delta, d.a);
-
-      *dest = SRGB1ToUint32(d);
-
-      dest++;
-    }
-
-    destRow += buffer->pitch;
-  }
-}
-
-internal void
 DrawBitmap(loaded_bitmap *buffer,
   loaded_bitmap *bitmap,
   v2 minCorner,
@@ -637,25 +611,15 @@ _PushRenderElement(render_group *group, u32 size, render_entry_type type)
 internal void
 PushBitmap(render_group *group,
   loaded_bitmap *bitmap,
-  v2 offset,
-  v2 align,
-  f32 entityZC = 1.0f,
-  f32 alpha = 1.0f)
+  v3 offset,
+  v4 color = V4(1, 1, 1, 1))
 {
   render_entry_bitmap *entry = PushRenderElement(group, render_entry_bitmap);
-  entry->entityBasis.offset = group->metersToPixels * offset + align;
+  entry->entityBasis.offset
+    = group->metersToPixels * offset - V3(bitmap->align, 0.0f);
   entry->entityBasis.basis = group->defaultBasis;
-  entry->entityBasis.entityZC = entityZC;
   entry->bitmap = bitmap;
-  entry->alpha = alpha;
-}
-
-internal void
-Saturation(render_group *group, f32 level)
-{
-  render_entry_saturation *entry
-    = PushRenderElement(group, render_entry_saturation);
-  entry->level = level;
+  entry->color = color;
 }
 
 internal void
@@ -695,52 +659,32 @@ CoordinateSystem(render_group *group,
 
 // `offset` is from the center
 internal void
-PushRect(render_group *group,
-  v2 offset,
-  v2 align,
-  v2 dim,
-  v4 color,
-  f32 entityZC = 0.0f)
+PushRect(render_group *group, v3 offset, v2 dim, v4 color = V4(1, 1, 1, 1))
 {
   render_entry_rectangle *entry
     = PushRenderElement(group, render_entry_rectangle);
-  entry->entityBasis.offset = group->metersToPixels * offset + align
-    - 0.5f * dim * group->metersToPixels;
+  entry->entityBasis.offset
+    = group->metersToPixels * (offset - V3(0.5f * dim, 0.0f));
   entry->entityBasis.basis = group->defaultBasis;
-  entry->entityBasis.entityZC = entityZC;
   entry->color = color;
   entry->dim = dim * group->metersToPixels;
 }
 
 // `offset` is from the center
 internal void
-PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v4 color)
+PushRectOutline(render_group *group,
+  v3 offset,
+  v2 dim,
+  v4 color = V4(1, 1, 1, 1))
 {
   f32 thickness = 0.1f;
-  v2 halfDim = 0.5f * dim;
   // Top and bottom
-  PushRect(group,
-    V2(offset.x, offset.y - halfDim.y),
-    align,
-    V2(dim.x, thickness),
-    color);
-  PushRect(group,
-    V2(offset.x, offset.y + halfDim.y),
-    align,
-    V2(dim.x, thickness),
-    color);
+  PushRect(group, offset - V3(0, 0.5f * dim.y, 0), V2(dim.x, thickness), color);
+  PushRect(group, offset + V3(0, 0.5f * dim.y, 0), V2(dim.x, thickness), color);
 
   // Left and right
-  PushRect(group,
-    V2(offset.x - halfDim.x, offset.y),
-    align,
-    V2(thickness, dim.y),
-    color);
-  PushRect(group,
-    V2(offset.x + halfDim.x, offset.y),
-    align,
-    V2(thickness, dim.y),
-    color);
+  PushRect(group, offset - V3(0, 0.5f * dim.x, 0), V2(thickness, dim.y), color);
+  PushRect(group, offset + V3(0, 0.5f * dim.x, 0), V2(thickness, dim.y), color);
 }
 
 internal v2
@@ -748,16 +692,12 @@ GetEntityMinCorner(render_entity_basis *entityBasis,
   v2 screenCenter,
   f32 metersToPixels)
 {
-  v3 entityP = entityBasis->basis->p;
-  f32 entityZ = entityP.z;
-  f32 zFudge = 1.0f + 0.1f * entityZ;
+  v3 entityP = metersToPixels * entityBasis->basis->p;
+  f32 zFudge = 1.0f + 0.1f * entityP.z;
+  v2 min = screenCenter + zFudge * entityP.xy + entityBasis->offset.xy;
+  v2 result = min + V2(0.0f, entityP.z + entityBasis->offset.z);
 
-  v2 min
-    = screenCenter + zFudge * entityP.xy * metersToPixels + entityBasis->offset;
-
-  min.y += entityBasis->entityZC * entityZ * metersToPixels;
-
-  return min;
+  return result;
 }
 
 internal void
@@ -784,13 +724,6 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->color);
       } break;
 
-      case RenderEntryType_render_entry_saturation: {
-        render_entry_saturation *saturation = (render_entry_saturation *)data;
-        offset += sizeof(render_entry_saturation);
-
-        ChangeSaturation(outputTarget, saturation->level);
-      } break;
-
       case RenderEntryType_render_entry_rectangle: {
         render_entry_rectangle *entry = (render_entry_rectangle *)data;
         offset += sizeof(render_entry_rectangle);
@@ -811,7 +744,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           screenCenter,
           renderGroup->metersToPixels);
 
-        DrawBitmap(outputTarget, entry->bitmap, min, entry->alpha);
+        DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
       } break;
 
       case RenderEntryType_render_entry_coordinate_system: {

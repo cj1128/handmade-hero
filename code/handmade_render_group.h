@@ -14,6 +14,10 @@
 
   4) Z is a special coordinate because it is broken up into discrete slices. and
   the renderer actually understands these slices.
+
+  5) All colors values specified to the renderer as V4s are in NON-premultiplied
+  alpha.
+    1, 1, 1, 0.5 -> 0.5, 0.5, 0.5, 0.5
 */
 
 struct loaded_bitmap {
@@ -21,6 +25,7 @@ struct loaded_bitmap {
   i32 width;
   i32 height;
   i32 pitch;
+  v2 align;
 };
 
 struct environment_map {
@@ -67,8 +72,7 @@ struct render_entry_clear {
 // position of the min corner
 struct render_entity_basis {
   render_basis *basis;
-  v2 offset;
-  f32 entityZC;
+  v3 offset;
 };
 
 struct render_entry_rectangle {
@@ -80,8 +84,7 @@ struct render_entry_rectangle {
 
 struct render_entry_bitmap {
   render_entity_basis entityBasis;
-
-  f32 alpha;
+  v4 color;
   loaded_bitmap *bitmap;
 };
 
@@ -94,5 +97,27 @@ struct render_group {
   u32 pushBufferSize;
   u8 *pushBufferBase;
 };
+
+// Render APIs
+#if 0
+internal void PushBitmap(render_group *group,
+  loaded_bitmap *bitmap,
+  v2 offset,
+  v2 align,
+  f32 entityZC = 1.0f,
+  f32 alpha = 1.0f);
+
+internal void Clear(render_group *group, v4 color);
+
+internal void PushRect(render_group *group,
+  v2 offset,
+  v2 align,
+  v2 dim,
+  v4 color,
+  f32 entityZC = 0.0f);
+
+internal void
+PushRectOutline(render_group *group, v2 offset, v2 align, v2 dim, v4 color);
+#endif
 
 #endif
