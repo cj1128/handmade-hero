@@ -209,6 +209,7 @@ My preferred code style for C is different from Casey's.
 - [Day 103: Card-like Normal Map Reflections](#day-103-card-like-normal-map-reflections)
 - [Day 104: Switching to Y-is-up Render Targets](#day-104-switching-to-y-is-up-render-targets)
 - [Day 105: Cleaning Up the Renderer API](#day-105-cleaning-up-the-renderer-api)
+- [Day 106: World Scaling](#day-106-world-scaling)
 
 <!-- /MarkdownTOC -->
 
@@ -1150,3 +1151,11 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
   - Remove `entityZC`
   - Unify v2 offset and offsetZ into v3 offset
   - `PushBitmap` should accept a v4 color
+
+### Day 106: World Scaling
+
+- Use `DrawRectangleSlowly` to render bitmap so we can scale
+- Store `zOffset` in game state and control it using action up/down buttons
+- Scale the position and size based on Z
+- Remove y offset caused by z
+  - Z Slices are what control the _scaling_ of things, where Z offsets inside a slice are what control Y offseting

@@ -687,15 +687,23 @@ PushRectOutline(render_group *group,
   PushRect(group, offset + V3(0, 0.5f * dim.x, 0), V2(thickness, dim.y), color);
 }
 
-internal v2
-GetEntityMinCorner(render_entity_basis *entityBasis,
+struct render_basis_result {
+  f32 scale;
+  v2 p;
+};
+
+internal render_basis_result
+GetEntityRenderBasisResult(render_entity_basis *entityBasis,
   v2 screenCenter,
   f32 metersToPixels)
 {
+  render_basis_result result;
+
   v3 entityP = metersToPixels * entityBasis->basis->p;
-  f32 zFudge = 1.0f + 0.1f * entityP.z;
-  v2 min = screenCenter + zFudge * entityP.xy + entityBasis->offset.xy;
-  v2 result = min + V2(0.0f, entityP.z + entityBasis->offset.z);
+  f32 zFudge = 1.0f + 0.001f * entityP.z;
+  v2 min = screenCenter + zFudge * (entityP.xy + entityBasis->offset.xy);
+  result.p = min; // V2(0.0f, entityP.z + entityBasis->offset.z);
+  result.scale = zFudge;
 
   return result;
 }
@@ -706,6 +714,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
   f32 metersToPixels = renderGroup->metersToPixels;
   v2 screenCenter
     = 0.5f * v2{ (f32)outputTarget->width, (f32)outputTarget->height };
+
+  f32 pixelsToMeters = 1.0f / renderGroup->metersToPixels;
 
   for(u32 offset = 0; offset < renderGroup->pushBufferSize;) {
     render_entry_header *header
@@ -729,22 +739,39 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
         offset += sizeof(render_entry_rectangle);
         v3 entityP = entry->entityBasis.basis->p;
 
-        v2 min = GetEntityMinCorner(&entry->entityBasis,
-          screenCenter,
-          renderGroup->metersToPixels);
+        render_basis_result basisResult
+          = GetEntityRenderBasisResult(&entry->entityBasis,
+            screenCenter,
+            renderGroup->metersToPixels);
 
-        DrawRectangle(outputTarget, min, min + entry->dim, entry->color);
+        DrawRectangle(outputTarget,
+          basisResult.p,
+          basisResult.p + basisResult.scale * entry->dim,
+          entry->color);
       } break;
 
       case RenderEntryType_render_entry_bitmap: {
         render_entry_bitmap *entry = (render_entry_bitmap *)data;
         offset += sizeof(render_entry_bitmap);
 
-        v2 min = GetEntityMinCorner(&entry->entityBasis,
-          screenCenter,
-          renderGroup->metersToPixels);
+        render_basis_result basisResult
+          = GetEntityRenderBasisResult(&entry->entityBasis,
+            screenCenter,
+            renderGroup->metersToPixels);
 
-        DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
+        // DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
+        DrawRectangleSlowly(outputTarget,
+          basisResult.p,
+          basisResult.scale * V2(entry->bitmap->width, 0),
+          basisResult.scale * V2(0, entry->bitmap->height),
+          entry->color,
+          entry->bitmap,
+          0,
+          0,
+          0,
+          0,
+          pixelsToMeters);
+
       } break;
 
       case RenderEntryType_render_entry_coordinate_system: {
@@ -764,7 +791,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
           entry->top,
           entry->middle,
           entry->bottom,
-          1.0f / renderGroup->metersToPixels);
+          pixelsToMeters);
 
         v2 dim = V2(4, 4);
         v2 p = entry->origin;

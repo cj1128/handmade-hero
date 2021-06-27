@@ -149,6 +149,8 @@ struct game_state {
   sim_entity_collision_volume_group *monsterCollision;
   sim_entity_collision_volume_group *stairCollision;
   sim_entity_collision_volume_group *nullCollision;
+
+  f32 zOffset;
 };
 
 #endif

@@ -13,7 +13,9 @@
   explicitly marked as such.
 
   4) Z is a special coordinate because it is broken up into discrete slices. and
-  the renderer actually understands these slices.
+  the renderer actually understands these slices. Z Slices are what control the
+  _scaling_ of things, where Z offsets inside a slice are what control Y
+  offseting
 
   5) All colors values specified to the renderer as V4s are in NON-premultiplied
   alpha.

@@ -721,12 +721,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       // 1: bottom
       // 2: up/down
 
-      // int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
-      // if(screenIndex == 0) { // make a stairwell
-      //   randomValue = 2;
-      // }
-
+#if 0
       int randomValue = RandomChoice(&series, 2);
+#else
+      int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
+      if(screenIndex == 0) { // make a stairwell
+        randomValue = 2;
+      }
+#endif
 
       switch(randomValue) {
         case 0: {
@@ -939,6 +941,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         conHero->dZ = 3.0f;
       }
 
+#if 0
       if(controller->actionUp.isEndedDown) {
         conHero->dSword.y = 1.0f;
       }
@@ -951,6 +954,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       if(controller->actionRight.isEndedDown) {
         conHero->dSword.x = 1.0f;
       }
+#else
+      f32 zoomRate = 0.0f;
+
+      if(controller->actionUp.isEndedDown) {
+        zoomRate = 10.0f;
+      }
+
+      if(controller->actionDown.isEndedDown) {
+        zoomRate = -10.0f;
+      }
+
+      state->zOffset += zoomRate * input->dt;
+#endif
     } else {
       if(controller->start.isEndedDown) {
         stored_entity *hero = AddHero(state);
@@ -998,6 +1014,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   }
 #endif
 
+#if 0
   // render ground buffers
   {
     for(u32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
@@ -1008,7 +1025,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         bitmap->align
           = V2(0.5f * (f32)bitmap->width, 0.5f * (f32)bitmap->height);
         v3 delta = SubtractPosition(&state->world, buffer->p, state->cameraP);
-        PushBitmap(renderGroup, bitmap, delta);
+        render_basis *basis = PushStruct(&tranState->tranArena, render_basis);
+        renderGroup->defaultBasis = basis;
+        basis->p = delta + V3(0, 0, state->zOffset);
+        PushBitmap(renderGroup, bitmap, V3(0, 0, 0));
       }
     }
   }
@@ -1069,6 +1089,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       }
     }
   }
+#endif
 
   v3 simExpansion = { 15.0f, 15.0f, 15.0f };
   rectangle3 simBounds = AddRadius(cameraBounds, simExpansion);
@@ -1161,10 +1182,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           sim_entity_collision_volume *volume
             = entity->collision->volumes + volumeIndex;
 
-          PushRectOutline(renderGroup,
-            V3(0, 0, 0),
-            volume->dim.xy,
-            V4(0.0f, 0, 1.0f, 1.0f));
+          // PushRectOutline(renderGroup,
+          //   V3(0, 0, 0),
+          //   volume->dim.xy,
+          //   V4(0.0f, 0, 1.0f, 1.0f));
         }
       } break;
 
@@ -1216,6 +1237,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
 
     basis->p = entity->p;
+    basis->p.z += state->zOffset;
 
     // debug draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
@@ -1224,7 +1246,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 
-#if 1
+#if 0
   v2 ScreenCenter = V2(0.5f * drawBuffer->width, 0.5f * drawBuffer->height);
   static f32 angle = 0;
   angle += 0.4f * input->dt;
