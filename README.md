@@ -210,6 +210,7 @@ My preferred code style for C is different from Casey's.
 - [Day 104: Switching to Y-is-up Render Targets](#day-104-switching-to-y-is-up-render-targets)
 - [Day 105: Cleaning Up the Renderer API](#day-105-cleaning-up-the-renderer-api)
 - [Day 106: World Scaling](#day-106-world-scaling)
+- [Day 107: Fading Z Layers](#day-107-fading-z-layers)
 
 <!-- /MarkdownTOC -->
 
@@ -1159,3 +1160,13 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 - Scale the position and size based on Z
 - Remove y offset caused by z
   - Z Slices are what control the _scaling_ of things, where Z offsets inside a slice are what control Y offseting
+
+### Day 107: Fading Z Layers
+
+- Remove `zOffset` in game_state
+- Do not preserve the offset z of cameraP
+- Add `globalAlpha` to render group
+- Fade entities based on its z value
+  - Define `fadeTopStartZ`, `fadeTopEndZ`, `fadeBottomStartZ` and `fadeBottomEndZ`
+  - Define `Clamp01MapToRange`
+- Modify `cameraBounds`

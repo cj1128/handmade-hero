@@ -697,9 +697,7 @@ EndSim(sim_region *simRegion, game_state *state)
     ChangeEntityLocation(&state->worldArena, simRegion->world, stored, newP);
 
     if(stored == state->cameraFollowingEntity) {
-      f32 oldZ = state->cameraP.offset.z;
       state->cameraP = newP;
-      state->cameraP.offset.z = oldZ;
     }
   }
 }

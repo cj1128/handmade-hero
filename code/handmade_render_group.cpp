@@ -586,6 +586,8 @@ AllocateRenderGroup(memory_arena *arena,
   result->pushBufferSize = 0;
   result->pushBufferBase = (u8 *)PushSize(arena, maxPushBufferSize);
 
+  result->globalAlpha = 1.0f;
+
   return result;
 }
 
@@ -619,7 +621,7 @@ PushBitmap(render_group *group,
     = group->metersToPixels * offset - V3(bitmap->align, 0.0f);
   entry->entityBasis.basis = group->defaultBasis;
   entry->bitmap = bitmap;
-  entry->color = color;
+  entry->color = group->globalAlpha * color;
 }
 
 internal void

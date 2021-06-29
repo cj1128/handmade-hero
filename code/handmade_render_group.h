@@ -98,6 +98,8 @@ struct render_group {
   u32 maxPushBufferSize;
   u32 pushBufferSize;
   u8 *pushBufferBase;
+
+  f32 globalAlpha;
 };
 
 // Render APIs

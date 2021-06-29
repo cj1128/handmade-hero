@@ -449,6 +449,19 @@ Clamp01(f32 v)
   return result;
 }
 
+inline f32
+Clamp01MapToRange(f32 min, f32 t, f32 max)
+{
+  f32 result = 0.0f;
+  f32 range = max - min;
+
+  if(range != 0.0f) {
+    result = Clamp01((t - min) / range);
+  }
+
+  return result;
+}
+
 inline v2
 Clamp01(v2 v)
 {

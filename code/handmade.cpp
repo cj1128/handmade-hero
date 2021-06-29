@@ -561,7 +561,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // in pixels
   u32 groundBufferWidth = 256;
   u32 groundBufferHeight = 256;
-
   f32 typicalFloorHeight = 3.0f;
 
   // f32 TileSizeInPixels = 60.0f;
@@ -716,21 +715,21 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     // world generation
     random_series series = RandomSeed(0x100);
-    for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
-      // 0: left
-      // 1: bottom
-      // 2: up/down
 
+    // 0: left
+    // 1: bottom
+    // 2: up
+    // 3: down
+    for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
 #if 0
-      int randomValue = RandomChoice(&series, 2);
+      int doorDirection = RandomChoice(&series, 2);
 #else
-      int randomValue = RandomChoice(&series, (doorUp || doorDown) ? 2 : 3);
-      if(screenIndex == 0) { // make a stairwell
-        randomValue = 2;
-      }
+      int doorDirection = RandomChoice(&series, (doorUp || doorDown) ? 2 : 4);
 #endif
 
-      switch(randomValue) {
+      doorDirection = 3;
+
+      switch(doorDirection) {
         case 0: {
           doorLeft = true;
         } break;
@@ -740,11 +739,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         } break;
 
         case 2: {
-          if(absTileZ == screenBaseZ) {
-            doorUp = true;
-          } else {
-            doorDown = true;
-          }
+          doorUp = true;
+        } break;
+
+        case 3: {
+          doorDown = true;
         } break;
       }
 
@@ -753,12 +752,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         screenY * tilesPerHeight + tilesPerHeight / 2,
         absTileZ);
 
-      // 1: empty
-      // 2: wall
       for(i32 tileY = 0; tileY < tilesPerHeight; tileY++) {
         for(i32 tileX = 0; tileX < tilesPerWidth; tileX++) {
           i32 absTileX = screenX * tilesPerWidth + tileX;
           i32 absTileY = screenY * tilesPerHeight + tileY;
+
+          // 1: empty
+          // 2: wall
           i32 tileValue = 1;
 
           if(tileX == 0) {
@@ -787,16 +787,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           }
 
           if(tileValue == 2) {
-            // if(screenIndex == 0) {
-            AddWall(state, absTileX, absTileY, absTileZ);
-            // }
+            if((tileX % 2 == 0) && (tileY % 2 == 0)) {
+              AddWall(state, absTileX, absTileY, absTileZ);
+            }
           }
 
-          if(tileX == 10 && tileY == 4 && (doorUp || doorDown)) {
-            AddStairwell(state,
-              absTileX,
-              absTileY,
-              doorDown ? absTileZ - 1 : absTileZ);
+          if(doorUp || doorDown) {
+            if((tileX == 10 && tileY == 4 && (absTileZ % 2 == 0))
+              || (tileX == 5 && tileY == 4 && (absTileZ % 2 != 0))) {
+              AddStairwell(state,
+                absTileX,
+                absTileY,
+                doorDown ? absTileZ - 1 : absTileZ);
+            }
           }
         }
       }
@@ -805,24 +808,17 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       doorTop = doorBottom;
       doorLeft = false;
       doorBottom = false;
+      doorUp = false;
+      doorDown = false;
 
-      if(randomValue == 0) {
-        screenX--;
-      } else if(randomValue == 1) {
-        screenY--;
-      } else if(randomValue == 2) {
-        if(absTileZ == screenBaseZ) {
-          doorDown = true;
-          doorUp = false;
-          absTileZ++;
-        } else {
-          doorUp = true;
-          doorDown = false;
-          absTileZ = screenBaseZ;
-        }
-      } else {
-        doorDown = false;
-        doorUp = false;
+      if(doorDirection == 0) {
+        screenX -= 1;
+      } else if(doorDirection == 1) {
+        screenY -= 1;
+      } else if(doorDirection == 2) {
+        absTileZ += 1;
+      } else if(doorDirection == 3) {
+        absTileZ -= 1;
       }
     }
 
@@ -938,10 +934,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       }
 
       if(controller->start.isEndedDown) {
-        conHero->dZ = 3.0f;
+        // conHero->dZ = 3.0f;
       }
 
-#if 0
       if(controller->actionUp.isEndedDown) {
         conHero->dSword.y = 1.0f;
       }
@@ -954,19 +949,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       if(controller->actionRight.isEndedDown) {
         conHero->dSword.x = 1.0f;
       }
-#else
-      f32 zoomRate = 0.0f;
-
-      if(controller->actionUp.isEndedDown) {
-        zoomRate = 10.0f;
-      }
-
-      if(controller->actionDown.isEndedDown) {
-        zoomRate = -10.0f;
-      }
-
-      state->zOffset += zoomRate * input->dt;
-#endif
     } else {
       if(controller->start.isEndedDown) {
         stored_entity *hero = AddHero(state);
@@ -1003,6 +985,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   f32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
   rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
     V3(screenWidthInMeters, screenHeightInMeters, 0));
+  cameraBounds.min.z = -3.0f * world->typicalFloorHeight;
+  cameraBounds.max.z = 1.0f * world->typicalFloorHeight;
 
 // clear ground buffers when reloaded
 #if 0
@@ -1091,16 +1075,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   }
 #endif
 
-  v3 simExpansion = { 15.0f, 15.0f, 15.0f };
+  v3 simExpansion = { 15.0f, 15.0f, 0.0f };
   rectangle3 simBounds = AddRadius(cameraBounds, simExpansion);
 
   state->time += input->dt;
 
-  sim_region *simRegion = BeginSim(&tranState->tranArena,
-    state,
-    state->cameraP,
-    simBounds,
-    input->dt);
+  world_position simCenterP = state->cameraP;
+  sim_region *simRegion
+    = BeginSim(&tranState->tranArena, state, simCenterP, simBounds, input->dt);
 
   // entities
   for(u32 index = 0; index < simRegion->entityCount; index++) {
@@ -1117,6 +1099,22 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     move_spec moveSpec = {};
     v3 ddP = {};
     v3 oldSwordP = {};
+
+    v3 cameraP = SubtractPosition(world, state->cameraP, simCenterP);
+    v3 cameraRelativeP = GetEntityGroundPoint(entity) - cameraP;
+    f32 fadeTopStartZ = 0.5f * world->typicalFloorHeight;
+    f32 fadeTopEndZ = 0.75f * world->typicalFloorHeight;
+    f32 fadeBottomStartZ = -2.0f * world->typicalFloorHeight;
+    f32 fadeBottomEndZ = -2.25f * world->typicalFloorHeight;
+
+    if(cameraRelativeP.z >= fadeTopStartZ) {
+      renderGroup->globalAlpha
+        = Clamp01MapToRange(fadeTopEndZ, cameraRelativeP.z, fadeTopStartZ);
+    } else if(cameraRelativeP.z <= fadeBottomStartZ) {
+      renderGroup->globalAlpha = Clamp01MapToRange(fadeBottomEndZ,
+        cameraRelativeP.z,
+        fadeBottomStartZ);
+    }
 
     switch(entity->type) {
       case EntityType_Hero: {
@@ -1231,13 +1229,14 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       }
     }
 
+    renderGroup->globalAlpha = 1.0f;
+
     if(!HasFlag(entity, EntityFlag_NonSpatial)
       && HasFlag(entity, EntityFlag_Moveable)) {
       MoveEntity(state, simRegion, &moveSpec, entity, input->dt, ddP);
     }
 
     basis->p = entity->p;
-    basis->p.z += state->zOffset;
 
     // debug draw boundary
     if(state->debugDrawBoundary && entity->type != EntityType_Space) {
