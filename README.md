@@ -211,6 +211,7 @@ My preferred code style for C is different from Casey's.
 - [Day 105: Cleaning Up the Renderer API](#day-105-cleaning-up-the-renderer-api)
 - [Day 106: World Scaling](#day-106-world-scaling)
 - [Day 107: Fading Z Layers](#day-107-fading-z-layers)
+- [Day 108: Perspective Projection](#day-108-perspective-projection)
 
 <!-- /MarkdownTOC -->
 
@@ -1170,3 +1171,9 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
   - Define `fadeTopStartZ`, `fadeTopEndZ`, `fadeBottomStartZ` and `fadeBottomEndZ`
   - Define `Clamp01MapToRange`
 - Modify `cameraBounds`
+
+### Day 108: Perspective Projection
+
+- Change `GetEntityRednerBasisResult` function to implement proper perspective projection
+  - the core formula: p' = (dp) / (Cz - Pz)
+  - NOTE: the `cameraP` in game_state is where we are looking at, not the actual camera position

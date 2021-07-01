@@ -692,6 +692,7 @@ PushRectOutline(render_group *group,
 struct render_basis_result {
   f32 scale;
   v2 p;
+  bool32 valid;
 };
 
 internal render_basis_result
@@ -699,13 +700,20 @@ GetEntityRenderBasisResult(render_entity_basis *entityBasis,
   v2 screenCenter,
   f32 metersToPixels)
 {
-  render_basis_result result;
-
+  render_basis_result result = {};
   v3 entityP = metersToPixels * entityBasis->basis->p;
-  f32 zFudge = 1.0f + 0.001f * entityP.z;
-  v2 min = screenCenter + zFudge * (entityP.xy + entityBasis->offset.xy);
-  result.p = min; // V2(0.0f, entityP.z + entityBasis->offset.z);
-  result.scale = zFudge;
+  f32 focalLength = metersToPixels * 20.0f;
+  f32 cameraDistanceAboveTarget = metersToPixels * 20.0f;
+  f32 zDistance = cameraDistanceAboveTarget - entityP.z;
+  f32 nearClipPlane = metersToPixels * 0.2f;
+
+  v2 rawXY = entityP.xy + entityBasis->offset.xy;
+  if(zDistance > nearClipPlane) {
+    f32 scale = (1.0f / zDistance) * focalLength;
+    result.p = screenCenter + scale * rawXY;
+    result.scale = scale;
+    result.valid = true;
+  }
 
   return result;
 }
