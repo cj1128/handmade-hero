@@ -570,9 +570,7 @@ DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 }
 
 internal render_group *
-AllocateRenderGroup(memory_arena *arena,
-  u32 maxPushBufferSize,
-  f32 metersToPixels)
+AllocateRenderGroup(memory_arena *arena, u32 maxPushBufferSize)
 {
   render_group *result = PushStruct(arena, render_group);
   render_basis *defaultBasis = PushStruct(arena, render_basis);
@@ -580,7 +578,6 @@ AllocateRenderGroup(memory_arena *arena,
 
   result->defaultBasis = defaultBasis;
   result->pieceCount = 0;
-  result->metersToPixels = metersToPixels;
 
   result->maxPushBufferSize = maxPushBufferSize;
   result->pushBufferSize = 0;
@@ -613,15 +610,18 @@ _PushRenderElement(render_group *group, u32 size, render_entry_type type)
 internal void
 PushBitmap(render_group *group,
   loaded_bitmap *bitmap,
+  f32 height,
   v3 offset,
   v4 color = V4(1, 1, 1, 1))
 {
   render_entry_bitmap *entry = PushRenderElement(group, render_entry_bitmap);
-  entry->entityBasis.offset
-    = group->metersToPixels * offset - V3(bitmap->align, 0.0f);
+  v2 size = V2(height * bitmap->widthOverHeight, height);
+  v2 align = Hadamard(bitmap->alignPercentage, size);
+  entry->entityBasis.offset = offset - V3(align, 0.0f);
   entry->entityBasis.basis = group->defaultBasis;
   entry->bitmap = bitmap;
   entry->color = group->globalAlpha * color;
+  entry->size = size;
 }
 
 internal void
@@ -665,11 +665,10 @@ PushRect(render_group *group, v3 offset, v2 dim, v4 color = V4(1, 1, 1, 1))
 {
   render_entry_rectangle *entry
     = PushRenderElement(group, render_entry_rectangle);
-  entry->entityBasis.offset
-    = group->metersToPixels * (offset - V3(0.5f * dim, 0.0f));
+  entry->entityBasis.offset = offset - V3(0.5f * dim, 0.0f);
   entry->entityBasis.basis = group->defaultBasis;
   entry->color = color;
-  entry->dim = dim * group->metersToPixels;
+  entry->dim = dim;
 }
 
 // `offset` is from the center
@@ -697,19 +696,20 @@ struct render_basis_result {
 
 internal render_basis_result
 GetEntityRenderBasisResult(render_entity_basis *entityBasis,
-  v2 screenCenter,
+  v2 screenDim,
   f32 metersToPixels)
 {
+  v2 screenCenter = 0.5f * screenDim;
   render_basis_result result = {};
-  v3 entityP = metersToPixels * entityBasis->basis->p;
-  f32 focalLength = metersToPixels * 20.0f;
-  f32 cameraDistanceAboveTarget = metersToPixels * 20.0f;
+  v3 entityP = entityBasis->basis->p;
+  f32 focalLength = 6.0f;
+  f32 cameraDistanceAboveTarget = 5.0f;
   f32 zDistance = cameraDistanceAboveTarget - entityP.z;
-  f32 nearClipPlane = metersToPixels * 0.2f;
+  f32 nearClipPlane = 0.2f;
 
   v2 rawXY = entityP.xy + entityBasis->offset.xy;
   if(zDistance > nearClipPlane) {
-    f32 scale = (1.0f / zDistance) * focalLength;
+    f32 scale = metersToPixels * (1.0f / zDistance) * focalLength;
     result.p = screenCenter + scale * rawXY;
     result.scale = scale;
     result.valid = true;
@@ -721,11 +721,11 @@ GetEntityRenderBasisResult(render_entity_basis *entityBasis,
 internal void
 RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 {
-  f32 metersToPixels = renderGroup->metersToPixels;
-  v2 screenCenter
-    = 0.5f * v2{ (f32)outputTarget->width, (f32)outputTarget->height };
+  v2 screenDim = { (f32)outputTarget->width, (f32)outputTarget->height };
 
-  f32 pixelsToMeters = 1.0f / renderGroup->metersToPixels;
+  f32 metersToPixels = screenDim.x / 20.0f;
+  f32 pixelsToMeters = 1.0f / metersToPixels;
+  v2 screenCenter = 0.5f * screenDim;
 
   for(u32 offset = 0; offset < renderGroup->pushBufferSize;) {
     render_entry_header *header
@@ -751,8 +751,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         render_basis_result basisResult
           = GetEntityRenderBasisResult(&entry->entityBasis,
-            screenCenter,
-            renderGroup->metersToPixels);
+            screenDim,
+            metersToPixels);
 
         DrawRectangle(outputTarget,
           basisResult.p,
@@ -766,14 +766,14 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         render_basis_result basisResult
           = GetEntityRenderBasisResult(&entry->entityBasis,
-            screenCenter,
-            renderGroup->metersToPixels);
+            screenDim,
+            metersToPixels);
 
         // DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
         DrawRectangleSlowly(outputTarget,
           basisResult.p,
-          basisResult.scale * V2(entry->bitmap->width, 0),
-          basisResult.scale * V2(0, entry->bitmap->height),
+          basisResult.scale * V2(entry->size.x, 0.0f),
+          basisResult.scale * V2(0.0f, entry->size.y),
           entry->color,
           entry->bitmap,
           0,

@@ -212,6 +212,7 @@ My preferred code style for C is different from Casey's.
 - [Day 106: World Scaling](#day-106-world-scaling)
 - [Day 107: Fading Z Layers](#day-107-fading-z-layers)
 - [Day 108: Perspective Projection](#day-108-perspective-projection)
+- [Day 109: Resolution-Independent Rendering](#day-109-resolution-independent-rendering)
 
 <!-- /MarkdownTOC -->
 
@@ -1177,3 +1178,12 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 - Change `GetEntityRednerBasisResult` function to implement proper perspective projection
   - the core formula: p' = (dp) / (Cz - Pz)
   - NOTE: the `cameraP` in game_state is where we are looking at, not the actual camera position
+
+### Day 109: Resolution-Independent Rendering
+
+- Change `align` to `alignPercentage`
+- Add `widthOverHeight` to loaded_bitmap
+- Remove `metersToPixels` in game_state
+- `PushBitmap` should take a `height` param
+- Add `size` to render_entry_bitmap
+- Add `screenDim` param to `GetEntityRenderBasisResult`

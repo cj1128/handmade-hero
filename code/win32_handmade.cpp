@@ -1085,6 +1085,7 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
         globalSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
         Win32ResizeDIBSection(&globalBackBuffer, 960, 540);
+        // Win32ResizeDIBSection(&globalBackBuffer, 1920, 1080);
 
         game_input input[2] = {};
         game_input *oldInput = &input[0];

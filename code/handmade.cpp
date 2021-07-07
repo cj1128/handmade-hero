@@ -8,7 +8,11 @@
 internal v2
 FromTopDownAlign(loaded_bitmap *bitmap, i32 alignX, i32 topDownAlignY)
 {
-  v2 result = { (f32)alignX, (f32)(bitmap->height - 1 - topDownAlignY) };
+  f32 x = (f32)alignX;
+  f32 y = (f32)(bitmap->height - 1 - topDownAlignY);
+  v2 result = {};
+  result.x = SafeRatio0(x, (f32)bitmap->width);
+  result.y = SafeRatio0(y, (f32)bitmap->height);
   return result;
 }
 
@@ -16,9 +20,9 @@ internal void
 SetTopDownAlign(hero_bitmaps *bitmaps, i32 alignX, i32 topDownAlignY)
 {
   v2 align = FromTopDownAlign(&bitmaps->head, alignX, topDownAlignY);
-  bitmaps->head.align = align;
-  bitmaps->cape.align = align;
-  bitmaps->torso.align = align;
+  bitmaps->head.alignPercentage = align;
+  bitmaps->cape.alignPercentage = align;
+  bitmaps->torso.alignPercentage = align;
 }
 
 internal void
@@ -373,10 +377,11 @@ LoadBMP(thread_context *thread,
 
     result.width = header->width;
     result.height = header->height;
+    result.widthOverHeight = SafeRatio0((f32)result.width, (f32)result.height);
     Assert(header->compression == 3);
     Assert(result.height >= 0);
 
-    result.align = FromTopDownAlign(&result, alignX, topDownAlignY);
+    result.alignPercentage = FromTopDownAlign(&result, alignX, topDownAlignY);
 
     result.memory = (u32 *)((u8 *)ReadResult.memory + header->dataOffset);
 
@@ -452,7 +457,7 @@ FillGroundBuffer(game_state *state,
 
   SaveArena(&tranState->tranArena);
   render_group *renderGroup
-    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), 1);
+    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4));
 
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -482,7 +487,7 @@ FillGroundBuffer(game_state *state,
           RandomUnilateral(&series) * height);
         v2 offset = 0.5f * V2(stamp->width, stamp->height);
         v2 p = chunkOffset + center - offset;
-        PushBitmap(renderGroup, stamp, V3(p, 0.0f));
+        PushBitmap(renderGroup, stamp, 1.0f, V3(p, 0.0f));
       }
     }
   }
@@ -509,7 +514,7 @@ FillGroundBuffer(game_state *state,
         v2 offset = 0.5f * V2(stamp->width, stamp->height);
         v2 p = chunkOffset + center - offset;
 
-        PushBitmap(renderGroup, stamp, V3(p, 0.0f));
+        PushBitmap(renderGroup, stamp, 1.0f, V3(p, 0.0f));
       }
     }
   }
@@ -567,10 +572,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   // f32 tileSizeInMeters = 1.4f;
   // f32 tileDepthInMeters = 3.0f;
 
-  f32 metersToPixels = 42.0f;
-  f32 pixelsToMeters = 1 / metersToPixels;
-  state->metersToPixels = metersToPixels;
-  state->pixelsToMeters = pixelsToMeters;
+  f32 pixelsToMeters = 1.0f / 42.0f;
 
   v3 chunkDimInMeters = { pixelsToMeters * groundBufferWidth,
     pixelsToMeters * groundBufferHeight,
@@ -974,7 +976,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   SaveArena(&tranState->tranArena);
 
   render_group *renderGroup
-    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), metersToPixels);
+    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4));
 
   v2 screenCenter = 0.5f * v2{ (f32)buffer->width, (f32)buffer->height };
 
@@ -1146,14 +1148,25 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           shadowAlpha = 0.0f;
         }
 
+        f32 heroScale = 2.5f;
         PushBitmap(renderGroup,
           &state->shadow,
+          heroScale * 1.0f,
           V3(0, 0, 0),
           V4(1.0f, 1.0f, 1.0f, shadowAlpha));
 
-        PushBitmap(renderGroup, &heroBitmaps->cape, V3(0, 0, 0));
-
-        PushBitmap(renderGroup, &heroBitmaps->head, V3(0, 0, 0));
+        PushBitmap(renderGroup,
+          &heroBitmaps->head,
+          heroScale * 1.2f,
+          V3(0, 0, 0));
+        PushBitmap(renderGroup,
+          &heroBitmaps->torso,
+          heroScale * 1.2f,
+          V3(0, 0, 0));
+        PushBitmap(renderGroup,
+          &heroBitmaps->cape,
+          heroScale * 1.2f,
+          V3(0, 0, 0));
 
         DrawHitPoints(entity, renderGroup);
       } break;
@@ -1167,11 +1180,11 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           ClearCollisionRulesFor(state, entity->stored);
         }
 
-        PushBitmap(renderGroup, &state->sword, V3(0, 0, 0));
+        PushBitmap(renderGroup, &state->sword, 0.5f, V3(0, 0, 0));
       } break;
 
       case EntityType_Wall: {
-        PushBitmap(renderGroup, &state->tree, V3(0, 0, 0));
+        PushBitmap(renderGroup, &state->tree, 2.5f, V3(0, 0, 0));
       } break;
 
       case EntityType_Space: {
@@ -1188,8 +1201,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       } break;
 
       case EntityType_Monster: {
-        PushBitmap(renderGroup, &state->shadow, V3(0, 0, 0));
-        PushBitmap(renderGroup, &heroBitmaps->torso, V3(0, 0, 0));
+        PushBitmap(renderGroup, &state->shadow, 2.0f, V3(0, 0, 0));
+        PushBitmap(renderGroup, &heroBitmaps->torso, 2.0f, V3(0, 0, 0));
         DrawHitPoints(entity, renderGroup);
       } break;
 
@@ -1220,8 +1233,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
         }
 
         moveSpec = HeroMoveSpec();
-        PushBitmap(renderGroup, &state->shadow, V3(0, 0, 0));
-        PushBitmap(renderGroup, &heroBitmaps->head, V3(0, 0, 0));
+        PushBitmap(renderGroup, &state->shadow, 1.0f, V3(0, 0, 0));
+        PushBitmap(renderGroup, &heroBitmaps->head, 1.0f, V3(0, 0, 0));
       } break;
 
       default: {

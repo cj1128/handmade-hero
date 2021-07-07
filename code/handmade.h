@@ -110,8 +110,6 @@ struct transient_state {
 };
 
 struct game_state {
-  f32 metersToPixels;
-  f32 pixelsToMeters;
   memory_arena worldArena;
   game_world world;
   world_position cameraP;

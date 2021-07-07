@@ -24,10 +24,12 @@
 
 struct loaded_bitmap {
   void *memory;
-  i32 width;
-  i32 height;
+  i32 width, height;
   i32 pitch;
-  v2 align;
+
+  v2 alignPercentage;
+
+  f32 widthOverHeight;
 };
 
 struct environment_map {
@@ -88,10 +90,10 @@ struct render_entry_bitmap {
   render_entity_basis entityBasis;
   v4 color;
   loaded_bitmap *bitmap;
+  v2 size;
 };
 
 struct render_group {
-  f32 metersToPixels;
   render_basis *defaultBasis;
   u32 pieceCount;
 
