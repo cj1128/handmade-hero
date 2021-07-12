@@ -93,8 +93,15 @@ struct render_entry_bitmap {
   v2 size;
 };
 
+struct render_group_camera {
+  f32 cameraDistanceAboveTarget;
+  f32 focalLength;
+};
+
 struct render_group {
   render_basis *defaultBasis;
+  render_group_camera gameCamera;
+  render_group_camera renderCamera;
   u32 pieceCount;
 
   u32 maxPushBufferSize;
@@ -102,6 +109,8 @@ struct render_group {
   u8 *pushBufferBase;
 
   f32 globalAlpha;
+  f32 metersToPixels;
+  v2 monitorHalfDim;
 };
 
 // Render APIs

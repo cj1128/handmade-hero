@@ -554,6 +554,13 @@ GetBarycentric(rectangle2 rect, v2 p)
   return result;
 }
 
+inline v2
+GetDim(rectangle2 rect)
+{
+  v2 result = rect.max - rect.min;
+  return result;
+}
+
 //
 // rectangle3
 //
@@ -649,6 +656,13 @@ GetBarycentric(rectangle3 rect, v3 p)
   result.y = SafeRatio0(p.y - rect.min.y, rect.max.y - rect.min.y);
   result.z = SafeRatio0(p.z - rect.min.z, rect.max.z - rect.min.z);
 
+  return result;
+}
+
+inline v3
+GetDim(rectangle3 rect)
+{
+  v3 result = rect.max - rect.min;
   return result;
 }
 

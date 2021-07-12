@@ -204,10 +204,12 @@ BeginSim(memory_arena *arena,
   simRegion->bounds = AddRadius(simRegion->updatableBounds,
     v3{ updateSafetyMargin, updateSafetyMargin, updateSafetyMarginZ });
 
-  world_position minChunk
-    = MapIntoWorldSpace(simRegion->world, origin, GetMinCorner(bounds));
-  world_position maxChunk
-    = MapIntoWorldSpace(simRegion->world, origin, GetMaxCorner(bounds));
+  world_position minChunk = MapIntoWorldSpace(simRegion->world,
+    origin,
+    GetMinCorner(simRegion->bounds));
+  world_position maxChunk = MapIntoWorldSpace(simRegion->world,
+    origin,
+    GetMaxCorner(simRegion->bounds));
 
   for(i32 chunkZ = minChunk.chunkZ; chunkZ <= maxChunk.chunkZ; chunkZ++) {
     for(i32 chunkY = minChunk.chunkY; chunkY <= maxChunk.chunkY; chunkY++) {

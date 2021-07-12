@@ -457,7 +457,7 @@ FillGroundBuffer(game_state *state,
 
   SaveArena(&tranState->tranArena);
   render_group *renderGroup
-    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4));
+    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), 960, 540);
 
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -723,13 +723,13 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     // 2: up
     // 3: down
     for(int screenIndex = 0; screenIndex < 10; screenIndex++) {
-#if 0
+#if 1
       int doorDirection = RandomChoice(&series, 2);
 #else
       int doorDirection = RandomChoice(&series, (doorUp || doorDown) ? 2 : 4);
 #endif
 
-      doorDirection = 3;
+      // doorDirection = 3;
 
       switch(doorDirection) {
         case 0: {
@@ -975,18 +975,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   //
   SaveArena(&tranState->tranArena);
 
-  render_group *renderGroup
-    = AllocateRenderGroup(&tranState->tranArena, Megabytes(4));
+  render_group *renderGroup = AllocateRenderGroup(&tranState->tranArena,
+    Megabytes(4),
+    drawBuffer->width,
+    drawBuffer->height);
 
   v2 screenCenter = 0.5f * v2{ (f32)buffer->width, (f32)buffer->height };
 
   // background
   Clear(renderGroup, V4(0.25f, 0.25f, 0.25f, 0.0f));
 
-  f32 screenWidthInMeters = drawBuffer->width * pixelsToMeters;
-  f32 screenHeightInMeters = drawBuffer->height * pixelsToMeters;
-  rectangle3 cameraBounds = RectCenterDim(V3(0, 0, 0),
-    V3(screenWidthInMeters, screenHeightInMeters, 0));
+  rectangle2 screenBounds = GetCameraRectangleAtTarget(renderGroup);
+  rectangle3 cameraBounds
+    = RectCenterDim(V3(0, 0, 0), V3(GetDim(screenBounds), 0));
   cameraBounds.min.z = -3.0f * world->typicalFloorHeight;
   cameraBounds.max.z = 1.0f * world->typicalFloorHeight;
 
@@ -1085,6 +1086,19 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   world_position simCenterP = state->cameraP;
   sim_region *simRegion
     = BeginSim(&tranState->tranArena, state, simCenterP, simBounds, input->dt);
+
+  PushRectOutline(renderGroup,
+    V3(0, 0, 0),
+    GetDim(screenBounds),
+    V4(1.0f, 1.0f, 0.0f, 1.0f));
+  PushRectOutline(renderGroup,
+    V3(0, 0, 0),
+    GetDim(simRegion->updatableBounds).xy,
+    V4(0.0f, 1.0f, 1.0f, 1.0f));
+  PushRectOutline(renderGroup,
+    V3(0, 0, 0),
+    GetDim(simRegion->bounds).xy,
+    V4(1.0f, 0.0f, 1.0f, 1.0f));
 
   // entities
   for(u32 index = 0; index < simRegion->entityCount; index++) {

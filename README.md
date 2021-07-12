@@ -213,6 +213,7 @@ My preferred code style for C is different from Casey's.
 - [Day 107: Fading Z Layers](#day-107-fading-z-layers)
 - [Day 108: Perspective Projection](#day-108-perspective-projection)
 - [Day 109: Resolution-Independent Rendering](#day-109-resolution-independent-rendering)
+- [Day 110: Unprojecting Screen Boudaries](#day-110-unprojecting-screen-boudaries)
 
 <!-- /MarkdownTOC -->
 
@@ -1187,3 +1188,13 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 - `PushBitmap` should take a `height` param
 - Add `size` to render_entry_bitmap
 - Add `screenDim` param to `GetEntityRenderBasisResult`
+
+### Day 110: Unprojecting Screen Boudaries
+
+- Define `GetCameraRectangleAtDistance`
+  - Define `Unproject`
+- Add `MetersToPixels` to render group and it means meters on the monitor into pixels on the monitor
+- Use `PushRectOutline` to verify our GetCameraRectangleAtDistance returns correct value
+- Define `render_group_camera`
+  - Add `gameCamera` and `renderCamera` to render group
+  - Now we can see the big picture of our game world

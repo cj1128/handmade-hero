@@ -570,7 +570,10 @@ DrawRectangleOutline(loaded_bitmap *buffer, v2 min, v2 max, v4 color)
 }
 
 internal render_group *
-AllocateRenderGroup(memory_arena *arena, u32 maxPushBufferSize)
+AllocateRenderGroup(memory_arena *arena,
+  u32 maxPushBufferSize,
+  u32 resolutionPixelsX,
+  u32 resolutionPixelsY)
 {
   render_group *result = PushStruct(arena, render_group);
   render_basis *defaultBasis = PushStruct(arena, render_basis);
@@ -582,6 +585,21 @@ AllocateRenderGroup(memory_arena *arena, u32 maxPushBufferSize)
   result->maxPushBufferSize = maxPushBufferSize;
   result->pushBufferSize = 0;
   result->pushBufferBase = (u8 *)PushSize(arena, maxPushBufferSize);
+
+  f32 widthOfMonitor = 0.635f;
+
+  result->metersToPixels = resolutionPixelsX / widthOfMonitor;
+  result->gameCamera.focalLength = 0.6f;
+  result->gameCamera.cameraDistanceAboveTarget = 9.0f;
+
+  result->renderCamera = result->gameCamera;
+  result->renderCamera.cameraDistanceAboveTarget = 60.0f;
+
+  f32 pixelsToMeters = 1.0f / result->metersToPixels;
+
+  result->monitorHalfDim = 0.5f
+    * V2(resolutionPixelsX * pixelsToMeters,
+      resolutionPixelsY * pixelsToMeters);
 
   result->globalAlpha = 1.0f;
 
@@ -680,12 +698,24 @@ PushRectOutline(render_group *group,
 {
   f32 thickness = 0.1f;
   // Top and bottom
-  PushRect(group, offset - V3(0, 0.5f * dim.y, 0), V2(dim.x, thickness), color);
-  PushRect(group, offset + V3(0, 0.5f * dim.y, 0), V2(dim.x, thickness), color);
+  PushRect(group,
+    offset - V3(0.0f, 0.5f * dim.y, 0.0f),
+    V2(dim.x, thickness),
+    color);
+  PushRect(group,
+    offset + V3(0.0f, 0.5f * dim.y, 0.0f),
+    V2(dim.x, thickness),
+    color);
 
   // Left and right
-  PushRect(group, offset - V3(0, 0.5f * dim.x, 0), V2(thickness, dim.y), color);
-  PushRect(group, offset + V3(0, 0.5f * dim.x, 0), V2(thickness, dim.y), color);
+  PushRect(group,
+    offset - V3(0.5f * dim.x, 0.0f, 0.0f),
+    V2(thickness, dim.y),
+    color);
+  PushRect(group,
+    offset + V3(0.5f * dim.x, 0.0f, 0.0f),
+    V2(thickness, dim.y),
+    color);
 }
 
 struct render_basis_result {
@@ -695,21 +725,22 @@ struct render_basis_result {
 };
 
 internal render_basis_result
-GetEntityRenderBasisResult(render_entity_basis *entityBasis,
+GetEntityRenderBasisResult(render_group *renderGroup,
+  render_entity_basis *entityBasis,
   v2 screenDim,
   f32 metersToPixels)
 {
   v2 screenCenter = 0.5f * screenDim;
   render_basis_result result = {};
   v3 entityP = entityBasis->basis->p;
-  f32 focalLength = 6.0f;
-  f32 cameraDistanceAboveTarget = 5.0f;
-  f32 zDistance = cameraDistanceAboveTarget - entityP.z;
+  f32 zDistance
+    = renderGroup->renderCamera.cameraDistanceAboveTarget - entityP.z;
   f32 nearClipPlane = 0.2f;
 
   v2 rawXY = entityP.xy + entityBasis->offset.xy;
   if(zDistance > nearClipPlane) {
-    f32 scale = metersToPixels * (1.0f / zDistance) * focalLength;
+    f32 scale = renderGroup->metersToPixels * (1.0f / zDistance)
+      * renderGroup->renderCamera.focalLength;
     result.p = screenCenter + scale * rawXY;
     result.scale = scale;
     result.valid = true;
@@ -750,7 +781,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
         v3 entityP = entry->entityBasis.basis->p;
 
         render_basis_result basisResult
-          = GetEntityRenderBasisResult(&entry->entityBasis,
+          = GetEntityRenderBasisResult(renderGroup,
+            &entry->entityBasis,
             screenDim,
             metersToPixels);
 
@@ -765,7 +797,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
         offset += sizeof(render_entry_bitmap);
 
         render_basis_result basisResult
-          = GetEntityRenderBasisResult(&entry->entityBasis,
+          = GetEntityRenderBasisResult(renderGroup,
+            &entry->entityBasis,
             screenDim,
             metersToPixels);
 
@@ -827,4 +860,29 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
         InvalidDefaultCase;
     }
   }
+}
+
+internal v2
+Unproject(v2 projected, f32 focalLength, f32 distanceToCamera)
+{
+  v2 result = projected * (distanceToCamera / focalLength);
+  return result;
+}
+
+internal rectangle2
+GetCameraRectangleAtDistance(render_group *renderGroup, f32 distanceToCamera)
+{
+  v2 halfDim = Unproject(renderGroup->monitorHalfDim,
+    renderGroup->gameCamera.focalLength,
+    distanceToCamera);
+  rectangle2 result = RectCenterHalfDim(V2(0, 0), halfDim);
+  return result;
+}
+
+internal rectangle2
+GetCameraRectangleAtTarget(render_group *renderGroup)
+{
+  rectangle2 result = GetCameraRectangleAtDistance(renderGroup,
+    renderGroup->gameCamera.cameraDistanceAboveTarget);
+  return result;
 }
