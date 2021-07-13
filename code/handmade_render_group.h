@@ -28,7 +28,6 @@ struct loaded_bitmap {
   i32 pitch;
 
   v2 alignPercentage;
-
   f32 widthOverHeight;
 };
 

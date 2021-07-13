@@ -214,6 +214,7 @@ My preferred code style for C is different from Casey's.
 - [Day 108: Perspective Projection](#day-108-perspective-projection)
 - [Day 109: Resolution-Independent Rendering](#day-109-resolution-independent-rendering)
 - [Day 110: Unprojecting Screen Boudaries](#day-110-unprojecting-screen-boudaries)
+- [Day 111: Resolution-independent Ground Chunks](#day-111-resolution-independent-ground-chunks)
 
 <!-- /MarkdownTOC -->
 
@@ -1198,3 +1199,10 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 - Define `render_group_camera`
   - Add `gameCamera` and `renderCamera` to render group
   - Now we can see the big picture of our game world
+
+### Day 111: Resolution-independent Ground Chunks
+
+- Reenable ground buffer code
+- Make ground the same size as the chunk
+- Define another LoadBMP call to set a default center align
+- Use meters in `FillGroundBuffer`

@@ -366,8 +366,8 @@ internal loaded_bitmap
 LoadBMP(thread_context *thread,
   debug_platform_read_file ReadFile,
   char *fileName,
-  i32 alignX = 0,
-  i32 topDownAlignY = 0)
+  i32 alignX,
+  i32 topDownAlignY)
 {
   loaded_bitmap result = {};
 
@@ -438,6 +438,16 @@ LoadBMP(thread_context *thread,
   return result;
 }
 
+internal loaded_bitmap
+LoadBMP(thread_context *thread,
+  debug_platform_read_file ReadFile,
+  char *fileName)
+{
+  loaded_bitmap result = LoadBMP(thread, ReadFile, fileName, 0, 0);
+  result.alignPercentage = V2(0.5f, 0.5f);
+  return result;
+}
+
 internal void
 InitializeArena(memory_arena *arena, size_t size, void *base)
 {
@@ -453,12 +463,21 @@ FillGroundBuffer(game_state *state,
   world_position chunkP)
 {
   loaded_bitmap *buffer = &groundBuffer->bitmap;
+  buffer->alignPercentage = V2(0.5f, 0.5f);
+  buffer->widthOverHeight = 1.0f;
   groundBuffer->p = chunkP;
 
   SaveArena(&tranState->tranArena);
+
   render_group *renderGroup
     = AllocateRenderGroup(&tranState->tranArena, Megabytes(4), 960, 540);
 
+  u32 iterationCount = 10;
+  f32 width = state->world.chunkDimInMeters.x;
+  f32 height = state->world.chunkDimInMeters.y;
+  v2 halfDim = 0.5f * V2(width, height);
+
+#if 1
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
       int chunkX = chunkP.chunkX + offsetX;
@@ -468,11 +487,9 @@ FillGroundBuffer(game_state *state,
       random_series series
         = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
 
-      f32 width = (f32)buffer->width;
-      f32 height = (f32)buffer->height;
       v2 chunkOffset = { width * offsetX, height * offsetY };
 
-      for(u32 i = 0; i < 100; i++) {
+      for(u32 i = 0; i < iterationCount; i++) {
         loaded_bitmap *stamp;
 
         if(RandomChoice(&series, 2)) {
@@ -483,11 +500,10 @@ FillGroundBuffer(game_state *state,
             = state->grass + RandomChoice(&series, ArrayCount(state->grass));
         }
 
-        v2 center = V2(RandomUnilateral(&series) * width,
-          RandomUnilateral(&series) * height);
-        v2 offset = 0.5f * V2(stamp->width, stamp->height);
-        v2 p = chunkOffset + center - offset;
-        PushBitmap(renderGroup, stamp, 1.0f, V3(p, 0.0f));
+        v2 p = chunkOffset
+          + Hadamard(halfDim,
+            V2(RandomBilateral(&series), RandomBilateral(&series)));
+        PushBitmap(renderGroup, stamp, 4.0f, V3(p, 0.0f));
       }
     }
   }
@@ -501,23 +517,21 @@ FillGroundBuffer(game_state *state,
       random_series series
         = RandomSeed(139 * chunkX + 593 * chunkY + 329 * chunkZ);
 
-      f32 width = (f32)buffer->width;
-      f32 height = (f32)buffer->height;
       v2 chunkOffset = { width * offsetX, height * offsetY };
 
-      for(u32 i = 0; i < 100; i++) {
+      for(u32 i = 0; i < iterationCount; i++) {
         loaded_bitmap *stamp
           = state->tuft + RandomChoice(&series, ArrayCount(state->tuft));
 
-        v2 center = V2(RandomUnilateral(&series) * width,
-          RandomUnilateral(&series) * height);
-        v2 offset = 0.5f * V2(stamp->width, stamp->height);
-        v2 p = chunkOffset + center - offset;
+        v2 p = chunkOffset
+          + Hadamard(halfDim,
+            V2(RandomBilateral(&series), RandomBilateral(&series)));
 
-        PushBitmap(renderGroup, stamp, 1.0f, V3(p, 0.0f));
+        PushBitmap(renderGroup, stamp, 0.4f, V3(p, 0.0f));
       }
     }
   }
+#endif
 
   RenderGroupToOutput(renderGroup, buffer);
   RestoreArena(&tranState->tranArena);
@@ -789,9 +803,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           }
 
           if(tileValue == 2) {
-            if((tileX % 2 == 0) && (tileY % 2 == 0)) {
-              AddWall(state, absTileX, absTileY, absTileZ);
-            }
+            AddWall(state, absTileX, absTileY, absTileZ);
           }
 
           if(doorUp || doorDown) {
@@ -853,7 +865,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     tranState->groundWidth = groundWidth;
     tranState->groundHeight = groundHeight;
     tranState->groundPitch = groundWidth * BYTES_PER_PIXEL;
-    tranState->groundBufferCount = 32;
+    tranState->groundBufferCount = 64;
     tranState->groundBuffers = PushArray(&tranState->tranArena,
       tranState->groundBufferCount,
       ground_buffer);
@@ -992,7 +1004,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   cameraBounds.max.z = 1.0f * world->typicalFloorHeight;
 
 // clear ground buffers when reloaded
-#if 0
+#if 1
   if(input->executableReloaded) {
     for(u32 i = 0; i < tranState->groundBufferCount; i++) {
       ground_buffer *buffer = tranState->groundBuffers + i;
@@ -1001,7 +1013,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   }
 #endif
 
-#if 0
+#if 1
   // render ground buffers
   {
     for(u32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
@@ -1009,20 +1021,24 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
       ground_buffer *buffer = tranState->groundBuffers + groundIndex;
       if(IsValid(&buffer->p)) {
         loaded_bitmap *bitmap = &buffer->bitmap;
-        bitmap->align
-          = V2(0.5f * (f32)bitmap->width, 0.5f * (f32)bitmap->height);
         v3 delta = SubtractPosition(&state->world, buffer->p, state->cameraP);
-        render_basis *basis = PushStruct(&tranState->tranArena, render_basis);
-        renderGroup->defaultBasis = basis;
-        basis->p = delta + V3(0, 0, state->zOffset);
-        PushBitmap(renderGroup, bitmap, V3(0, 0, 0));
+        if((delta.z >= -1.0f) && (delta.z <= 1.0f)) {
+          render_basis *basis = PushStruct(&tranState->tranArena, render_basis);
+          renderGroup->defaultBasis = basis;
+          basis->p = delta;
+          f32 groundSideInMeters = world->chunkDimInMeters.x;
+          PushBitmap(renderGroup, bitmap, groundSideInMeters, V3(0, 0, 0));
+          PushRectOutline(renderGroup,
+            V3(0, 0, 0),
+            V2(groundSideInMeters, groundSideInMeters),
+            V4(1.0f, 1.0f, 0.0f, 1.0f));
+        }
       }
     }
   }
 
-  // fill ground buffers
+  // update ground buffers
   {
-
     world_position minChunk
       = MapIntoWorldSpace(world, state->cameraP, GetMinCorner(cameraBounds));
     world_position maxChunk
@@ -1036,14 +1052,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
           world_position chunkCenterP
             = CenteredChunkPoint(world, chunkX, chunkY, chunkZ);
           v3 chunkRel = SubtractPosition(world, chunkCenterP, state->cameraP);
-
-          v2 renderCenter = screenCenter + metersToPixels * chunkRel.xy;
-          v2 renderDim = metersToPixels * world->chunkDimInMeters.xy;
-
-          // PushRectOutline(renderGroup,
-          //   chunkRel,
-          //   world->chunkDimInMeters.xy,
-          //   V4(1, 1, 0, 1));
 
           ground_buffer *furthestBuffer = 0;
           f32 furthestLengthSq = 0.0f;
@@ -1077,6 +1085,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     }
   }
 #endif
+
+  render_basis *basis = PushStruct(&tranState->tranArena, render_basis);
+  renderGroup->defaultBasis = basis;
+  basis->p = {};
 
   v3 simExpansion = { 15.0f, 15.0f, 0.0f };
   rectangle3 simBounds = AddRadius(cameraBounds, simExpansion);

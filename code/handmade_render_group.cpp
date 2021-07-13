@@ -590,10 +590,10 @@ AllocateRenderGroup(memory_arena *arena,
 
   result->metersToPixels = resolutionPixelsX / widthOfMonitor;
   result->gameCamera.focalLength = 0.6f;
-  result->gameCamera.cameraDistanceAboveTarget = 9.0f;
+  result->gameCamera.cameraDistanceAboveTarget = 25.0f;
 
   result->renderCamera = result->gameCamera;
-  result->renderCamera.cameraDistanceAboveTarget = 60.0f;
+  // result->renderCamera.cameraDistanceAboveTarget = 60.0f;
 
   f32 pixelsToMeters = 1.0f / result->metersToPixels;
 
