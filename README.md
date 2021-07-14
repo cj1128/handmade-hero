@@ -215,6 +215,7 @@ My preferred code style for C is different from Casey's.
 - [Day 109: Resolution-Independent Rendering](#day-109-resolution-independent-rendering)
 - [Day 110: Unprojecting Screen Boudaries](#day-110-unprojecting-screen-boudaries)
 - [Day 111: Resolution-independent Ground Chunks](#day-111-resolution-independent-ground-chunks)
+- [Day 112: A Mental Model of CPU Performance](#day-112-a-mental-model-of-cpu-performance)
 
 <!-- /MarkdownTOC -->
 
@@ -1206,3 +1207,12 @@ In a 2D perspective, things are intentionally wrong, because the art wants them 
 - Make ground the same size as the chunk
 - Define another LoadBMP call to set a default center align
 - Use meters in `FillGroundBuffer`
+
+### Day 112: A Mental Model of CPU Performance
+
+This is a blackboard day. No code evolved.
+
+- SIMD is everywhere
+- Modern CPUS are heavily heavily out of order
+- Casey explains the difference between latency and throughput
+- In most cases, we only care the throughput not the latency.
