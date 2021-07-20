@@ -165,7 +165,37 @@ typedef DEBUG_PLATFORM_WRITE_FILE(debug_platform_write_file);
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(name)                                  \
   void name(thread_context *thread, void *memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
+
+extern struct game_memory *debugGlobalMemory;
+
+enum {
+  DebugCycleCounter_GameUpdateVideo,
+  DebugCycleCounter_Render,
+  DebugCycleCounter_DrawRectangleSlowly,
+  DebugCycleCounter_TestPixel,
+  DebugCycleCounter_FillPixel,
+};
+
+#define BEGIN_TIMED_BLOCK(id)                                                  \
+  u64 cycleStartCounter##id = __rdtsc();                                       \
+  debugGlobalMemory->counters[DebugCycleCounter_##id].name = #id;
+#define END_TIMED_BLOCK(id)                                                    \
+  debugGlobalMemory->counters[DebugCycleCounter_##id].cycleCount               \
+    += __rdtsc() - cycleStartCounter##id;                                      \
+  debugGlobalMemory->counters[DebugCycleCounter_##id].callCount++;
+
+#else
+
+#define BEGIN_TIMED_BLOCK(id)
+#define END_TIMED_BLOCK(id)
+
 #endif
+
+struct debug_cycle_counter {
+  char *name;
+  u64 cycleCount;
+  u32 callCount;
+};
 
 struct game_memory {
   bool32 isInitialized;
@@ -179,6 +209,8 @@ struct game_memory {
   debug_platform_read_file *debugPlatformReadFile;
   debug_platform_write_file *debugPlatformWriteFile;
   debug_platform_free_file_memory *debugPlatformFreeFileMemory;
+
+  debug_cycle_counter counters[32];
 };
 
 #define GAME_UPDATE_VIDEO(name)                                                \

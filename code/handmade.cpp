@@ -477,7 +477,7 @@ FillGroundBuffer(game_state *state,
   f32 height = state->world.chunkDimInMeters.y;
   v2 halfDim = 0.5f * V2(width, height);
 
-#if 1
+#if 0
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
       int chunkX = chunkP.chunkX + offsetX;
@@ -567,8 +567,17 @@ InitializeWorld(game_world *world, f32 typicalFloorHeight, v3 chunkDimInMeters)
   world->chunkDimInMeters = chunkDimInMeters;
 }
 
+#if HANDMADE_INTERNAL
+game_memory *debugGlobalMemory;
+#endif
+
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 {
+#if HANDMADE_INTERNAL
+  debugGlobalMemory = memory;
+#endif
+  BEGIN_TIMED_BLOCK(GameUpdateVideo);
+
   Assert((&input->controllers[0].terminator - &input->controllers[0].buttons[0])
     == ArrayCount(input->controllers[0].buttons));
   Assert(sizeof(game_state) <= memory->permanentStorageSize);
@@ -1395,6 +1404,8 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   EndSim(simRegion, state);
   RestoreArena(&tranState->tranArena);
   CheckArena(&tranState->tranArena);
+
+  END_TIMED_BLOCK(GameUpdateVideo);
 }
 
 extern "C" GAME_UPDATE_AUDIO(GameUpdateAudio) {}

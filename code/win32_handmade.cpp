@@ -37,6 +37,32 @@ global_variable LPDIRECTSOUNDBUFFER globalSoundBuffer;
 global_variable u64 globalPerfCounterFrequency;
 global_variable bool32 globalShowCursor;
 
+internal void
+HandleDebugCounters(game_memory *memory)
+{
+#if HANDMADE_INTERNAL
+  OutputDebugStringA("=== Debug Cycle Counter ===\n");
+  for(i32 i = 0; i < ArrayCount(memory->counters); i++) {
+    debug_cycle_counter *counter = memory->counters + i;
+    if(counter->callCount > 0) {
+      char buffer[256];
+      sprintf_s(buffer,
+        sizeof(buffer),
+        "%s\t%llu(cycle), %d(call), %llu(cycle/call) \n",
+        counter->name,
+        counter->cycleCount,
+        counter->callCount,
+        counter->cycleCount / counter->callCount);
+      OutputDebugStringA(buffer);
+
+      counter->cycleCount = 0;
+      counter->callCount = 0;
+    }
+  }
+  OutputDebugStringA("\n");
+#endif
+}
+
 DEBUG_PLATFORM_READ_FILE(DebugPlatformReadFile)
 {
   debug_read_file_result result = {};
@@ -1314,6 +1340,7 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
                 newInput,
                 oldInput,
                 &buffer);
+              HandleDebugCounters(&memory);
             }
           }
 

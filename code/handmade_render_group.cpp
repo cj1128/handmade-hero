@@ -326,6 +326,8 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
   environment_map *bottom,
   f32 pixelsToMeters)
 {
+  BEGIN_TIMED_BLOCK(DrawRectangleSlowly);
+
   color.rgb *= color.a;
 
   u32 c = SRGB1ToUint32(color);
@@ -397,6 +399,8 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
     u32 *pixel = (u32 *)row;
 
     for(int x = minX; x <= maxX; x++) {
+      BEGIN_TIMED_BLOCK(TestPixel);
+
       v2 p = V2(x, y);
       v2 d = p - origin;
 
@@ -407,6 +411,7 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
       if((edgeTop < 0) && (edgeBottom < 0) && (edgeLeft < 0)
         && (edgeRight < 0)) {
+        BEGIN_TIMED_BLOCK(FillPixel);
         v2 screenSpaceUV = { invMaxWidth * (f32)x, fixedCastY };
         f32 zDiff = pixelsToMeters * ((f32)y - originY);
 
@@ -497,13 +502,17 @@ DrawRectangleSlowly(loaded_bitmap *buffer,
 
         blended = Linear1ToSRGB255(blended);
         *pixel = Pack4x8(blended);
+        END_TIMED_BLOCK(FillPixel);
       }
 
       pixel++;
+      END_TIMED_BLOCK(TestPixel);
     }
 
     row += buffer->pitch;
   }
+
+  END_TIMED_BLOCK(DrawRectangleSlowly);
 }
 
 // exclusive: [min, max)
@@ -752,6 +761,8 @@ GetEntityRenderBasisResult(render_group *renderGroup,
 internal void
 RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 {
+  BEGIN_TIMED_BLOCK(Render);
+
   v2 screenDim = { (f32)outputTarget->width, (f32)outputTarget->height };
 
   f32 metersToPixels = screenDim.x / 20.0f;
@@ -860,6 +871,8 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
         InvalidDefaultCase;
     }
   }
+
+  END_TIMED_BLOCK(Render);
 }
 
 internal v2

@@ -216,6 +216,7 @@ My preferred code style for C is different from Casey's.
 - [Day 110: Unprojecting Screen Boudaries](#day-110-unprojecting-screen-boudaries)
 - [Day 111: Resolution-independent Ground Chunks](#day-111-resolution-independent-ground-chunks)
 - [Day 112: A Mental Model of CPU Performance](#day-112-a-mental-model-of-cpu-performance)
+- [Day 113: Simple Performance Counters](#day-113-simple-performance-counters)
 
 <!-- /MarkdownTOC -->
 
@@ -1216,3 +1217,18 @@ This is a blackboard day. No code evolved.
 - Modern CPUS are heavily heavily out of order
 - Casey explains the difference between latency and throughput
 - In most cases, we only care the throughput not the latency.
+
+### Day 113: Simple Performance Counters
+
+- Basic process of making things run quickly
+  - Gather statistics
+    - where it is slow
+    - what are their characteristics
+  - Make an estimation
+  - Analyze "efficiency" and "performance"
+    - "efficiency" is about how much work we have to do
+    - "performance" is about how to make the CPU do the work
+  - Start coding
+- Define `BEGIN_TIMED_BLOCK` and `END_TIMED_BLOCK` macros to track performance
+- Define `debug_cycle_counter` struct to store counters
+- Define `HandleDebugCounters` to display counters
