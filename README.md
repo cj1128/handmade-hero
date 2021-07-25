@@ -218,6 +218,7 @@ My preferred code style for C is different from Casey's.
 - [Day 112: A Mental Model of CPU Performance](#day-112-a-mental-model-of-cpu-performance)
 - [Day 113: Simple Performance Counters](#day-113-simple-performance-counters)
 - [Day 114: Preparing a Function for Optimization](#day-114-preparing-a-function-for-optimization)
+- [Day 115: SIMD Basics](#day-115-simd-basics)
 
 <!-- /MarkdownTOC -->
 
@@ -1239,3 +1240,14 @@ This is a blackboard day. No code evolved.
 - Copy `DrawRectangleSlowly` to `DrawRectangleHopefullyQuickly`
 - Flatten `DrawRectangleHopefullyQuickly`
 - Think about the question: What is our "wide" strategy?
+
+### Day 115: SIMD Basics
+
+- SOA(Struct of Array) vs AOS(Array of Struct)
+  - C makes AOS really easy
+  - but SIMD needs SOA
+- We are targeting SSE and SSE2
+- Convert `FillRectangleHopefullyQuickly` to operate on 4 pixels a time
+- RESOURCE: [Numerical Methods that work](https://www.amazon.com/Numerical-Methods-that-Work-Spectrum/dp/0883854503)
+- RESOURCE: [What Every Computer Scientist Should
+Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7895/800-7895.pdf)

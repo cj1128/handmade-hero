@@ -323,6 +323,10 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 {
   BEGIN_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
 
+  __m128 a = _mm_set1_ps(1.0f);
+  __m128 b = _mm_set1_ps(2.0f);
+  __m128 result = _mm_add_ps(a, b);
+
   color.rgb *= color.a;
 
   f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
@@ -385,84 +389,142 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   for(int y = minY; y <= maxY; y++) {
     u32 *pixel = (u32 *)row;
 
-    for(int x = minX; x <= maxX; x++) {
+    for(int x = minX; x <= maxX; x += 4) {
       BEGIN_TIMED_BLOCK(TestPixel);
 
-      v2 p = V2(x, y);
-      v2 d = p - origin;
+      f32 fx[4];
+      f32 fy[4];
+      f32 texelAr[4];
+      f32 texelAg[4];
+      f32 texelAb[4];
+      f32 texelAa[4];
+      f32 texelBr[4];
+      f32 texelBg[4];
+      f32 texelBb[4];
+      f32 texelBa[4];
 
-      // NOTE(cj): xAxis must be perpendicular with yAxis
-      f32 u = Inner(d, nXAxis);
-      f32 v = Inner(d, nYAxis);
+      f32 texelCr[4];
+      f32 texelCg[4];
+      f32 texelCb[4];
+      f32 texelCa[4];
 
-      if((u >= 0.0f) && (u < 1.0f) && (v >= 0.0f) && (v < 1.0f)) {
-        BEGIN_TIMED_BLOCK(FillPixel);
-        f32 tPx = u * (f32)(texture->width - 2);
-        f32 tPy = v * (f32)(texture->height - 2);
+      f32 texelDr[4];
+      f32 texelDg[4];
+      f32 texelDb[4];
+      f32 texelDa[4];
 
-        i32 tx = (i32)tPx;
-        i32 ty = (i32)tPy;
+      f32 destR[4];
+      f32 destG[4];
+      f32 destB[4];
+      f32 destA[4];
 
-        f32 fx = tPx - (f32)tx;
-        f32 fy = tPy - (f32)ty;
+      f32 blendedR[4];
+      f32 blendedG[4];
+      f32 blendedB[4];
+      f32 blendedA[4];
 
-        u8 *ptr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
-        u32 sampleA = *((u32 *)ptr);
-        u32 sampleB = *((u32 *)(ptr + 4));
-        u32 sampleC = *((u32 *)(ptr + texture->pitch));
-        u32 sampleD = *((u32 *)(ptr + texture->pitch + 4));
+      bool32 shouldFill[4];
 
-        f32 texelAr = (f32)((sampleA >> 16) & 0xff);
-        f32 texelAg = (f32)((sampleA >> 8) & 0xff);
-        f32 texelAb = (f32)((sampleA >> 0) & 0xff);
-        f32 texelAa = (f32)((sampleA >> 24) & 0xff);
+      for(int i = 0; i < 4; i++) {
+        v2 p = V2(x + i, y);
+        v2 d = p - origin;
 
-        f32 texelBr = (f32)((sampleB >> 16) & 0xff);
-        f32 texelBg = (f32)((sampleB >> 8) & 0xff);
-        f32 texelBb = (f32)((sampleB >> 0) & 0xff);
-        f32 texelBa = (f32)((sampleB >> 24) & 0xff);
+        // NOTE(cj): xAxis must be perpendicular with yAxis
+        f32 u = Inner(d, nXAxis);
+        f32 v = Inner(d, nYAxis);
 
-        f32 texelCr = (f32)((sampleC >> 16) & 0xff);
-        f32 texelCg = (f32)((sampleC >> 8) & 0xff);
-        f32 texelCb = (f32)((sampleC >> 0) & 0xff);
-        f32 texelCa = (f32)((sampleC >> 24) & 0xff);
+        shouldFill[i] = (u >= 0.0f) && (u < 1.0f) && (v >= 0.0f) && (v < 1.0f);
+        if(shouldFill[i]) {
+          f32 tPx = u * (f32)(texture->width - 2);
+          f32 tPy = v * (f32)(texture->height - 2);
 
-        f32 texelDr = (f32)((sampleD >> 16) & 0xff);
-        f32 texelDg = (f32)((sampleD >> 8) & 0xff);
-        f32 texelDb = (f32)((sampleD >> 0) & 0xff);
-        f32 texelDa = (f32)((sampleD >> 24) & 0xff);
+          i32 tx = (i32)tPx;
+          i32 ty = (i32)tPy;
 
-        texelAr = Square(texelAr * inv255);
-        texelAg = Square(texelAg * inv255);
-        texelAb = Square(texelAb * inv255);
-        texelAa = texelAa * inv255;
+          fx[i] = tPx - (f32)tx;
+          fy[i] = tPy - (f32)ty;
 
-        texelBr = Square(texelBr * inv255);
-        texelBg = Square(texelBg * inv255);
-        texelBb = Square(texelBb * inv255);
-        texelBa = texelBa * inv255;
+          u8 *ptr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
+          u32 sampleA = *((u32 *)ptr);
+          u32 sampleB = *((u32 *)(ptr + 4));
+          u32 sampleC = *((u32 *)(ptr + texture->pitch));
+          u32 sampleD = *((u32 *)(ptr + texture->pitch + 4));
 
-        texelCr = Square(texelCr * inv255);
-        texelCg = Square(texelCg * inv255);
-        texelCb = Square(texelCb * inv255);
-        texelCa = texelCa * inv255;
+          texelAr[i] = (f32)((sampleA >> 16) & 0xff);
+          texelAg[i] = (f32)((sampleA >> 8) & 0xff);
+          texelAb[i] = (f32)((sampleA >> 0) & 0xff);
+          texelAa[i] = (f32)((sampleA >> 24) & 0xff);
 
-        texelDr = Square(texelDr * inv255);
-        texelDg = Square(texelDg * inv255);
-        texelDb = Square(texelDb * inv255);
-        texelDa = texelDa * inv255;
+          texelBr[i] = (f32)((sampleB >> 16) & 0xff);
+          texelBg[i] = (f32)((sampleB >> 8) & 0xff);
+          texelBb[i] = (f32)((sampleB >> 0) & 0xff);
+          texelBa[i] = (f32)((sampleB >> 24) & 0xff);
 
-        f32 invFx = 1.0f - fx;
-        f32 invFy = 1.0f - fy;
+          texelCr[i] = (f32)((sampleC >> 16) & 0xff);
+          texelCg[i] = (f32)((sampleC >> 8) & 0xff);
+          texelCb[i] = (f32)((sampleC >> 0) & 0xff);
+          texelCa[i] = (f32)((sampleC >> 24) & 0xff);
+
+          texelDr[i] = (f32)((sampleD >> 16) & 0xff);
+          texelDg[i] = (f32)((sampleD >> 8) & 0xff);
+          texelDb[i] = (f32)((sampleD >> 0) & 0xff);
+          texelDa[i] = (f32)((sampleD >> 24) & 0xff);
+
+          destR[i] = (f32)((*(pixel + i) >> 16) & 0xff);
+          destG[i] = (f32)((*(pixel + i) >> 8) & 0xff);
+          destB[i] = (f32)((*(pixel + i) >> 0) & 0xff);
+          destA[i] = (f32)((*(pixel + i) >> 24) & 0xff);
+        }
+      }
+
+      for(int i = 0; i < 4; i++) {
+        texelAr[i] = texelAr[i] * inv255;
+        texelAr[i] *= texelAr[i];
+        texelAg[i] = texelAg[i] * inv255;
+        texelAg[i] *= texelAg[i];
+        texelAb[i] = texelAb[i] * inv255;
+        texelAb[i] *= texelAb[i];
+        texelAa[i] = texelAa[i] * inv255;
+
+        texelBr[i] = texelBr[i] * inv255;
+        texelBr[i] *= texelBr[i];
+        texelBg[i] = texelBg[i] * inv255;
+        texelBg[i] *= texelBg[i];
+        texelBb[i] = texelBb[i] * inv255;
+        texelBb[i] *= texelBb[i];
+        texelBa[i] = texelBa[i] * inv255;
+
+        texelCr[i] = texelCr[i] * inv255;
+        texelCr[i] *= texelCr[i];
+        texelCg[i] = texelCg[i] * inv255;
+        texelCg[i] *= texelCg[i];
+        texelCb[i] = texelCb[i] * inv255;
+        texelCb[i] *= texelCb[i];
+        texelCa[i] = texelCa[i] * inv255;
+
+        texelDr[i] = texelDr[i] * inv255;
+        texelDr[i] *= texelDr[i];
+        texelDg[i] = texelDg[i] * inv255;
+        texelDg[i] *= texelDg[i];
+        texelDb[i] = texelDb[i] * inv255;
+        texelDb[i] *= texelDb[i];
+        texelDa[i] = texelDa[i] * inv255;
+
+        f32 invFx = 1.0f - fx[i];
+        f32 invFy = 1.0f - fy[i];
         f32 l0 = invFy * invFx;
-        f32 l1 = invFy * fx;
-        f32 l2 = fy * invFx;
-        f32 l3 = fy * fx;
+        f32 l1 = invFy * fx[i];
+        f32 l2 = fy[i] * invFx;
+        f32 l3 = fy[i] * fx[i];
 
-        f32 texelR = l0 * texelAr + l1 * texelBr + l2 * texelCr + l3 * texelDr;
-        f32 texelG = l0 * texelAg + l1 * texelBg + l2 * texelCg + l3 * texelDg;
-        f32 texelB = l0 * texelAb + l1 * texelBb + l2 * texelCb + l3 * texelDb;
-        f32 texelA = l0 * texelAa + l1 * texelBa + l2 * texelCa + l3 * texelDa;
+        f32 texelR = l0 * texelAr[i] + l1 * texelBr[i] + l2 * texelCr[i]
+          + l3 * texelDr[i];
+        f32 texelG = l0 * texelAg[i] + l1 * texelBg[i] + l2 * texelCg[i]
+          + l3 * texelDg[i];
+        f32 texelB = l0 * texelAb[i] + l1 * texelBb[i] + l2 * texelCb[i]
+          + l3 * texelDb[i];
+        f32 texelA = l0 * texelAa[i] + l1 * texelBa[i] + l2 * texelCa[i]
+          + l3 * texelDa[i];
 
         texelR *= color.r;
         texelG *= color.g;
@@ -475,33 +537,34 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 
         f32 invTexelA = 1.0f - texelA;
 
-        f32 destR = (f32)((*pixel >> 16) & 0xff);
-        f32 destG = (f32)((*pixel >> 8) & 0xff);
-        f32 destB = (f32)((*pixel >> 0) & 0xff);
-        f32 destA = (f32)((*pixel >> 24) & 0xff);
+        destR[i] = destR[i] * inv255;
+        destR[i] *= destR[i];
+        destG[i] = destG[i] * inv255;
+        destG[i] *= destG[i];
+        destB[i] = destB[i] * inv255;
+        destB[i] *= destB[i];
+        destA[i] = destA[i] * inv255;
 
-        destR = Square(destR * inv255);
-        destG = Square(destG * inv255);
-        destB = Square(destB * inv255);
-        destA = destA * inv255;
+        blendedR[i] = invTexelA * destR[i] + texelR;
+        blendedG[i] = invTexelA * destG[i] + texelG;
+        blendedB[i] = invTexelA * destB[i] + texelB;
+        blendedA[i] = invTexelA * destA[i] + texelA;
 
-        f32 blendedR = invTexelA * destR + texelR;
-        f32 blendedG = invTexelA * destG + texelG;
-        f32 blendedB = invTexelA * destB + texelB;
-        f32 blendedA = invTexelA * destA + texelA;
-
-        blendedR = 255.0f * SquareRoot(blendedR);
-        blendedG = 255.0f * SquareRoot(blendedG);
-        blendedB = 255.0f * SquareRoot(blendedB);
-        blendedA = 255.0f * blendedA;
-
-        *pixel = ((u32)(blendedA + 0.5f) << 24) | ((u32)(blendedR + 0.5f) << 16)
-          | ((u32)(blendedG + 0.5f) << 8) | (u32)(blendedB + 0.5f);
-
-        END_TIMED_BLOCK(FillPixel);
+        blendedR[i] = 255.0f * SquareRoot(blendedR[i]);
+        blendedG[i] = 255.0f * SquareRoot(blendedG[i]);
+        blendedB[i] = 255.0f * SquareRoot(blendedB[i]);
+        blendedA[i] = 255.0f * blendedA[i];
       }
 
-      pixel++;
+      for(int i = 0; i < 4; i++) {
+        if(shouldFill[i]) {
+          *(pixel + i) = ((u32)(blendedA[i] + 0.5f) << 24)
+            | ((u32)(blendedR[i] + 0.5f) << 16)
+            | ((u32)(blendedG[i] + 0.5f) << 8) | (u32)(blendedB[i] + 0.5f);
+        }
+      }
+
+      pixel += 4;
       END_TIMED_BLOCK(TestPixel);
     }
 
