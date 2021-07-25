@@ -312,6 +312,205 @@ SampleEnvironmentMap(v2 screenSpaceUV,
   return result;
 }
 
+internal void
+DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
+  v2 origin,
+  v2 xAxis,
+  v2 yAxis,
+  v4 color,
+  loaded_bitmap *texture,
+  f32 pixelsToMeters)
+{
+  BEGIN_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
+
+  color.rgb *= color.a;
+
+  f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
+  f32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
+
+  i32 maxWidth = buffer->width - 1;
+  i32 maxHeight = buffer->height - 1;
+
+  f32 invMaxWidth = 1.0f / (f32)maxWidth;
+  f32 invMaxHeight = 1.0f / (f32)maxHeight;
+
+  i32 minX = maxWidth;
+  i32 minY = maxHeight;
+  i32 maxX = 0;
+  i32 maxY = 0;
+
+  f32 originZ = 0.0f;
+  f32 originY = (origin + 0.5f * xAxis + 0.5f * yAxis).y;
+  f32 fixedCastY = invMaxHeight * originY;
+
+  v2 ps[4] = { origin, origin + xAxis, origin + yAxis, origin + xAxis + yAxis };
+  for(int pIndex = 0; pIndex < ArrayCount(ps); pIndex++) {
+    v2 p = ps[pIndex];
+    i32 floorX = FloorReal32ToInt32(p.x);
+    i32 floorY = FloorReal32ToInt32(p.y);
+
+    if(minX > floorX) {
+      minX = floorX;
+    }
+    if(maxX < floorX) {
+      maxX = floorX;
+    }
+    if(minY > floorY) {
+      minY = floorY;
+    }
+    if(maxY < floorY) {
+      maxY = floorY;
+    }
+  }
+
+  if(minX < 0) {
+    minX = 0;
+  }
+  if(minY < 0) {
+    minY = 0;
+  }
+  if(maxX > maxWidth) {
+    maxX = maxWidth;
+  }
+  if(maxY > maxHeight) {
+    maxY = maxHeight;
+  }
+
+  u8 *row = (u8 *)buffer->memory + minY * buffer->pitch + minX * 4;
+
+  v2 nXAxis = xAxis * invXAxisLengthSq;
+  v2 nYAxis = yAxis * invYAxisLengthSq;
+  f32 inv255 = 1.0f / 255.0f;
+
+  for(int y = minY; y <= maxY; y++) {
+    u32 *pixel = (u32 *)row;
+
+    for(int x = minX; x <= maxX; x++) {
+      BEGIN_TIMED_BLOCK(TestPixel);
+
+      v2 p = V2(x, y);
+      v2 d = p - origin;
+
+      // NOTE(cj): xAxis must be perpendicular with yAxis
+      f32 u = Inner(d, nXAxis);
+      f32 v = Inner(d, nYAxis);
+
+      if((u >= 0.0f) && (u < 1.0f) && (v >= 0.0f) && (v < 1.0f)) {
+        BEGIN_TIMED_BLOCK(FillPixel);
+        f32 tPx = u * (f32)(texture->width - 2);
+        f32 tPy = v * (f32)(texture->height - 2);
+
+        i32 tx = (i32)tPx;
+        i32 ty = (i32)tPy;
+
+        f32 fx = tPx - (f32)tx;
+        f32 fy = tPy - (f32)ty;
+
+        u8 *ptr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
+        u32 sampleA = *((u32 *)ptr);
+        u32 sampleB = *((u32 *)(ptr + 4));
+        u32 sampleC = *((u32 *)(ptr + texture->pitch));
+        u32 sampleD = *((u32 *)(ptr + texture->pitch + 4));
+
+        f32 texelAr = (f32)((sampleA >> 16) & 0xff);
+        f32 texelAg = (f32)((sampleA >> 8) & 0xff);
+        f32 texelAb = (f32)((sampleA >> 0) & 0xff);
+        f32 texelAa = (f32)((sampleA >> 24) & 0xff);
+
+        f32 texelBr = (f32)((sampleB >> 16) & 0xff);
+        f32 texelBg = (f32)((sampleB >> 8) & 0xff);
+        f32 texelBb = (f32)((sampleB >> 0) & 0xff);
+        f32 texelBa = (f32)((sampleB >> 24) & 0xff);
+
+        f32 texelCr = (f32)((sampleC >> 16) & 0xff);
+        f32 texelCg = (f32)((sampleC >> 8) & 0xff);
+        f32 texelCb = (f32)((sampleC >> 0) & 0xff);
+        f32 texelCa = (f32)((sampleC >> 24) & 0xff);
+
+        f32 texelDr = (f32)((sampleD >> 16) & 0xff);
+        f32 texelDg = (f32)((sampleD >> 8) & 0xff);
+        f32 texelDb = (f32)((sampleD >> 0) & 0xff);
+        f32 texelDa = (f32)((sampleD >> 24) & 0xff);
+
+        texelAr = Square(texelAr * inv255);
+        texelAg = Square(texelAg * inv255);
+        texelAb = Square(texelAb * inv255);
+        texelAa = texelAa * inv255;
+
+        texelBr = Square(texelBr * inv255);
+        texelBg = Square(texelBg * inv255);
+        texelBb = Square(texelBb * inv255);
+        texelBa = texelBa * inv255;
+
+        texelCr = Square(texelCr * inv255);
+        texelCg = Square(texelCg * inv255);
+        texelCb = Square(texelCb * inv255);
+        texelCa = texelCa * inv255;
+
+        texelDr = Square(texelDr * inv255);
+        texelDg = Square(texelDg * inv255);
+        texelDb = Square(texelDb * inv255);
+        texelDa = texelDa * inv255;
+
+        f32 invFx = 1.0f - fx;
+        f32 invFy = 1.0f - fy;
+        f32 l0 = invFy * invFx;
+        f32 l1 = invFy * fx;
+        f32 l2 = fy * invFx;
+        f32 l3 = fy * fx;
+
+        f32 texelR = l0 * texelAr + l1 * texelBr + l2 * texelCr + l3 * texelDr;
+        f32 texelG = l0 * texelAg + l1 * texelBg + l2 * texelCg + l3 * texelDg;
+        f32 texelB = l0 * texelAb + l1 * texelBb + l2 * texelCb + l3 * texelDb;
+        f32 texelA = l0 * texelAa + l1 * texelBa + l2 * texelCa + l3 * texelDa;
+
+        texelR *= color.r;
+        texelG *= color.g;
+        texelB *= color.b;
+        texelA *= color.a;
+
+        texelR = Clamp01(texelR);
+        texelG = Clamp01(texelG);
+        texelB = Clamp01(texelB);
+
+        f32 invTexelA = 1.0f - texelA;
+
+        f32 destR = (f32)((*pixel >> 16) & 0xff);
+        f32 destG = (f32)((*pixel >> 8) & 0xff);
+        f32 destB = (f32)((*pixel >> 0) & 0xff);
+        f32 destA = (f32)((*pixel >> 24) & 0xff);
+
+        destR = Square(destR * inv255);
+        destG = Square(destG * inv255);
+        destB = Square(destB * inv255);
+        destA = destA * inv255;
+
+        f32 blendedR = invTexelA * destR + texelR;
+        f32 blendedG = invTexelA * destG + texelG;
+        f32 blendedB = invTexelA * destB + texelB;
+        f32 blendedA = invTexelA * destA + texelA;
+
+        blendedR = 255.0f * SquareRoot(blendedR);
+        blendedG = 255.0f * SquareRoot(blendedG);
+        blendedB = 255.0f * SquareRoot(blendedB);
+        blendedA = 255.0f * blendedA;
+
+        *pixel = ((u32)(blendedA + 0.5f) << 24) | ((u32)(blendedR + 0.5f) << 16)
+          | ((u32)(blendedG + 0.5f) << 8) | (u32)(blendedB + 0.5f);
+
+        END_TIMED_BLOCK(FillPixel);
+      }
+
+      pixel++;
+      END_TIMED_BLOCK(TestPixel);
+    }
+
+    row += buffer->pitch;
+  }
+
+  END_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
+}
+
 // exclusive
 internal void
 DrawRectangleSlowly(loaded_bitmap *buffer,
@@ -814,16 +1013,12 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
             metersToPixels);
 
         // DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
-        DrawRectangleSlowly(outputTarget,
+        DrawRectangleHopefullyQuickly(outputTarget,
           basisResult.p,
           basisResult.scale * V2(entry->size.x, 0.0f),
           basisResult.scale * V2(0.0f, entry->size.y),
           entry->color,
           entry->bitmap,
-          0,
-          0,
-          0,
-          0,
           pixelsToMeters);
 
       } break;
@@ -835,16 +1030,12 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         v2 min = entry->origin;
         v2 max = entry->origin + entry->xAxis + entry->yAxis;
-        DrawRectangleSlowly(outputTarget,
+        DrawRectangleHopefullyQuickly(outputTarget,
           entry->origin,
           entry->xAxis,
           entry->yAxis,
           entry->color,
           entry->texture,
-          entry->normalMap,
-          entry->top,
-          entry->middle,
-          entry->bottom,
           pixelsToMeters);
 
         v2 dim = V2(4, 4);

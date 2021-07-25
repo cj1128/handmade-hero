@@ -217,6 +217,7 @@ My preferred code style for C is different from Casey's.
 - [Day 111: Resolution-independent Ground Chunks](#day-111-resolution-independent-ground-chunks)
 - [Day 112: A Mental Model of CPU Performance](#day-112-a-mental-model-of-cpu-performance)
 - [Day 113: Simple Performance Counters](#day-113-simple-performance-counters)
+- [Day 114: Preparing a Function for Optimization](#day-114-preparing-a-function-for-optimization)
 
 <!-- /MarkdownTOC -->
 
@@ -1232,3 +1233,9 @@ This is a blackboard day. No code evolved.
 - Define `BEGIN_TIMED_BLOCK` and `END_TIMED_BLOCK` macros to track performance
 - Define `debug_cycle_counter` struct to store counters
 - Define `HandleDebugCounters` to display counters
+
+### Day 114: Preparing a Function for Optimization
+
+- Copy `DrawRectangleSlowly` to `DrawRectangleHopefullyQuickly`
+- Flatten `DrawRectangleHopefullyQuickly`
+- Think about the question: What is our "wide" strategy?
