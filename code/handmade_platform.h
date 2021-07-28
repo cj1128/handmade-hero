@@ -172,18 +172,23 @@ enum {
   DebugCycleCounter_GameUpdateVideo,
   DebugCycleCounter_Render,
   DebugCycleCounter_DrawRectangleSlowly,
-  DebugCycleCounter_TestPixel,
-  DebugCycleCounter_FillPixel,
+  DebugCycleCounter_ProcessPixel,
   DebugCycleCounter_DrawRectangleHopefullyQuickly,
 };
 
 #define BEGIN_TIMED_BLOCK(id)                                                  \
   u64 cycleStartCounter##id = __rdtsc();                                       \
   debugGlobalMemory->counters[DebugCycleCounter_##id].name = #id;
+
 #define END_TIMED_BLOCK(id)                                                    \
   debugGlobalMemory->counters[DebugCycleCounter_##id].cycleCount               \
     += __rdtsc() - cycleStartCounter##id;                                      \
   debugGlobalMemory->counters[DebugCycleCounter_##id].callCount++;
+
+#define END_TIMED_BLOCK_COUNTED(id, count)                                     \
+  debugGlobalMemory->counters[DebugCycleCounter_##id].cycleCount               \
+    += __rdtsc() - cycleStartCounter##id;                                      \
+  debugGlobalMemory->counters[DebugCycleCounter_##id].callCount += count;
 
 #else
 

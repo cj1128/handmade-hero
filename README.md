@@ -219,6 +219,7 @@ My preferred code style for C is different from Casey's.
 - [Day 113: Simple Performance Counters](#day-113-simple-performance-counters)
 - [Day 114: Preparing a Function for Optimization](#day-114-preparing-a-function-for-optimization)
 - [Day 115: SIMD Basics](#day-115-simd-basics)
+- [Day 116: Converting Math Operations to SIMD](#day-116-converting-math-operations-to-simd)
 
 <!-- /MarkdownTOC -->
 
@@ -1251,3 +1252,16 @@ This is a blackboard day. No code evolved.
 - RESOURCE: [Numerical Methods that work](https://www.amazon.com/Numerical-Methods-that-Work-Spectrum/dp/0883854503)
 - RESOURCE: [What Every Computer Scientist Should
 Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7895/800-7895.pdf)
+
+### Day 116: Converting Math Operations to SIMD
+
+- Define `END_TIMED_BLOCK_COUNTED`
+- SIMDify `DrawRectangleHopefullyQuickly`
+  - `_mm_mul_ps`
+  - `_mm_add_ps`
+  - `_mm_sub_ps`
+  - `_mm_sqrt_ps`
+  - `_mm_max_ps`
+  - `_mm_min_ps`
+- before simdify: about 135 cycles, after simdify, about 100 cycles
+- Casey accidently showed a performance boost by just removing two inline functions
