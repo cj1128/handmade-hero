@@ -220,6 +220,7 @@ My preferred code style for C is different from Casey's.
 - [Day 114: Preparing a Function for Optimization](#day-114-preparing-a-function-for-optimization)
 - [Day 115: SIMD Basics](#day-115-simd-basics)
 - [Day 116: Converting Math Operations to SIMD](#day-116-converting-math-operations-to-simd)
+- [Day 117: Packing Pixels for the Framebuffer](#day-117-packing-pixels-for-the-framebuffer)
 
 <!-- /MarkdownTOC -->
 
@@ -1265,3 +1266,16 @@ Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7
   - `_mm_min_ps`
 - before simdify: about 135 cycles, after simdify, about 100 cycles
 - Casey accidently showed a performance boost by just removing two inline functions
+
+### Day 117: Packing Pixels for the Framebuffer
+
+- Write pixels using SIMD
+  - Use structure art technique to verify that our unpack code is correct
+  - Be careful about alignment
+- Used simd instructions
+  - `_mm_unpacklo_epi32`
+  - `_mm_castps_si128`
+  - `_mm_cvttps_epi32`
+  - `_mm_or_si128`
+  - `_mm_slli_epi32`
+  - `_mm_storeu_si128`

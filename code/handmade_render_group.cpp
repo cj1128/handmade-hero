@@ -394,6 +394,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   __m128 one_4x = _mm_set1_ps(1.0f);
   __m128 zero_4x = _mm_set1_ps(0.0f);
   __m128 n255_4x = _mm_set1_ps(255.0f);
+  __m128 half_4x = _mm_set1_ps(0.5f);
 
   __m128 colorr_4x = _mm_set1_ps(color.r);
   __m128 colorg_4x = _mm_set1_ps(color.g);
@@ -595,15 +596,20 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
       blendedB = _mm_mul_ps(n255_4x, _mm_sqrt_ps(blendedB));
       blendedA = _mm_mul_ps(n255_4x, blendedA);
 
-      for(int i = 0; i < 4; i++) {
-        if(shouldFill[i]) {
-          *(pixel + i) = ((u32)(M(blendedA, i) + 0.5f) << 24)
-            | ((u32)(M(blendedR, i) + 0.5f) << 16)
-            | ((u32)(M(blendedG, i) + 0.5f) << 8)
-            | (u32)(M(blendedB, i) + 0.5f);
-        }
-      }
+      __m128i R = _mm_cvttps_epi32(_mm_add_ps(blendedR, half_4x));
+      __m128i G = _mm_cvttps_epi32(_mm_add_ps(blendedG, half_4x));
+      __m128i B = _mm_cvttps_epi32(_mm_add_ps(blendedB, half_4x));
+      __m128i A = _mm_cvttps_epi32(_mm_add_ps(blendedA, half_4x));
 
+      __m128i SR = _mm_slli_epi32(R, 16);
+      __m128i SG = _mm_slli_epi32(G, 8);
+      __m128i SB = B;
+      __m128i SA = _mm_slli_epi32(A, 24);
+
+      __m128i out = _mm_or_si128(_mm_or_si128(SR, SG), _mm_or_si128(SB, SA));
+
+      // *((__m128i *)pixel) = out;
+      _mm_storeu_si128((__m128i *)pixel, out);
       pixel += 4;
     }
 
