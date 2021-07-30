@@ -221,6 +221,7 @@ My preferred code style for C is different from Casey's.
 - [Day 115: SIMD Basics](#day-115-simd-basics)
 - [Day 116: Converting Math Operations to SIMD](#day-116-converting-math-operations-to-simd)
 - [Day 117: Packing Pixels for the Framebuffer](#day-117-packing-pixels-for-the-framebuffer)
+- [Day 118: Wide Unpacking](#day-118-wide-unpacking)
 
 <!-- /MarkdownTOC -->
 
@@ -1272,10 +1273,23 @@ Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7
 - Write pixels using SIMD
   - Use structure art technique to verify that our unpack code is correct
   - Be careful about alignment
-- Used simd instructions
+- Used SIMD intrinsics
   - `_mm_unpacklo_epi32`
   - `_mm_castps_si128`
   - `_mm_cvttps_epi32`
   - `_mm_or_si128`
   - `_mm_slli_epi32`
   - `_mm_storeu_si128`
+
+### Day 118: Wide Unpacking
+
+- Convert load code to SIMD except for texture fetching
+- Used SIMD instrinsics
+  - `_mm_cvtps_epi32` will round to nearest by default
+  - `_mm_cvtepi32_ps`
+  - `_mm_andnot_si128`
+  - `_mm_loadu_si128`
+  - `_mm_srli_epi32`
+  - `_mm_cmpge_ps`
+  - `_mm_cmple_ps`
+  - `_mm_movemask_epi8`

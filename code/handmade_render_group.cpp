@@ -323,17 +323,13 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 {
   BEGIN_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
 
-  __m128 a = _mm_set1_ps(1.0f);
-  __m128 b = _mm_set1_ps(2.0f);
-  __m128 result = _mm_add_ps(a, b);
-
   color.rgb *= color.a;
 
   f32 invXAxisLengthSq = 1.0f / LengthSq(xAxis);
   f32 invYAxisLengthSq = 1.0f / LengthSq(yAxis);
 
-  i32 maxWidth = buffer->width - 1;
-  i32 maxHeight = buffer->height - 1;
+  i32 maxWidth = buffer->width - 1 - 3;
+  i32 maxHeight = buffer->height - 1 - 3;
 
   f32 invMaxWidth = 1.0f / (f32)maxWidth;
   f32 invMaxHeight = 1.0f / (f32)maxHeight;
@@ -388,13 +384,15 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   __m128 nXAxisy_4x = _mm_set1_ps(nXAxis.y);
   __m128 nYAxisx_4x = _mm_set1_ps(nYAxis.x);
   __m128 nYAxisy_4x = _mm_set1_ps(nYAxis.y);
+  __m128 widthM2 = _mm_set1_ps((f32)(texture->width - 2));
+  __m128 heightM2 = _mm_set1_ps((f32)(texture->height - 2));
 
-  f32 inv255 = 1.0f / 255.0f;
-  __m128 inv255_4x = _mm_set1_ps(inv255);
+  __m128 inv255_4x = _mm_set1_ps(1.0f / 255.0f);
   __m128 one_4x = _mm_set1_ps(1.0f);
   __m128 zero_4x = _mm_set1_ps(0.0f);
   __m128 n255_4x = _mm_set1_ps(255.0f);
   __m128 half_4x = _mm_set1_ps(0.5f);
+  __m128i maskFF_4x = _mm_set1_epi32(0xff);
 
   __m128 colorr_4x = _mm_set1_ps(color.r);
   __m128 colorg_4x = _mm_set1_ps(color.g);
@@ -405,6 +403,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   __m128 originy_4x = _mm_set1_ps(origin.y);
 
 #define M(a, idx) ((f32 *)(&a))[idx]
+#define Mi(a, idx) ((u32 *)(&a))[idx]
 #define mmSquare(a) _mm_mul_ps(a, a)
 
   BEGIN_TIMED_BLOCK(ProcessPixel);
@@ -412,38 +411,6 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
     u32 *pixel = (u32 *)row;
 
     for(int x = minX; x <= maxX; x += 4) {
-      __m128 texelAr = _mm_set1_ps(0.0f);
-      __m128 texelAg = _mm_set1_ps(0.0f);
-      __m128 texelAb = _mm_set1_ps(0.0f);
-      __m128 texelAa = _mm_set1_ps(0.0f);
-
-      __m128 texelBr = _mm_set1_ps(0.0f);
-      __m128 texelBg = _mm_set1_ps(0.0f);
-      __m128 texelBb = _mm_set1_ps(0.0f);
-      __m128 texelBa = _mm_set1_ps(0.0f);
-
-      __m128 texelCr = _mm_set1_ps(0.0f);
-      __m128 texelCg = _mm_set1_ps(0.0f);
-      __m128 texelCb = _mm_set1_ps(0.0f);
-      __m128 texelCa = _mm_set1_ps(0.0f);
-
-      __m128 texelDr = _mm_set1_ps(0.0f);
-      __m128 texelDg = _mm_set1_ps(0.0f);
-      __m128 texelDb = _mm_set1_ps(0.0f);
-      __m128 texelDa = _mm_set1_ps(0.0f);
-
-      __m128 fx = _mm_set1_ps(0.0f);
-      __m128 fy = _mm_set1_ps(0.0f);
-
-      __m128 destR = _mm_set1_ps(0.0f);
-      __m128 destG = _mm_set1_ps(0.0f);
-      __m128 destB = _mm_set1_ps(0.0f);
-      __m128 destA = _mm_set1_ps(0.0f);
-
-      __m128 blendedR, blendedG, blendedB, blendedA;
-      bool32 shouldFill[4];
-
-#if 1
       __m128 px
         = _mm_set_ps((f32)(x + 3), (f32)(x + 2), (f32)(x + 1), (f32)(x + 0));
       __m128 py = _mm_set1_ps((f32)y);
@@ -453,79 +420,74 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
         = _mm_add_ps(_mm_mul_ps(dx, nXAxisx_4x), _mm_mul_ps(dy, nXAxisy_4x));
       __m128 v
         = _mm_add_ps(_mm_mul_ps(dx, nYAxisx_4x), _mm_mul_ps(dy, nYAxisy_4x));
-#endif
+
+      __m128i writeMask = _mm_castps_si128(_mm_and_ps(
+        _mm_and_ps(_mm_cmpge_ps(u, zero_4x), _mm_cmple_ps(u, one_4x)),
+        _mm_and_ps(_mm_cmpge_ps(v, zero_4x), _mm_cmple_ps(v, one_4x))));
+
+      __m128i originDest = _mm_loadu_si128((__m128i *)pixel);
+
+      u = _mm_min_ps(_mm_max_ps(u, zero_4x), one_4x);
+      v = _mm_min_ps(_mm_max_ps(v, zero_4x), one_4x);
+
+      __m128 tPx = _mm_mul_ps(u, widthM2);
+      __m128 tPy = _mm_mul_ps(v, heightM2);
+
+      __m128i tx = _mm_cvttps_epi32(tPx);
+      __m128i ty = _mm_cvttps_epi32(tPy);
+
+      __m128 fx = _mm_sub_ps(tPx, _mm_cvtepi32_ps(tx));
+      __m128 fy = _mm_sub_ps(tPy, _mm_cvtepi32_ps(ty));
+
+      __m128i sampleA = _mm_set1_epi32(0);
+      __m128i sampleB = _mm_set1_epi32(0);
+      __m128i sampleC = _mm_set1_epi32(0);
+      __m128i sampleD = _mm_set1_epi32(0);
 
       for(int i = 0; i < 4; i++) {
-
-#if 0
-        v2 p = V2(x + i, y);
-        v2 d = p - origin;
-        f32 u = Inner(d, nXAxis);
-        f32 v = Inner(d, nYAxis);
-#endif
-#if 0
-        // !!! this code uses about 30 less cycles , from 140 tommkk 110
-        // this is unbelievable
-        f32 px = f32(x + i);
-        f32 py = f32(y);
-        f32 dx = px - origin.x;
-        f32 dy = py - origin.y;
-        f32 u = dx * nXAxis.x + dy * nXAxis.y;
-        f32 v = dx * nYAxis.x + dy * nYAxis.y;
-#endif
-
-        shouldFill[i] = (M(u, i) >= 0.0f) && (M(u, i) < 1.0f)
-          && (M(v, i) >= 0.0f) && (M(v, i) < 1.0f);
-        // shouldFill[i] = (u >= 0.0f) && (u < 1.0f) && (v >= 0.0f) && (v
-        // < 1.0f);
-
-        if(shouldFill[i]) {
-#if 1
-          f32 tPx = M(u, i) * (f32)(texture->width - 2);
-          f32 tPy = M(v, i) * (f32)(texture->height - 2);
-#else
-          f32 tPx = u * (f32)(texture->width - 2);
-          f32 tPy = v * (f32)(texture->height - 2);
-#endif
-
-          i32 tx = (i32)tPx;
-          i32 ty = (i32)tPy;
-
-          M(fx, i) = tPx - (f32)tx;
-          M(fy, i) = tPy - (f32)ty;
-
-          u8 *ptr = (u8 *)(texture->memory) + ty * texture->pitch + tx * 4;
-          u32 sampleA = *((u32 *)ptr);
-          u32 sampleB = *((u32 *)(ptr + 4));
-          u32 sampleC = *((u32 *)(ptr + texture->pitch));
-          u32 sampleD = *((u32 *)(ptr + texture->pitch + 4));
-
-          M(texelAr, i) = (f32)((sampleA >> 16) & 0xff);
-          M(texelAg, i) = (f32)((sampleA >> 8) & 0xff);
-          M(texelAb, i) = (f32)((sampleA >> 0) & 0xff);
-          M(texelAa, i) = (f32)((sampleA >> 24) & 0xff);
-
-          M(texelBr, i) = (f32)((sampleB >> 16) & 0xff);
-          M(texelBg, i) = (f32)((sampleB >> 8) & 0xff);
-          M(texelBb, i) = (f32)((sampleB >> 0) & 0xff);
-          M(texelBa, i) = (f32)((sampleB >> 24) & 0xff);
-
-          M(texelCr, i) = (f32)((sampleC >> 16) & 0xff);
-          M(texelCg, i) = (f32)((sampleC >> 8) & 0xff);
-          M(texelCb, i) = (f32)((sampleC >> 0) & 0xff);
-          M(texelCa, i) = (f32)((sampleC >> 24) & 0xff);
-
-          M(texelDr, i) = (f32)((sampleD >> 16) & 0xff);
-          M(texelDg, i) = (f32)((sampleD >> 8) & 0xff);
-          M(texelDb, i) = (f32)((sampleD >> 0) & 0xff);
-          M(texelDa, i) = (f32)((sampleD >> 24) & 0xff);
-
-          M(destR, i) = (f32)((*(pixel + i) >> 16) & 0xff);
-          M(destG, i) = (f32)((*(pixel + i) >> 8) & 0xff);
-          M(destB, i) = (f32)((*(pixel + i) >> 0) & 0xff);
-          M(destA, i) = (f32)((*(pixel + i) >> 24) & 0xff);
-        }
+        u8 *ptr = (u8 *)(texture->memory) + Mi(ty, i) * texture->pitch
+          + Mi(tx, i) * 4;
+        Mi(sampleA, i) = *((u32 *)ptr);
+        Mi(sampleB, i) = *((u32 *)(ptr + 4));
+        Mi(sampleC, i) = *((u32 *)(ptr + texture->pitch));
+        Mi(sampleD, i) = *((u32 *)(ptr + texture->pitch + 4));
       }
+
+      __m128 texelAr = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleA, 16), maskFF_4x));
+      __m128 texelAg
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleA, 8), maskFF_4x));
+      __m128 texelAb
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleA, 0), maskFF_4x));
+      __m128 texelAa = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleA, 24), maskFF_4x));
+
+      __m128 texelBr = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleB, 16), maskFF_4x));
+      __m128 texelBg
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleB, 8), maskFF_4x));
+      __m128 texelBb
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleB, 0), maskFF_4x));
+      __m128 texelBa = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleB, 24), maskFF_4x));
+
+      __m128 texelCr = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleC, 16), maskFF_4x));
+      __m128 texelCg
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleC, 8), maskFF_4x));
+      __m128 texelCb
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleC, 0), maskFF_4x));
+      __m128 texelCa = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleC, 24), maskFF_4x));
+
+      __m128 texelDr = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleD, 16), maskFF_4x));
+      __m128 texelDg
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleD, 8), maskFF_4x));
+      __m128 texelDb
+        = _mm_cvtepi32_ps(_mm_and_si128(_mm_srli_epi32(sampleD, 0), maskFF_4x));
+      __m128 texelDa = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(sampleD, 24), maskFF_4x));
 
       texelAr = mmSquare(_mm_mul_ps(texelAr, inv255_4x));
       texelAg = mmSquare(_mm_mul_ps(texelAg, inv255_4x));
@@ -581,15 +543,24 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 
       __m128 invTexelA = _mm_sub_ps(one_4x, texelA);
 
+      __m128 destR = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(originDest, 16), maskFF_4x));
+      __m128 destG = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(originDest, 8), maskFF_4x));
+      __m128 destB = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(originDest, 0), maskFF_4x));
+      __m128 destA = _mm_cvtepi32_ps(
+        _mm_and_si128(_mm_srli_epi32(originDest, 24), maskFF_4x));
+
       destR = mmSquare(_mm_mul_ps(destR, inv255_4x));
       destG = mmSquare(_mm_mul_ps(destG, inv255_4x));
       destB = mmSquare(_mm_mul_ps(destB, inv255_4x));
       destA = _mm_mul_ps(destA, inv255_4x);
 
-      blendedR = _mm_add_ps(_mm_mul_ps(invTexelA, destR), texelR);
-      blendedG = _mm_add_ps(_mm_mul_ps(invTexelA, destG), texelG);
-      blendedB = _mm_add_ps(_mm_mul_ps(invTexelA, destB), texelB);
-      blendedA = _mm_add_ps(_mm_mul_ps(invTexelA, destA), texelA);
+      __m128 blendedR = _mm_add_ps(_mm_mul_ps(invTexelA, destR), texelR);
+      __m128 blendedG = _mm_add_ps(_mm_mul_ps(invTexelA, destG), texelG);
+      __m128 blendedB = _mm_add_ps(_mm_mul_ps(invTexelA, destB), texelB);
+      __m128 blendedA = _mm_add_ps(_mm_mul_ps(invTexelA, destA), texelA);
 
       blendedR = _mm_mul_ps(n255_4x, _mm_sqrt_ps(blendedR));
       blendedG = _mm_mul_ps(n255_4x, _mm_sqrt_ps(blendedG));
@@ -607,9 +578,10 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
       __m128i SA = _mm_slli_epi32(A, 24);
 
       __m128i out = _mm_or_si128(_mm_or_si128(SR, SG), _mm_or_si128(SB, SA));
+      __m128i maskedOut = _mm_or_si128(_mm_and_si128(writeMask, out),
+        _mm_andnot_si128(writeMask, originDest));
 
-      // *((__m128i *)pixel) = out;
-      _mm_storeu_si128((__m128i *)pixel, out);
+      _mm_storeu_si128((__m128i *)pixel, maskedOut);
       pixel += 4;
     }
 
