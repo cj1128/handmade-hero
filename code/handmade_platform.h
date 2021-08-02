@@ -173,7 +173,7 @@ enum {
   DebugCycleCounter_Render,
   DebugCycleCounter_DrawRectangleSlowly,
   DebugCycleCounter_ProcessPixel,
-  DebugCycleCounter_DrawRectangleHopefullyQuickly,
+  DebugCycleCounter_DrawRectangleQuickly,
 };
 
 #define BEGIN_TIMED_BLOCK(id)                                                  \

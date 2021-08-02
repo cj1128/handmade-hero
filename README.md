@@ -222,6 +222,7 @@ My preferred code style for C is different from Casey's.
 - [Day 116: Converting Math Operations to SIMD](#day-116-converting-math-operations-to-simd)
 - [Day 117: Packing Pixels for the Framebuffer](#day-117-packing-pixels-for-the-framebuffer)
 - [Day 118: Wide Unpacking](#day-118-wide-unpacking)
+- [Day 119: Counting Intrinsics](#day-119-counting-intrinsics)
 
 <!-- /MarkdownTOC -->
 
@@ -1293,3 +1294,10 @@ Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7
   - `_mm_cmpge_ps`
   - `_mm_cmple_ps`
   - `_mm_movemask_epi8`
+
+### Day 119: Counting Intrinsics
+
+- Change the way of calculating px
+- Count intrinsics by substituting intrinsics with macros (I skipped this)
+- `_mm_sqrt_ps` does not hurt us too badly, about 5 cycles
+

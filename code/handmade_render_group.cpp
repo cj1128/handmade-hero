@@ -313,7 +313,7 @@ SampleEnvironmentMap(v2 screenSpaceUV,
 }
 
 internal void
-DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
+DrawRectangleQuickly(loaded_bitmap *buffer,
   v2 origin,
   v2 xAxis,
   v2 yAxis,
@@ -321,7 +321,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   loaded_bitmap *texture,
   f32 pixelsToMeters)
 {
-  BEGIN_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
+  BEGIN_TIMED_BLOCK(DrawRectangleQuickly);
 
   color.rgb *= color.a;
 
@@ -389,6 +389,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 
   __m128 inv255_4x = _mm_set1_ps(1.0f / 255.0f);
   __m128 one_4x = _mm_set1_ps(1.0f);
+  __m128 four_4x = _mm_set1_ps(4.0f);
   __m128 zero_4x = _mm_set1_ps(0.0f);
   __m128 n255_4x = _mm_set1_ps(255.0f);
   __m128 half_4x = _mm_set1_ps(0.5f);
@@ -410,21 +411,22 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
   for(int y = minY; y <= maxY; y++) {
     u32 *pixel = (u32 *)row;
 
+    __m128 px = _mm_set_ps((f32)(minX + 3),
+      (f32)(minX + 2),
+      (f32)(minX + 1),
+      (f32)(minX + 0));
+    __m128 py = _mm_set1_ps((f32)y);
+
     for(int x = minX; x <= maxX; x += 4) {
-      __m128 px
-        = _mm_set_ps((f32)(x + 3), (f32)(x + 2), (f32)(x + 1), (f32)(x + 0));
-      __m128 py = _mm_set1_ps((f32)y);
       __m128 dx = _mm_sub_ps(px, originx_4x);
       __m128 dy = _mm_sub_ps(py, originy_4x);
       __m128 u
         = _mm_add_ps(_mm_mul_ps(dx, nXAxisx_4x), _mm_mul_ps(dy, nXAxisy_4x));
       __m128 v
         = _mm_add_ps(_mm_mul_ps(dx, nYAxisx_4x), _mm_mul_ps(dy, nYAxisy_4x));
-
       __m128i writeMask = _mm_castps_si128(_mm_and_ps(
         _mm_and_ps(_mm_cmpge_ps(u, zero_4x), _mm_cmple_ps(u, one_4x)),
         _mm_and_ps(_mm_cmpge_ps(v, zero_4x), _mm_cmple_ps(v, one_4x))));
-
       __m128i originDest = _mm_loadu_si128((__m128i *)pixel);
 
       u = _mm_min_ps(_mm_max_ps(u, zero_4x), one_4x);
@@ -583,6 +585,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 
       _mm_storeu_si128((__m128i *)pixel, maskedOut);
       pixel += 4;
+      px = _mm_add_ps(px, four_4x);
     }
 
     row += buffer->pitch;
@@ -590,7 +593,7 @@ DrawRectangleHopefullyQuickly(loaded_bitmap *buffer,
 
   END_TIMED_BLOCK_COUNTED(ProcessPixel, (maxY - minY + 1) * (maxX - minX + 1));
 
-  END_TIMED_BLOCK(DrawRectangleHopefullyQuickly);
+  END_TIMED_BLOCK(DrawRectangleQuickly);
 }
 
 // exclusive
@@ -1090,7 +1093,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
             metersToPixels);
 
         // DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
-        DrawRectangleHopefullyQuickly(outputTarget,
+        DrawRectangleQuickly(outputTarget,
           basisResult.p,
           basisResult.scale * V2(entry->size.x, 0.0f),
           basisResult.scale * V2(0.0f, entry->size.y),
@@ -1107,7 +1110,7 @@ RenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
 
         v2 min = entry->origin;
         v2 max = entry->origin + entry->xAxis + entry->yAxis;
-        DrawRectangleHopefullyQuickly(outputTarget,
+        DrawRectangleQuickly(outputTarget,
           entry->origin,
           entry->xAxis,
           entry->yAxis,
