@@ -223,6 +223,7 @@ My preferred code style for C is different from Casey's.
 - [Day 117: Packing Pixels for the Framebuffer](#day-117-packing-pixels-for-the-framebuffer)
 - [Day 118: Wide Unpacking](#day-118-wide-unpacking)
 - [Day 119: Counting Intrinsics](#day-119-counting-intrinsics)
+- [Day 120: Measuring Port Usage with IACA](#day-120-measuring-port-usage-with-iaca)
 
 <!-- /MarkdownTOC -->
 
@@ -1301,3 +1302,9 @@ Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7
 - Count intrinsics by substituting intrinsics with macros (I skipped this)
 - `_mm_sqrt_ps` does not hurt us too badly, about 5 cycles
 
+### Day 120: Measuring Port Usage with IACA
+
+- Casey demostrates how to use [IACA](https://software.intel.com/content/www/us/en/develop/articles/intel-architecture-code-analyzer.html) to profile our program
+- We don't have to convert color to 0-1 first. We can do opertions in 0-255 space, this can save bunch of mul ops.
+- Make `texture->memory` and `texture->pitch` local variables (This doesn't work for me)
+- Use `_mm_rsqrt_ps` instead of `_mm_sqrt_ps` (This doesn't work for me either)
