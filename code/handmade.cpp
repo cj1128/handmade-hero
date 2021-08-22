@@ -477,6 +477,8 @@ FillGroundBuffer(game_state *state,
   f32 height = state->world.chunkDimInMeters.y;
   v2 halfDim = 0.5f * V2(width, height);
 
+  Clear(renderGroup, V4(1.0f, 1.0f, 0.0f, 1.0f));
+
 #if 0
   for(int offsetY = -1; offsetY <= 1; offsetY++) {
     for(int offsetX = -1; offsetX <= 1; offsetX++) {
@@ -533,7 +535,7 @@ FillGroundBuffer(game_state *state,
   }
 #endif
 
-  RenderGroupToOutput(renderGroup, buffer);
+  TiledRenderGroupToOutput(renderGroup, buffer);
   RestoreArena(&tranState->tranArena);
 }
 
@@ -890,10 +892,10 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
     tranState->testDiffuse
       = MakeEmptyBitmap(&tranState->tranArena, 256, 256, false);
-    DrawRectangle(&tranState->testDiffuse,
-      V2(0, 0),
-      V2(tranState->testDiffuse.width, tranState->testDiffuse.height),
-      V4(0.5f, 0.5f, 0.5f, 1.0f));
+    // DrawRectangle(&tranState->testDiffuse,
+    //   V2(0, 0),
+    //   V2(tranState->testDiffuse.width, tranState->testDiffuse.height),
+    //   V4(0.5f, 0.5f, 0.5f, 1.0f));
 
     tranState->testNormal = MakeEmptyBitmap(&tranState->tranArena,
       tranState->testDiffuse.width,
@@ -1390,16 +1392,16 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   Saturation(renderGroup, 0.5f + 0.5f * Sin(10.f * state->time));
 #endif
 
-  RenderGroupToOutput(renderGroup, drawBuffer);
+  TiledRenderGroupToOutput(renderGroup, drawBuffer);
 
   // debug: show current floors
-  for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
-    v2 start = { 10 + (f32)i * 15, (f32)buffer->height - 20 };
-    DrawRectangle(drawBuffer,
-      start,
-      start + v2{ 10, 10 },
-      V4(0.0f, 1.0f, 0.0f, 1.0f));
-  }
+  // for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {
+  //   v2 start = { 10 + (f32)i * 15, (f32)buffer->height - 20 };
+  //   DrawRectangle(drawBuffer,
+  //     start,
+  //     start + v2{ 10, 10 },
+  //     V4(0.0f, 1.0f, 0.0f, 1.0f));
+  // }
 
   EndSim(simRegion, state);
   RestoreArena(&tranState->tranArena);

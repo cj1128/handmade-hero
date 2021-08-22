@@ -224,6 +224,7 @@ My preferred code style for C is different from Casey's.
 - [Day 118: Wide Unpacking](#day-118-wide-unpacking)
 - [Day 119: Counting Intrinsics](#day-119-counting-intrinsics)
 - [Day 120: Measuring Port Usage with IACA](#day-120-measuring-port-usage-with-iaca)
+- [Day 121: Rendering in Tiles](#day-121-rendering-in-tiles)
 
 <!-- /MarkdownTOC -->
 
@@ -1308,3 +1309,19 @@ Know About Floating-Point Arithmetic](https://docs.oracle.com/cd/E19957-01/800-7
 - We don't have to convert color to 0-1 first. We can do opertions in 0-255 space, this can save bunch of mul ops.
 - Make `texture->memory` and `texture->pitch` local variables (This doesn't work for me)
 - Use `_mm_rsqrt_ps` instead of `_mm_sqrt_ps` (This doesn't work for me either)
+
+### Day 121: Rendering in Tiles
+
+This was a really long day, 4 hours in total.
+
+- The IACA analyser does not take loop into account, so we need to manually unroll the loop
+  - `_mm_setr_ps`: use memory order rather than register order
+  - `_mm_mul_epi32` will produce 2 64bit value, we need to use `_mm_mullo_epi32`
+- Define `rectangle2i` and `Union`, `Intersect` functions
+  - As the `rectangle2`, `max` is not included, so we need to change `DrawRectangleQuickly`
+- Make `DrawRectangleQuickly` draw on even lines or odd lines
+- `DrawRectangleQuickly` takes a clip rect
+- Use `clipMask` to ensure drawing inside clip rect
+- Define `InvertedInfinityRectangle`
+- Define `TiledRenderGroupToOutput`
+- NOTE: `_mm_mullo_epi32` belongs to SSE4

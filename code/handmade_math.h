@@ -666,4 +666,71 @@ GetDim(rectangle3 rect)
   return result;
 }
 
+//
+// rectangle2i
+//
+
+struct rectangle2i {
+  i32 minX, minY;
+  i32 maxX, maxY;
+};
+
+inline rectangle2i
+Intersect(rectangle2i a, rectangle2i b)
+{
+  rectangle2i result;
+
+  result.minX = (a.minX < b.minX) ? b.minX : a.minX;
+  result.minY = (a.minY < b.minY) ? b.minY : a.minY;
+  result.maxX = (b.maxX < a.maxX) ? b.maxX : a.maxX;
+  result.maxY = (b.maxY < a.maxY) ? b.maxY : a.maxY;
+
+  return result;
+}
+
+inline rectangle2i
+Union(rectangle2i a, rectangle2i b)
+{
+  rectangle2i result;
+
+  result.minX = (b.minX < a.minX) ? b.minX : a.minX;
+  result.minY = (b.minY < a.minY) ? b.minY : a.minY;
+  result.maxX = (a.maxX < b.maxX) ? b.maxX : a.maxX;
+  result.maxY = (a.maxY < b.maxY) ? b.maxY : a.maxY;
+
+  return result;
+}
+
+inline rectangle2i
+InvertedInfinityRectangle()
+{
+  rectangle2i result;
+
+  result.minX = result.minY = INT_MAX;
+  result.maxY = result.maxY = -INT_MAX;
+
+  return result;
+}
+
+inline bool32
+HasArea(rectangle2i a)
+{
+  bool32 result = (a.minX < a.maxX) && (a.minY < a.maxY);
+  return result;
+}
+
+inline i32
+GetClampedRectArea(rectangle2i a)
+{
+  i32 result = 0;
+  i32 width = a.maxX - a.minX;
+  i32 height = a.maxY - a.minY;
+
+  if(width > 0 && height > 0) {
+    result = width * height;
+  }
+
+  return result;
+}
+
 #endif
