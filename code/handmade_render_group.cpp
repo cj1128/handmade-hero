@@ -1164,6 +1164,19 @@ RenderGroupToOutput(render_group *renderGroup,
 
         // DrawBitmap(outputTarget, entry->bitmap, min, entry->color.a);
 
+#if 0
+        DrawRectangleSlowly(outputTarget,
+          basisResult.p,
+          basisResult.scale * V2(entry->size.x, 0.0f),
+          basisResult.scale * V2(0.0f, entry->size.y),
+          entry->color,
+          entry->bitmap,
+          0,
+          0,
+          0,
+          0,
+          pixelsToMeters);
+#else
         DrawRectangleQuickly(outputTarget,
           basisResult.p,
           basisResult.scale * V2(entry->size.x, 0.0f),
@@ -1173,6 +1186,7 @@ RenderGroupToOutput(render_group *renderGroup,
           pixelsToMeters,
           clipRect,
           even);
+#endif
       } break;
 
 #if 0
