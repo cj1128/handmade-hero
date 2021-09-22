@@ -226,6 +226,7 @@ My preferred code style for C is different from Casey's.
 - [Day 120: Measuring Port Usage with IACA](#day-120-measuring-port-usage-with-iaca)
 - [Day 121: Rendering in Tiles](#day-121-rendering-in-tiles)
 - [Day 122: Introduction to multithreading](#day-122-introduction-to-multithreading)
+- [Day 123: Interlocked Operations](#day-123-interlocked-operations)
 
 <!-- /MarkdownTOC -->
 
@@ -1334,3 +1335,9 @@ This is a blackboard day, no code involved.
 - Casey talks about process, thread, hyperthreading and all kinds of that stuff
 - Casey demonstrates how to use `CreateThread` windows api
 - `CloseHandle` will not close the thread, it just releases the handle to the OS.
+
+### Day 123: Interlocked Operations
+
+- X64 provides special instructions to help us write multithread programs
+  - interlocked compare and exchange
+- Casey demonstrates the unsafe multithread code

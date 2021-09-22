@@ -1014,9 +1014,66 @@ Win32GetPerfCounter()
 
 #define SoundFrameLatency 3
 
+struct thread_info {
+  int id;
+};
+
+struct work_queue_entry {
+  char *str;
+};
+
+global_variable int entryCount;
+global_variable int nextEntryToDo;
+global_variable work_queue_entry entries[256];
+
+void
+PushString(char *str)
+{
+  Assert(entryCount < ArrayCount(entries));
+  entries[entryCount++].str = str;
+}
+
+DWORD
+ThreadProc(LPVOID lpParameter)
+{
+  thread_info *threadInfo = (thread_info *)lpParameter;
+  char buffer[256];
+
+  for(;;) {
+    if(nextEntryToDo < entryCount) {
+      int entryIndex = nextEntryToDo++;
+      work_queue_entry *entry = entries + entryIndex;
+      wsprintf(buffer, "==== thread %d: %s ====\n", threadInfo->id, entry->str);
+      OutputDebugStringA(buffer);
+    }
+  }
+
+  // return 0;
+}
+
 int CALLBACK
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
 {
+  thread_info threadInfos[4];
+  for(int threadIndex = 0; threadIndex < ArrayCount(threadInfos);
+      threadIndex++) {
+    thread_info *info = threadInfos + threadIndex;
+    info->id = threadIndex;
+    HANDLE threadHandle = CreateThread(0, 0, ThreadProc, info, 0, 0);
+    CloseHandle(threadHandle);
+  }
+
+  PushString("string 0");
+  PushString("string 1");
+  PushString("string 2");
+  PushString("string 3");
+  PushString("string 4");
+  PushString("string 5");
+  PushString("string 6");
+  PushString("string 7");
+  PushString("string 8");
+  PushString("string 9");
+
 #if HANDMADE_INTERNAL
   globalShowCursor = true;
 #endif
@@ -1340,7 +1397,7 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
                 newInput,
                 oldInput,
                 &buffer);
-              HandleDebugCounters(&memory);
+              // HandleDebugCounters(&memory);
             }
           }
 
