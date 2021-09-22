@@ -422,6 +422,7 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
 
     __m128 originx_4x = _mm_set1_ps(origin.x);
     __m128 originy_4x = _mm_set1_ps(origin.y);
+    void *textureMemory = texture->memory;
 
 #if 1
 #include <iacaMarks.h>
@@ -435,7 +436,12 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
 #define mmSquare(a) _mm_mul_ps(a, a)
 
     BEGIN_TIMED_BLOCK(ProcessPixel);
-    for(int y = fillRect.minY; y < fillRect.maxY; y += 2) {
+
+    i32 minX = fillRect.minX;
+    i32 minY = fillRect.minY;
+    i32 maxX = fillRect.maxX;
+    i32 maxY = fillRect.maxY;
+    for(int y = minY; y < maxY; y += 2) {
       u32 *pixel = (u32 *)row;
 
       __m128 px = _mm_set_ps((f32)(fillRect.minX + 3),
@@ -446,7 +452,7 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
 
       __m128i clipMask = startupClipMask;
 
-      for(int x = fillRect.minX; x < fillRect.maxX; x += 4) {
+      for(int x = minX; x < maxX; x += 4) {
         IACA_VC64_START;
 
         __m128 dx = _mm_sub_ps(px, originx_4x);
@@ -481,15 +487,14 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
 
         {
           tx = _mm_slli_epi32(tx, 2);
-          // ty = _mm_mullo_epi32(ty, texturePitch_4x);
           ty = _mm_or_si128(_mm_mullo_epi16(ty, texturePitch_4x),
             _mm_slli_epi32(_mm_mulhi_epi16(ty, texturePitch_4x), 16));
           __m128i ptr = _mm_add_epi32(tx, ty);
 
-          u8 *ptr0 = (u8 *)(texture->memory) + Mi(ptr, 0);
-          u8 *ptr1 = (u8 *)(texture->memory) + Mi(ptr, 1);
-          u8 *ptr2 = (u8 *)(texture->memory) + Mi(ptr, 2);
-          u8 *ptr3 = (u8 *)(texture->memory) + Mi(ptr, 3);
+          u8 *ptr0 = (u8 *)(textureMemory) + Mi(ptr, 0);
+          u8 *ptr1 = (u8 *)(textureMemory) + Mi(ptr, 1);
+          u8 *ptr2 = (u8 *)(textureMemory) + Mi(ptr, 2);
+          u8 *ptr3 = (u8 *)(textureMemory) + Mi(ptr, 3);
 
           Mi(sampleA, 0) = *((u32 *)ptr0);
           Mi(sampleA, 1) = *((u32 *)ptr1);
@@ -511,15 +516,6 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
           Mi(sampleD, 2) = *((u32 *)(ptr2 + texture->pitch + 4));
           Mi(sampleD, 3) = *((u32 *)(ptr3 + texture->pitch + 4));
         }
-
-        // for(int i = 0; i < 4; i++) {
-        //   u8 *ptr = (u8 *)(texture->memory) + Mi(ty, i) * texture->pitch
-        //     + Mi(tx, i) * 4;
-        //   Mi(sampleA, i) = *((u32 *)ptr);
-        //   Mi(sampleB, i) = *((u32 *)(ptr + 4));
-        //   Mi(sampleC, i) = *((u32 *)(ptr + texture->pitch));
-        //   Mi(sampleD, i) = *((u32 *)(ptr + texture->pitch + 4));
-        // }
 
         __m128 texelAr = _mm_cvtepi32_ps(
           _mm_and_si128(_mm_srli_epi32(sampleA, 16), maskFF_4x));

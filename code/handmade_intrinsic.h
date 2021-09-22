@@ -27,14 +27,14 @@ RoundReal32ToInt32(f32 input)
 inline i32
 FloorReal32ToInt32(f32 value)
 {
-  i32 result = (i32)floor(value);
+  i32 result = (i32)floorf(value);
   return result;
 }
 
 inline i32
 CeilReal32ToInt32(f32 value)
 {
-  i32 result = (i32)ceil(value);
+  i32 result = (i32)ceilf(value);
   return result;
 }
 
@@ -71,7 +71,7 @@ FindLeastSignificantSetBit(u32 value)
       result.found = true;
       result.index = test;
     }
-  } 
+  }
 #endif
 
   return result;
