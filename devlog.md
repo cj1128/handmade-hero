@@ -1,5 +1,15 @@
 # Dev log
 
+## Hyperthread
+
+CPU 内部有很多工作单元，叫做 Port。
+
+某个 Thread 的指令需要占据某个 Port 并且需要一定的时间来完成，那么在这之间，其他 Port 就空闲了。
+
+Hyperthreading 就是 CPU 在硬件级别可以动态从两个 Thread 中选择指令进行执行，这样最大化利用 CPU。
+
+还是只有一个 CPU，只不过在调度上做了一些功夫。
+
 ## 优化
 
 Day122(36f3735) 我发现我的代码 CPU 使用率明显高于 Casey 的代码，我的是 15% 左右，而 Casey 的是 5% 左右。

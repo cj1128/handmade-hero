@@ -1016,21 +1016,33 @@ Win32GetPerfCounter()
 
 struct thread_info {
   int id;
+  HANDLE semaphore;
 };
 
 struct work_queue_entry {
   char *str;
 };
 
-global_variable int entryCount;
-global_variable int nextEntryToDo;
+global_variable volatile int entryCount;
+global_variable volatile int nextEntryToDo;
 global_variable work_queue_entry entries[256];
 
+#define WRITE_BARRIER                                                          \
+  _WriteBarrier();                                                             \
+  _mm_sfence()
+#define READ_BARRIER _ReadBarrier()
+
 void
-PushString(char *str)
+PushString(HANDLE semaphore, char *str)
 {
   Assert(entryCount < ArrayCount(entries));
-  entries[entryCount++].str = str;
+  work_queue_entry *entry = entries + entryCount;
+  entry->str = str;
+
+  WRITE_BARRIER;
+
+  entryCount++;
+  ReleaseSemaphore(semaphore, 1, NULL);
 }
 
 DWORD
@@ -1039,40 +1051,55 @@ ThreadProc(LPVOID lpParameter)
   thread_info *threadInfo = (thread_info *)lpParameter;
   char buffer[256];
 
-  for(;;) {
+  while(1) {
     if(nextEntryToDo < entryCount) {
-      int entryIndex = nextEntryToDo++;
-      work_queue_entry *entry = entries + entryIndex;
-      wsprintf(buffer, "==== thread %d: %s ====\n", threadInfo->id, entry->str);
-      OutputDebugStringA(buffer);
+      int entryIndex = InterlockedIncrement((long *)&nextEntryToDo) - 1;
+      if(entryIndex < entryCount) {
+        work_queue_entry *entry = entries + entryIndex;
+        wsprintf(buffer,
+          "==== thread %d: %s ====\n",
+          threadInfo->id,
+          entry->str);
+        OutputDebugStringA(buffer);
+      }
+    } else {
+      WaitForSingleObjectEx(threadInfo->semaphore, INFINITE, FALSE);
     }
   }
-
-  // return 0;
 }
 
 int CALLBACK
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
 {
   thread_info threadInfos[4];
-  for(int threadIndex = 0; threadIndex < ArrayCount(threadInfos);
-      threadIndex++) {
+  int initialCount = 0;
+  int threadCount = ArrayCount(threadInfos);
+
+  HANDLE semaphore = CreateSemaphoreExA(NULL,
+    initialCount,
+    threadCount,
+    NULL,
+    0,
+    SEMAPHORE_ALL_ACCESS);
+
+  for(int threadIndex = 0; threadIndex < threadCount; threadIndex++) {
     thread_info *info = threadInfos + threadIndex;
     info->id = threadIndex;
+    info->semaphore = semaphore;
     HANDLE threadHandle = CreateThread(0, 0, ThreadProc, info, 0, 0);
     CloseHandle(threadHandle);
   }
 
-  PushString("string 0");
-  PushString("string 1");
-  PushString("string 2");
-  PushString("string 3");
-  PushString("string 4");
-  PushString("string 5");
-  PushString("string 6");
-  PushString("string 7");
-  PushString("string 8");
-  PushString("string 9");
+  PushString(semaphore, "string 0");
+  PushString(semaphore, "string 1");
+  PushString(semaphore, "string 2");
+  PushString(semaphore, "string 3");
+  PushString(semaphore, "string 4");
+  PushString(semaphore, "string 5");
+  PushString(semaphore, "string 6");
+  PushString(semaphore, "string 7");
+  PushString(semaphore, "string 8");
+  PushString(semaphore, "string 9");
 
 #if HANDMADE_INTERNAL
   globalShowCursor = true;

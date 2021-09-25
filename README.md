@@ -227,6 +227,7 @@ My preferred code style for C is different from Casey's.
 - [Day 121: Rendering in Tiles](#day-121-rendering-in-tiles)
 - [Day 122: Introduction to multithreading](#day-122-introduction-to-multithreading)
 - [Day 123: Interlocked Operations](#day-123-interlocked-operations)
+- [Day 124: Memory Barriers and Semaphores](#day-124-memory-barriers-and-semaphores)
 
 <!-- /MarkdownTOC -->
 
@@ -1341,3 +1342,15 @@ This is a blackboard day, no code involved.
 - X64 provides special instructions to help us write multithread programs
   - interlocked compare and exchange
 - Casey demonstrates the unsafe multithread code
+
+### Day 124: Memory Barriers and Semaphores
+
+- We need a way to tell the compiler and the processor not to reorder things
+  - `_WriteBarrier` for the compiler
+  - `_mm_sfence()` for the processor
+- Use `volatile` to tell the compiler some variable may be changed without its local knowledge
+- Use `InterlockedIncrement` to safely modify our variable
+- Use semaphores to implement a basic multithread work queue
+  - `CreateSemaphoreEx`
+  - `WaitForSingleObjectEx`
+  - `ReleaseSemaphore`
