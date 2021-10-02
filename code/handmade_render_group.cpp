@@ -1230,11 +1230,35 @@ RenderGroupToOutput(render_group *renderGroup,
   END_TIMED_BLOCK(Render);
 }
 
-internal void
-TiledRenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
+struct tile_render_work {
+  render_group *renderGroup;
+  loaded_bitmap *outputTarget;
+  rectangle2i clipRect;
+};
+
+internal PLATFORM_WORK_QUEUE_CALLBACK(DoTileRenderWork)
 {
-  int tileCountX = 4;
-  int tileCountY = 4;
+  tile_render_work *work = (tile_render_work *)data;
+  RenderGroupToOutput(work->renderGroup,
+    work->outputTarget,
+    work->clipRect,
+    true);
+  RenderGroupToOutput(work->renderGroup,
+    work->outputTarget,
+    work->clipRect,
+    false);
+}
+
+internal void
+TiledRenderGroupToOutput(platform_work_queue *renderQueue,
+  render_group *renderGroup,
+  loaded_bitmap *outputTarget)
+{
+  int const tileCountX = 4;
+  int const tileCountY = 4;
+
+  tile_render_work renderWork[tileCountY * tileCountY];
+  int workIndex = 0;
 
   int tileWidth = outputTarget->width / tileCountX;
   int tileHeight = outputTarget->height / tileCountY;
@@ -1246,10 +1270,22 @@ TiledRenderGroupToOutput(render_group *renderGroup, loaded_bitmap *outputTarget)
       clipRect.minY = tileY * tileHeight + 4;
       clipRect.maxY = clipRect.minY + tileHeight - 4;
 
-      RenderGroupToOutput(renderGroup, outputTarget, clipRect, true);
-      RenderGroupToOutput(renderGroup, outputTarget, clipRect, false);
+      tile_render_work *work = renderWork + workIndex++;
+      work->renderGroup = renderGroup;
+      work->outputTarget = outputTarget;
+      work->clipRect = clipRect;
+
+#if 1
+      // multithread
+      PlatformAddEntry(renderQueue, DoTileRenderWork, work);
+#else
+      // single thread
+      DoTileRenderWork(renderQueue, work);
+#endif
     }
   }
+
+  PlatformCompleteAllWork(renderQueue);
 }
 
 internal v2

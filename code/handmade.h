@@ -105,6 +105,8 @@ struct transient_state {
   // 0: bottom, 1: middle, 2: top
   environment_map envMap[3];
 
+  platform_work_queue *renderQueue;
+
   loaded_bitmap testDiffuse;
   loaded_bitmap testNormal;
 };
@@ -148,5 +150,8 @@ struct game_state {
   sim_entity_collision_volume_group *stairCollision;
   sim_entity_collision_volume_group *nullCollision;
 };
+
+global_variable platform_add_entry *PlatformAddEntry;
+global_variable platform_complete_all_work *PlatformCompleteAllWork;
 
 #endif

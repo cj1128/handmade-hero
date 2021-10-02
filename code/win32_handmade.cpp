@@ -1014,56 +1014,111 @@ Win32GetPerfCounter()
 
 #define SoundFrameLatency 3
 
-struct thread_info {
-  int id;
-  HANDLE semaphore;
+struct platform_work_queue_entry {
+  platform_work_queue_callback *callback;
+  void *data;
 };
 
-struct work_queue_entry {
-  char *str;
+struct platform_work_queue {
+  // circular buffer
+  u32 volatile nextEntryToRead;
+  u32 volatile nextEntryToWrite;
+
+  u32 volatile completionGoal;
+  u32 volatile completionCount;
+
+  platform_work_queue_entry entries[256];
+
+  HANDLE semaphoreHandle;
 };
 
-global_variable volatile int entryCount;
-global_variable volatile int nextEntryToDo;
-global_variable work_queue_entry entries[256];
+struct win32_thread_info {
+  platform_work_queue *queue;
+};
 
-#define WRITE_BARRIER                                                          \
-  _WriteBarrier();                                                             \
-  _mm_sfence()
-#define READ_BARRIER _ReadBarrier()
+// NOTE(cj): currently there is only one producer, so we don't need to
+// synchronize
+void
+Win32AddEntry(platform_work_queue *queue,
+  platform_work_queue_callback *callback,
+  void *data)
+{
+  u32 nextEntryToWrite = queue->nextEntryToWrite;
+  u32 newNextEntryToWrite = (nextEntryToWrite + 1) % ArrayCount(queue->entries);
+  Assert(newNextEntryToWrite != queue->nextEntryToRead);
+  platform_work_queue_entry *entry = queue->entries + nextEntryToWrite;
+  entry->callback = callback;
+  entry->data = data;
+  queue->completionGoal++;
+
+  _WriteBarrier();
+  _mm_sfence();
+
+  queue->nextEntryToWrite = newNextEntryToWrite;
+  ReleaseSemaphore(queue->semaphoreHandle, 1, NULL);
+}
+
+internal bool32
+Win32ProcessNextEntry(platform_work_queue *queue)
+{
+  bool32 hasProcessed = false;
+  u32 nextEntryToRead = queue->nextEntryToRead;
+  u32 newNextEntryToRead = (nextEntryToRead + 1) % ArrayCount(queue->entries);
+
+  if(nextEntryToRead != queue->nextEntryToWrite) {
+    u32 index
+      = InterlockedCompareExchange((long volatile *)&queue->nextEntryToRead,
+        newNextEntryToRead,
+        nextEntryToRead);
+    if(index == nextEntryToRead) {
+      hasProcessed = true;
+      platform_work_queue_entry *entry = queue->entries + index;
+      entry->callback(queue, entry->data);
+      InterlockedIncrement((long *)&queue->completionCount);
+    }
+  }
+
+  return hasProcessed;
+}
 
 void
-PushString(HANDLE semaphore, char *str)
+Win32CompleteAllWork(platform_work_queue *queue)
 {
-  Assert(entryCount < ArrayCount(entries));
-  work_queue_entry *entry = entries + entryCount;
-  entry->str = str;
+  while(queue->completionCount != queue->completionGoal) {
+    Win32ProcessNextEntry(queue);
+  }
 
-  WRITE_BARRIER;
+  queue->completionGoal = 0;
+  queue->completionCount = 0;
+}
 
-  entryCount++;
-  ReleaseSemaphore(semaphore, 1, NULL);
+void
+TmpPrint(platform_work_queue *queue, void *data)
+{
+  char buffer[256];
+  wsprintf(buffer,
+    "==== thread %d: %s ====\n",
+    GetCurrentThreadId(),
+    (char *)data);
+  OutputDebugStringA(buffer);
+}
+
+void
+PushString(platform_work_queue *queue, char *str)
+{
+  Win32AddEntry(queue, TmpPrint, str);
 }
 
 DWORD
 ThreadProc(LPVOID lpParameter)
 {
-  thread_info *threadInfo = (thread_info *)lpParameter;
-  char buffer[256];
+  win32_thread_info *threadInfo = (win32_thread_info *)lpParameter;
 
   while(1) {
-    if(nextEntryToDo < entryCount) {
-      int entryIndex = InterlockedIncrement((long *)&nextEntryToDo) - 1;
-      if(entryIndex < entryCount) {
-        work_queue_entry *entry = entries + entryIndex;
-        wsprintf(buffer,
-          "==== thread %d: %s ====\n",
-          threadInfo->id,
-          entry->str);
-        OutputDebugStringA(buffer);
-      }
-    } else {
-      WaitForSingleObjectEx(threadInfo->semaphore, INFINITE, FALSE);
+    if(!Win32ProcessNextEntry(threadInfo->queue)) {
+      WaitForSingleObjectEx(threadInfo->queue->semaphoreHandle,
+        INFINITE,
+        FALSE);
     }
   }
 }
@@ -1071,35 +1126,50 @@ ThreadProc(LPVOID lpParameter)
 int CALLBACK
 WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
 {
-  thread_info threadInfos[4];
+  static win32_thread_info threadInfos[7];
   int initialCount = 0;
   int threadCount = ArrayCount(threadInfos);
 
-  HANDLE semaphore = CreateSemaphoreExA(NULL,
+  HANDLE semaphoreHandle = CreateSemaphoreExA(NULL,
     initialCount,
     threadCount,
     NULL,
     0,
     SEMAPHORE_ALL_ACCESS);
 
+  platform_work_queue queue = {};
+  queue.semaphoreHandle = semaphoreHandle;
+
   for(int threadIndex = 0; threadIndex < threadCount; threadIndex++) {
-    thread_info *info = threadInfos + threadIndex;
-    info->id = threadIndex;
-    info->semaphore = semaphore;
+    win32_thread_info *info = threadInfos + threadIndex;
+    info->queue = &queue;
     HANDLE threadHandle = CreateThread(0, 0, ThreadProc, info, 0, 0);
     CloseHandle(threadHandle);
   }
 
-  PushString(semaphore, "string 0");
-  PushString(semaphore, "string 1");
-  PushString(semaphore, "string 2");
-  PushString(semaphore, "string 3");
-  PushString(semaphore, "string 4");
-  PushString(semaphore, "string 5");
-  PushString(semaphore, "string 6");
-  PushString(semaphore, "string 7");
-  PushString(semaphore, "string 8");
-  PushString(semaphore, "string 9");
+  PushString(&queue, "A0");
+  PushString(&queue, "A1");
+  PushString(&queue, "A2");
+  PushString(&queue, "A3");
+  PushString(&queue, "A4");
+  PushString(&queue, "A5");
+  PushString(&queue, "A6");
+  PushString(&queue, "A7");
+  PushString(&queue, "A8");
+  PushString(&queue, "A9");
+
+  PushString(&queue, "B0");
+  PushString(&queue, "B1");
+  PushString(&queue, "B2");
+  PushString(&queue, "B3");
+  PushString(&queue, "B4");
+  PushString(&queue, "B5");
+  PushString(&queue, "B6");
+  PushString(&queue, "B7");
+  PushString(&queue, "B8");
+  PushString(&queue, "B9");
+
+  Win32CompleteAllWork(&queue);
 
 #if HANDMADE_INTERNAL
   globalShowCursor = true;
@@ -1173,6 +1243,9 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
         PAGE_READWRITE);
       memory.transientStorage
         = (u8 *)memory.permanentStorage + memory.permanentStorageSize;
+      memory.platformAddEntry = Win32AddEntry;
+      memory.platformCompleteAllWork = Win32CompleteAllWork;
+      memory.highPriorityQueue = &queue;
 
       win32_state win32State = {};
       win32State.gameMemory = memory.permanentStorage;
@@ -1194,8 +1267,8 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
         Win32ClearSoundBuffer(&soundOutput);
         globalSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
-        Win32ResizeDIBSection(&globalBackBuffer, 960, 540);
-        // Win32ResizeDIBSection(&globalBackBuffer, 1920, 1080);
+        // Win32ResizeDIBSection(&globalBackBuffer, 960, 540);
+        Win32ResizeDIBSection(&globalBackBuffer, 1920, 1080);
 
         game_input input[2] = {};
         game_input *oldInput = &input[0];

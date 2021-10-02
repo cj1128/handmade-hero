@@ -535,7 +535,7 @@ FillGroundBuffer(game_state *state,
   }
 #endif
 
-  TiledRenderGroupToOutput(renderGroup, buffer);
+  TiledRenderGroupToOutput(tranState->renderQueue, renderGroup, buffer);
   RestoreArena(&tranState->tranArena);
 }
 
@@ -605,6 +605,9 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   if(!memory->isInitialized) {
     memory->isInitialized = true;
+
+    PlatformAddEntry = memory->platformAddEntry;
+    PlatformCompleteAllWork = memory->platformCompleteAllWork;
 
     state->background = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -865,6 +868,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   transient_state *tranState = (transient_state *)(memory->transientStorage);
   if(!tranState->isInitialized) {
     tranState->isInitialized = true;
+    tranState->renderQueue = memory->highPriorityQueue;
 
     InitializeArena(&tranState->tranArena,
       memory->transientStorageSize - sizeof(transient_state),
@@ -1392,7 +1396,7 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
   Saturation(renderGroup, 0.5f + 0.5f * Sin(10.f * state->time));
 #endif
 
-  TiledRenderGroupToOutput(renderGroup, drawBuffer);
+  TiledRenderGroupToOutput(memory->highPriorityQueue, renderGroup, drawBuffer);
 
   // debug: show current floors
   // for(int i = 0; i < simRegion->origin.chunkZ + 1; i++) {

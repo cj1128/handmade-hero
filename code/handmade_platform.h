@@ -204,6 +204,17 @@ struct debug_cycle_counter {
   u32 callCount;
 };
 
+struct platform_work_queue;
+#define PLATFORM_WORK_QUEUE_CALLBACK(name)                                     \
+  void name(platform_work_queue *queue, void *data)
+
+typedef PLATFORM_WORK_QUEUE_CALLBACK(platform_work_queue_callback);
+
+typedef void platform_add_entry(platform_work_queue *queue,
+  platform_work_queue_callback *callback,
+  void *data);
+typedef void platform_complete_all_work(platform_work_queue *queue);
+
 struct game_memory {
   bool32 isInitialized;
 
@@ -212,6 +223,10 @@ struct game_memory {
 
   size_t transientStorageSize;
   void *transientStorage;
+
+  platform_work_queue *highPriorityQueue;
+  platform_add_entry *platformAddEntry;
+  platform_complete_all_work *platformCompleteAllWork;
 
   debug_platform_read_file *debugPlatformReadFile;
   debug_platform_write_file *debugPlatformWriteFile;

@@ -228,6 +228,7 @@ My preferred code style for C is different from Casey's.
 - [Day 122: Introduction to multithreading](#day-122-introduction-to-multithreading)
 - [Day 123: Interlocked Operations](#day-123-interlocked-operations)
 - [Day 124: Memory Barriers and Semaphores](#day-124-memory-barriers-and-semaphores)
+- [Day 125 && 126: Work Queue](#day-125--126-work-queue)
 
 <!-- /MarkdownTOC -->
 
@@ -1354,3 +1355,18 @@ This is a blackboard day, no code involved.
   - `CreateSemaphoreEx`
   - `WaitForSingleObjectEx`
   - `ReleaseSemaphore`
+
+### Day 125 && 126: Work Queue
+
+- Build a single producer multiple consumer queue system
+  - data structure:
+    - `platform_work_queue`
+    - `platform_work_queue_entry`
+    - `platform_work_queue_callback`
+  - `PlatformAddEntry`
+  - `PlatformCompleteAllWork`
+  - `Win32ProcessNextEntry`
+  - `InterlockedCompareExchange`
+  - Make it circular so we don't worry about wrapping
+- We can use `getCurrentThreadId` to get current thread id. This is for testing.
+- Render with multithreading
