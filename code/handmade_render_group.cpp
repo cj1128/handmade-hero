@@ -370,26 +370,31 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
   }
 
   if(HasArea(fillRect)) {
-    __m128i startupClipMask = _mm_set1_epi8(-1);
-    int fillWidth = fillRect.maxX - fillRect.minX;
-    int fillWidthAlign = fillWidth & 3;
-    if(fillWidthAlign > 0) {
-      int adjustment = 4 - fillWidthAlign;
+    __m128i startClipMask = _mm_set1_epi8(-1);
+    __m128i endClipMask = _mm_set1_epi8(-1);
 
-      switch(adjustment) {
-        case 1: {
-          startupClipMask = _mm_slli_si128(startupClipMask, 1 * 4);
-        } break;
-        case 2: {
-          startupClipMask = _mm_slli_si128(startupClipMask, 2 * 4);
-        } break;
-        case 3: {
-          startupClipMask = _mm_slli_si128(startupClipMask, 3 * 4);
-        } break;
-      }
+    __m128i startClipMasks[] = {
+      _mm_slli_si128(startClipMask, 0 * 4),
+      _mm_slli_si128(startClipMask, 1 * 4),
+      _mm_slli_si128(startClipMask, 2 * 4),
+      _mm_slli_si128(startClipMask, 3 * 4),
+    };
 
-      fillWidth += adjustment;
-      fillRect.minX = fillRect.maxX - fillWidth;
+    __m128i endClipMasks[] = {
+      _mm_srli_si128(endClipMask, 0 * 4),
+      _mm_srli_si128(endClipMask, 3 * 4),
+      _mm_srli_si128(endClipMask, 2 * 4),
+      _mm_srli_si128(endClipMask, 1 * 4),
+    };
+
+    if(fillRect.minX & 3) {
+      startClipMask = startClipMasks[fillRect.minX & 3];
+      fillRect.minX = fillRect.minX & ~3;
+    }
+
+    if(fillRect.maxX & 3) {
+      endClipMask = endClipMasks[fillRect.maxX & 3];
+      fillRect.maxX = (fillRect.maxX & ~3) + 4;
     }
 
     i32 texturePitch = texture->pitch;
@@ -450,9 +455,9 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
         (f32)(fillRect.minX + 0));
       __m128 py = _mm_set1_ps((f32)y);
 
-      __m128i clipMask = startupClipMask;
+      __m128i clipMask = startClipMask;
 
-      for(int x = minX; x < maxX; x += 4) {
+      for(int xi = minX; xi < maxX; xi += 4) {
         IACA_VC64_START;
 
         __m128 dx = _mm_sub_ps(px, originx_4x);
@@ -461,7 +466,7 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
           = _mm_add_ps(_mm_mul_ps(dx, nXAxisx_4x), _mm_mul_ps(dy, nXAxisy_4x));
         __m128 v
           = _mm_add_ps(_mm_mul_ps(dx, nYAxisx_4x), _mm_mul_ps(dy, nYAxisy_4x));
-        __m128i originDest = _mm_loadu_si128((__m128i *)pixel);
+        __m128i originDest = _mm_load_si128((__m128i *)pixel);
 
         __m128i writeMask = _mm_castps_si128(_mm_and_ps(
           _mm_and_ps(_mm_cmpge_ps(u, zero_4x), _mm_cmple_ps(u, one_4x)),
@@ -639,10 +644,15 @@ DrawRectangleQuickly(loaded_bitmap *buffer,
         __m128i maskedOut = _mm_or_si128(_mm_and_si128(writeMask, out),
           _mm_andnot_si128(writeMask, originDest));
 
-        _mm_storeu_si128((__m128i *)pixel, maskedOut);
+        _mm_store_si128((__m128i *)pixel, maskedOut);
         pixel += 4;
         px = _mm_add_ps(px, four_4x);
-        clipMask = _mm_set1_epi8(-1);
+
+        if((xi + 8) < maxX) {
+          clipMask = _mm_set1_epi8(-1);
+        } else {
+          clipMask = endClipMask;
+        }
 
         IACA_VC64_END;
       }
@@ -1254,21 +1264,34 @@ TiledRenderGroupToOutput(platform_work_queue *renderQueue,
   render_group *renderGroup,
   loaded_bitmap *outputTarget)
 {
-  int const tileCountX = 4;
-  int const tileCountY = 4;
+  Assert(((u64)outputTarget->memory & 15) == 0);
+
+  int const tileCountX = 9;
+  int const tileCountY = 9;
 
   tile_render_work renderWork[tileCountY * tileCountY];
   int workIndex = 0;
 
   int tileWidth = outputTarget->width / tileCountX;
   int tileHeight = outputTarget->height / tileCountY;
+
+  tileWidth = Align4(tileWidth);
+  Assert(tileWidth % 4 == 0);
+
   for(int tileY = 0; tileY < tileCountY; tileY++) {
     for(int tileX = 0; tileX < tileCountX; tileX++) {
       rectangle2i clipRect;
-      clipRect.minX = tileX * tileWidth + 4;
-      clipRect.maxX = clipRect.minX + tileWidth - 4;
-      clipRect.minY = tileY * tileHeight + 4;
-      clipRect.maxY = clipRect.minY + tileHeight - 4;
+      clipRect.minX = tileX * tileWidth;
+      clipRect.maxX = clipRect.minX + tileWidth;
+      clipRect.minY = tileY * tileHeight;
+      clipRect.maxY = clipRect.minY + tileHeight;
+
+      if(tileX == (tileCountX - 1)) {
+        clipRect.maxX = outputTarget->width;
+      }
+      if(tileY == (tileCountY - 1)) {
+        clipRect.maxY = outputTarget->height;
+      }
 
       tile_render_work *work = renderWork + workIndex++;
       work->renderGroup = renderGroup;

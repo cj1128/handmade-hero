@@ -229,6 +229,7 @@ My preferred code style for C is different from Casey's.
 - [Day 123: Interlocked Operations](#day-123-interlocked-operations)
 - [Day 124: Memory Barriers and Semaphores](#day-124-memory-barriers-and-semaphores)
 - [Day 125 && 126: Work Queue](#day-125--126-work-queue)
+- [Day 127: Aligning Rendering Memory](#day-127-aligning-rendering-memory)
 
 <!-- /MarkdownTOC -->
 
@@ -1370,3 +1371,12 @@ This is a blackboard day, no code involved.
   - Make it circular so we don't worry about wrapping
 - We can use `getCurrentThreadId` to get current thread id. This is for testing.
 - Render with multithreading
+
+### Day 127: Aligning Rendering Memory
+
+- In x64, there is no need to use `_mm_sfence` because writes are always ordered.
+- `_mm_sfence` is only necessary when you are writing to someting like *write combining memory* which may reorder things for you
+- Assert that outputTarget's memory is aligned with 16 bytes in `TiledRenderGroupToOutput`
+- Modify `DrawRectangleQuickly` to support memory aligning
+  - Introduce `startClipMask` and `endClipMask` and set them correctly
+  - Use `_mm_load_si128` and `_mm_store_si128` instead of the unaligned version

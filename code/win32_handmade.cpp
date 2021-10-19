@@ -867,9 +867,11 @@ Win32ResizeDIBSection(win32_offscreen_buffer *buffer, int width, int height)
     VirtualFree(buffer->memory, 0, MEM_RELEASE);
   }
 
+  int bytesPerPixel = 4;
+
   buffer->width = width;
   buffer->height = height;
-  buffer->bytesPerPixel = 4;
+  buffer->bytesPerPixel = bytesPerPixel;
 
   buffer->info.bmiHeader.biSize = sizeof(buffer->info.bmiHeader);
   buffer->info.bmiHeader.biWidth = buffer->width;
@@ -878,10 +880,13 @@ Win32ResizeDIBSection(win32_offscreen_buffer *buffer, int width, int height)
   buffer->info.bmiHeader.biBitCount = (WORD)(buffer->bytesPerPixel * 8);
   buffer->info.bmiHeader.biCompression = BI_RGB;
 
-  int BitmapSize = buffer->width * buffer->height * buffer->bytesPerPixel;
+  // 这里需要 16 字节对其预留出空间，保证 DrawRectangleQuicly 不会 touch invalid
+  // memory
+  buffer->pitch = Align16(width * bytesPerPixel);
 
+  int memorySize = buffer->pitch * buffer->height;
   buffer->memory
-    = VirtualAlloc(0, BitmapSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    = VirtualAlloc(0, memorySize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
 internal void
@@ -1267,7 +1272,7 @@ WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int showCmd)
         Win32ClearSoundBuffer(&soundOutput);
         globalSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
-        // Win32ResizeDIBSection(&globalBackBuffer, 960, 540);
+        Win32ResizeDIBSection(&globalBackBuffer, 960, 540);
         Win32ResizeDIBSection(&globalBackBuffer, 1920, 1080);
 
         game_input input[2] = {};

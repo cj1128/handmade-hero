@@ -94,9 +94,6 @@ struct ground_buffer {
 struct transient_state {
   bool32 isInitialized;
   memory_arena tranArena;
-  i32 groundWidth;
-  i32 groundHeight;
-  i32 groundPitch;
   u32 groundBufferCount;
   ground_buffer *groundBuffers;
 
@@ -106,9 +103,6 @@ struct transient_state {
   environment_map envMap[3];
 
   platform_work_queue *renderQueue;
-
-  loaded_bitmap testDiffuse;
-  loaded_bitmap testNormal;
 };
 
 struct game_state {
@@ -149,6 +143,9 @@ struct game_state {
   sim_entity_collision_volume_group *monsterCollision;
   sim_entity_collision_volume_group *stairCollision;
   sim_entity_collision_volume_group *nullCollision;
+
+  loaded_bitmap testDiffuse;
+  loaded_bitmap testNormal;
 };
 
 global_variable platform_add_entry *PlatformAddEntry;

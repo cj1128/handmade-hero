@@ -575,6 +575,9 @@ game_memory *debugGlobalMemory;
 
 extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 {
+  PlatformAddEntry = memory->platformAddEntry;
+  PlatformCompleteAllWork = memory->platformCompleteAllWork;
+
 #if HANDMADE_INTERNAL
   debugGlobalMemory = memory;
 #endif
@@ -605,9 +608,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
 
   if(!memory->isInitialized) {
     memory->isInitialized = true;
-
-    PlatformAddEntry = memory->platformAddEntry;
-    PlatformCompleteAllWork = memory->platformCompleteAllWork;
 
     state->background = LoadBMP(thread,
       memory->debugPlatformReadFile,
@@ -877,9 +877,6 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     i32 groundWidth = 256;
     i32 groundHeight = 256;
     i32 totalMemorySize = groundWidth * groundHeight * BYTES_PER_PIXEL;
-    tranState->groundWidth = groundWidth;
-    tranState->groundHeight = groundHeight;
-    tranState->groundPitch = groundWidth * BYTES_PER_PIXEL;
     tranState->groundBufferCount = 64;
     tranState->groundBuffers = PushArray(&tranState->tranArena,
       tranState->groundBufferCount,
@@ -888,25 +885,24 @@ extern "C" GAME_UPDATE_VIDEO(GameUpdateVideo)
     for(u32 groundIndex = 0; groundIndex < tranState->groundBufferCount;
         groundIndex++) {
       ground_buffer *groundBuffer = tranState->groundBuffers + groundIndex;
-      groundBuffer->p = NullPosition();
       groundBuffer->bitmap = MakeEmptyBitmap(groundWidth,
         groundHeight,
         PushSize(&tranState->tranArena, totalMemorySize));
     }
 
-    tranState->testDiffuse
+    state->testDiffuse
       = MakeEmptyBitmap(&tranState->tranArena, 256, 256, false);
     // DrawRectangle(&tranState->testDiffuse,
     //   V2(0, 0),
     //   V2(tranState->testDiffuse.width, tranState->testDiffuse.height),
     //   V4(0.5f, 0.5f, 0.5f, 1.0f));
 
-    tranState->testNormal = MakeEmptyBitmap(&tranState->tranArena,
-      tranState->testDiffuse.width,
-      tranState->testDiffuse.height,
+    state->testNormal = MakeEmptyBitmap(&tranState->tranArena,
+      state->testDiffuse.width,
+      state->testDiffuse.height,
       false);
-    MakeSphereNormalMap(&tranState->testNormal, 0.0f);
-    MakeSphereDiffuseMap(&tranState->testDiffuse);
+    MakeSphereNormalMap(&state->testNormal, 0.0f);
+    MakeSphereDiffuseMap(&state->testDiffuse);
 
     tranState->envMapWidth = 512;
     tranState->envMapHeight = 256;
